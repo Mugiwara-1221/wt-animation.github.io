@@ -28,7 +28,7 @@ colorInput.addEventListener("change", updateColor);
 
 // Nav bar buttons //
 const lineJoinBtn = document.querySelector(".line-join-btn");
-const lineCapBtn = document.querySelector(".line-cap-btn");
+// const lineCapBtn = document.querySelector(".line-cap-btn");
 const lineWidthBtn = document.querySelector(".line-width-btn");
 const colorBtn = document.querySelector(".color-btn");
 
@@ -38,7 +38,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
-ctx.lineWidth = "10";
+ctx.lineWidth = "5";
 ctx.strokeStyle = "#BADA55";
 
 lineJoinBtn.addEventListener("click", () => {
@@ -46,10 +46,10 @@ lineJoinBtn.addEventListener("click", () => {
     document.querySelector(".line-join-info").innerHTML = ctx.lineJoin;
 })
 
-lineCapBtn.addEventListener("click", () => {
-    ctx.lineCap = document.querySelector(".line-cap-select").value;
-    document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
-})
+//lineCapBtn.addEventListener("click", () => {
+    //ctx.lineCap = document.querySelector(".line-cap-select").value;
+    //document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
+//})
 
 lineWidthBtn.addEventListener("click", () => {
     ctx.lineWidth = document.querySelector(".line-width-input").value;
@@ -62,7 +62,7 @@ colorBtn.addEventListener("click", () => {
 });
 
 document.querySelector(".line-join-info").innerHTML = ctx.lineJoin;
-document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
+//document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
 document.querySelector(".line-width-info").innerHTML = ctx.lineWidth;
 document.querySelector(".color-info").innerHTML = ctx.strokeStyle;
 
