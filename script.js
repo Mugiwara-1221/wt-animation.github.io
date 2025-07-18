@@ -39,7 +39,7 @@ canvas.height = window.innerHeight;
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
 ctx.lineWidth = "5";
-ctx.strokeStyle = "#BADA55";
+ctx.strokeStyle = "#000000";
 
 lineJoinBtn.addEventListener("click", () => {
     ctx.lineJoin = document.querySelector(".line-join-select").value;
