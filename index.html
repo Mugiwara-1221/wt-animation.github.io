@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Canvas Painting</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <div class="toggleNavLeft"></div>
+        <nav id="navLeft">
+            <div class="nav-content">
+                <span>Choose LineJoin style</span>
+                <select class="line-join-select">
+                    <option value="round">Round</option>
+                    <option value="bevel">Bevel</option>
+                    <option value="miter">Miter</option>
+                </select>
+                <button class="line-join-btn" type="button">Apply Style</button>
+            </div>
+            <div class="nav-content">
+                <span>Choose LineCap style</span>
+                <select class="line-cap-select">
+                    <option value="round">Round</option>
+                    <option value="butt">Butt</option>
+                    <option value="square">Square</option>
+                </select>
+                <button class="line-cap-btn" type="button">Apply Style</button>
+            </div>
+            <div class="nav-content">
+                <span>Choose LineWidth style</span>
+                <input class="line-width-input" type="number" value="10">
+                <button class="line-width-btn" type="button">Apply Style</button>
+            </div>
+            <div class="nav-content">
+                <span>Choose Color</span>
+                <input class="pick-color" type="color" name="drawing-color" value="#BADA55">
+                <button class="color-btn" type="button">Apply Color</button>
+            </div>
+
+            <div class="table-info">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Line Join</th>
+                            <th>Line Cap</th>
+                            <th>Line Width</th>
+                            <th>Color</th>    
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="line-join-info"></td>
+                            <td class="line-cap-info"></td>
+                            <td class="line-width-info"></td>
+                            <td class="color-info"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </nav>
+
+        <canvas id="canvas"></canvas>
+
+        <script src="js/script.js"></script>
+    </body>
+</html>
