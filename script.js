@@ -6,7 +6,7 @@ let toggleStatus = 1;
 
 function toggleMenu(){
     if(toggleStatus === 1){
-        navLeft.style.left = "-251px";
+        navLeft.style.left = "251px";
         toggleLeft.style.backgroundImage = "url('images/navigateRight.png')";
         toggleStatus = 0;
     } else if(toggleStatus === 0){
