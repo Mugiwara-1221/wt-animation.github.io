@@ -1,27 +1,97 @@
 "use strict";
 
+// Navigation toggle
 const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
 
-function toggleMenu(){
-    if(toggleStatus === 1){
+function toggleMenu() {
+    if (toggleStatus === 1) {
         navLeft.style.left = "-251px";
         toggleLeft.style.backgroundImage = "url('navigateRight.png')";
         toggleStatus = 0;
-    } else if(toggleStatus === 0){
+    } else {
         navLeft.style.left = "0px";
         toggleLeft.style.backgroundImage = "url('navigateLeft.png')";
         toggleStatus = 1;
     }
 }
-
 toggleLeft.addEventListener("click", toggleMenu);
 
-const colorInput = document.querySelector(".pick-color");
+// Canvas setup
+const bgCanvas = document.getElementById("bgCanvas");
+const drawCanvas = document.getElementById("drawCanvas");
+const bgCtx = bgCanvas.getContext("2d");
+const ctx = drawCanvas.getContext("2d");
 
-function updateColor(){
-    document.documentElement.style.setProperty(`--${this.name}`, this.value + "");
+bgCanvas.width = drawCanvas.width = window.innerWidth;
+bgCanvas.height = drawCanvas.height = window.innerHeight;
+
+// Load background image
+const bgImage = new Image();
+bgImage.src = "your-background.jpg"; // Replace with your actual image path
+bgImage.onload = () => {
+    bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
+};
+
+// UI Elements
+const colorInput = document.querySelector(".pick-color");
+const lineWidthInput = document.querySelector(".line-width-input");
+const colorBtn = document.querySelector(".color-btn");
+const lineWidthBtn = document.querySelector(".line-width-btn");
+const lineJoinBtn = document.querySelector(".line-join-btn");
+
+// Brush state
+let drawing = false;
+let currentTool = "draw";
+let brushSize = parseInt(lineWidthInput.value);
+let brushColor = colorInput.value;
+let prevX = null;
+let prevY = null;
+
+// Initial canvas defaults
+ctx.lineJoin = document.querySelector(".line-join-select").value;
+ctx.lineCap = "round";
+ctx.lineWidth = brushSize;
+ctx.strokeStyle = brushColor;
+
+// Tool switching
+function setTool(tool) {
+    currentTool = tool;
+}
+
+// Drawing helpers
+function getPos(e) {
+    const rect = drawCanvas.getBoundingClientRect();
+    return [e.clientX - rect.left, e.clientY - rect.top];
+}
+
+function draw(e) {
+    if (!drawing) return;
+    const [x, y] = getPos(e);
+
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = "round";
+
+    if (currentTool === "erase") {
+        ctx.globalCompositeOperation = "destination-out";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = brushColor;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(prevX ?? x, prevY ?? y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    prevX = x;
+    prevY = y;
+}
+
+// Clear & Save
+function clearCanvas() {
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 }
 
 function saveImage() {
@@ -30,92 +100,66 @@ function saveImage() {
     mergedCanvas.height = drawCanvas.height;
     const mergedCtx = mergedCanvas.getContext("2d");
 
-    // Merge layers
     mergedCtx.drawImage(bgCanvas, 0, 0);
     mergedCtx.drawImage(drawCanvas, 0, 0);
 
-    const link = document.createElement('a');
-    link.download = 'my_drawing.png';
+    const link = document.createElement("a");
+    link.download = "my_drawing.png";
     link.href = mergedCanvas.toDataURL();
     link.click();
 }
 
-colorInput.addEventListener("change", updateColor);
+// Apply buttons
+colorBtn.addEventListener("click", () => {
+    brushColor = colorInput.value;
+    document.querySelector(".color-info").textContent = brushColor;
+});
 
-// Nav bar buttons //
-const lineJoinBtn = document.querySelector(".line-join-btn");
-// const lineCapBtn = document.querySelector(".line-cap-btn");
-const lineWidthBtn = document.querySelector(".line-width-btn");
-const colorBtn = document.querySelector(".color-btn");
-
-//const canvas = document.querySelector("#canvas");
-//const ctx = canvas.getContext('2d');
-const bgCanvas = document.getElementById("bgCanvas");
-const drawCanvas = document.getElementById("drawCanvas");
-
-const bgCtx = bgCanvas.getContext("2d");
-const ctx = drawCanvas.getContext("2d"); // this is where drawing happens
-
-bgCanvas.width = drawCanvas.width = window.innerWidth;
-bgCanvas.height = drawCanvas.height = window.innerHeight;
-
-// Load background image
-const bgImage = new Image();
-bgImage.src = "your-background.jpg"; // <- replace with your image path
-bgImage.onload = () => {
-    bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
-};
-
-canvas.width = window.innerWidth; //may need to make a change here
-canvas.height = window.innerHeight; //may need to make a change here
-ctx.lineJoin = 'round';
-ctx.lineCap = 'round';
-ctx.lineWidth = "1";
-ctx.strokeStyle = "#000000";
+lineWidthBtn.addEventListener("click", () => {
+    brushSize = parseInt(lineWidthInput.value);
+    document.querySelector(".line-width-info").textContent = brushSize;
+});
 
 lineJoinBtn.addEventListener("click", () => {
     ctx.lineJoin = document.querySelector(".line-join-select").value;
-    document.querySelector(".line-join-info").innerHTML = ctx.lineJoin;
-})
-
-//lineCapBtn.addEventListener("click", () => {
-    //ctx.lineCap = document.querySelector(".line-cap-select").value;
-    //document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
-//})
-
-lineWidthBtn.addEventListener("click", () => {
-    ctx.lineWidth = document.querySelector(".line-width-input").value;
-    document.querySelector(".line-width-info").innerHTML = ctx.lineWidth;
-})
-
-colorBtn.addEventListener("click", () => {
-    ctx.strokeStyle = colorInput.value;
-    document.querySelector(".color-info").innerHTML = ctx.strokeStyle;
+    document.querySelector(".line-join-info").textContent = ctx.lineJoin;
 });
 
-document.querySelector(".line-join-info").innerHTML = ctx.lineJoin;
-//document.querySelector(".line-cap-info").innerHTML = ctx.lineCap;
-document.querySelector(".line-width-info").innerHTML = ctx.lineWidth;
-document.querySelector(".color-info").innerHTML = ctx.strokeStyle;
+// Sync defaults to info table
+document.querySelector(".line-join-info").textContent = ctx.lineJoin;
+document.querySelector(".line-width-info").textContent = brushSize;
+document.querySelector(".color-info").textContent = brushColor;
 
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-
-function draw(event){
-    if(!isDrawing) return;
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(event.offsetX, event.offsetY);
-    ctx.stroke();
-    [lastX, lastY] = [event.offsetX, event.offsetY];
-}
-
+// Drawing events
+drawCanvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    [prevX, prevY] = getPos(e);
+});
+drawCanvas.addEventListener("mouseup", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("mouseout", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
 drawCanvas.addEventListener("mousemove", draw);
-drawCanvas.addEventListener("mousedown", () => {
-    isDrawing = true;
-    [lastX, lastY] = [event.offsetX, event.offsetY];
+
+// Touch support
+drawCanvas.addEventListener("touchstart", (e) => {
+    drawing = true;
+    [prevX, prevY] = getPos(e.touches[0]);
 });
-drawCanvas.addEventListener("mouseup", () => isDrawing = false);
-drawCanvas.addEventListener("mouseout", () => isDrawing = false);
+drawCanvas.addEventListener("touchend", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("touchcancel", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    draw(e.touches[0]);
+}, { passive: false });
+
