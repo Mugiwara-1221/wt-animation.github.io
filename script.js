@@ -4,7 +4,7 @@ const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
 
-function toggleMenu(){
+/*function toggleMenu(){
     if(toggleStatus === 1){
         navLeft.style.left = "251px";
         toggleLeft.style.backgroundImage = "url('images/navigateRight.png')";
@@ -14,7 +14,7 @@ function toggleMenu(){
         toggleLeft.style.backgroundImage = "url('images/navigateLeft.png')";
         toggleStatus = 1;
     }
-}
+}*/
 
 toggleLeft.addEventListener("click", toggleMenu);
 
