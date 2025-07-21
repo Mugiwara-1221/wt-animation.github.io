@@ -27,6 +27,11 @@
                 font-size: 12px;
                 margin-top: 5px;
             }
+            canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
         </style>
     </head>
     <body>
@@ -82,23 +87,11 @@
         <canvas id="bgCanvas"></canvas>
         <canvas id="drawCanvas"></canvas>
 
-        <script src="script.js"></script>
-        <script>
+        <script src = "script.js">
             const bgCanvas = document.getElementById("bgCanvas");
             const drawCanvas = document.getElementById("drawCanvas");
-            bgCanvas.width = drawCanvas.width = window.innerWidth;
-            bgCanvas.height = drawCanvas.height = window.innerHeight;
             const bgCtx = bgCanvas.getContext("2d");
-            const ctx = drawCanvas.getContext("2d"); // drawing happens here
-            // load your image
-            const img = new Image();
-            img.src = 'your-background-image.jpg'; // put your image path here
-            img.onload = () => {
-                bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
-            };
-            
-            //const canvas = document.getElementById("canvas");
-            //const ctx = canvas.getContext("2d");
+            const ctx = drawCanvas.getContext("2d");
 
             const colorInput = document.querySelector(".pick-color");
             const lineWidthInput = document.querySelector(".line-width-input");
@@ -112,48 +105,54 @@
             let prevX = null;
             let prevY = null;
 
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            bgCanvas.width = drawCanvas.width = window.innerWidth;
+            bgCanvas.height = drawCanvas.height = window.innerHeight;
 
-            canvas.addEventListener("mousedown", (e) => {
+            const img = new Image();
+            img.src = "your-background.jpg"; // replace with your image path
+            img.onload = () => {
+                bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
+            };
+
+            drawCanvas.addEventListener("mousedown", (e) => {
                 drawing = true;
                 [prevX, prevY] = getPos(e);
             });
 
-            canvas.addEventListener("mouseup", () => {
+            drawCanvas.addEventListener("mouseup", () => {
                 drawing = false;
                 prevX = prevY = null;
             });
 
-            canvas.addEventListener("mouseout", () => {
+            drawCanvas.addEventListener("mouseout", () => {
                 drawing = false;
                 prevX = prevY = null;
             });
 
-            canvas.addEventListener("mousemove", draw);
+            drawCanvas.addEventListener("mousemove", draw);
 
-            canvas.addEventListener("touchstart", (e) => {
+            drawCanvas.addEventListener("touchstart", (e) => {
                 drawing = true;
                 [prevX, prevY] = getPos(e.touches[0]);
             });
 
-            canvas.addEventListener("touchend", () => {
+            drawCanvas.addEventListener("touchend", () => {
                 drawing = false;
                 prevX = prevY = null;
             });
 
-            canvas.addEventListener("touchcancel", () => {
+            drawCanvas.addEventListener("touchcancel", () => {
                 drawing = false;
                 prevX = prevY = null;
             });
 
-            canvas.addEventListener("touchmove", (e) => {
+            drawCanvas.addEventListener("touchmove", (e) => {
                 e.preventDefault();
                 draw(e.touches[0]);
             }, { passive: false });
 
             function getPos(e) {
-                const rect = canvas.getBoundingClientRect();
+                const rect = drawCanvas.getBoundingClientRect();
                 return [e.clientX - rect.left, e.clientY - rect.top];
             }
 
@@ -185,13 +184,21 @@
             }
 
             function clearCanvas() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
             }
 
             function saveImage() {
+                const mergedCanvas = document.createElement("canvas");
+                mergedCanvas.width = drawCanvas.width;
+                mergedCanvas.height = drawCanvas.height;
+                const mergedCtx = mergedCanvas.getContext("2d");
+
+                mergedCtx.drawImage(bgCanvas, 0, 0);
+                mergedCtx.drawImage(drawCanvas, 0, 0);
+
                 const link = document.createElement('a');
                 link.download = 'my_drawing.png';
-                link.href = canvas.toDataURL();
+                link.href = mergedCanvas.toDataURL();
                 link.click();
             }
 
