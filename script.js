@@ -24,6 +24,22 @@ function updateColor(){
     document.documentElement.style.setProperty(`--${this.name}`, this.value + "");
 }
 
+function saveImage() {
+    const mergedCanvas = document.createElement("canvas");
+    mergedCanvas.width = drawCanvas.width;
+    mergedCanvas.height = drawCanvas.height;
+    const mergedCtx = mergedCanvas.getContext("2d");
+
+    // Merge layers
+    mergedCtx.drawImage(bgCanvas, 0, 0);
+    mergedCtx.drawImage(drawCanvas, 0, 0);
+
+    const link = document.createElement('a');
+    link.download = 'my_drawing.png';
+    link.href = mergedCanvas.toDataURL();
+    link.click();
+}
+
 colorInput.addEventListener("change", updateColor);
 
 // Nav bar buttons //
@@ -32,10 +48,26 @@ const lineJoinBtn = document.querySelector(".line-join-btn");
 const lineWidthBtn = document.querySelector(".line-width-btn");
 const colorBtn = document.querySelector(".color-btn");
 
-const canvas = document.querySelector("#canvas");
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+//const canvas = document.querySelector("#canvas");
+//const ctx = canvas.getContext('2d');
+const bgCanvas = document.getElementById("bgCanvas");
+const drawCanvas = document.getElementById("drawCanvas");
+
+const bgCtx = bgCanvas.getContext("2d");
+const ctx = drawCanvas.getContext("2d"); // this is where drawing happens
+
+bgCanvas.width = drawCanvas.width = window.innerWidth;
+bgCanvas.height = drawCanvas.height = window.innerHeight;
+
+// Load background image
+const bgImage = new Image();
+bgImage.src = "your-background.jpg"; // <- replace with your image path
+bgImage.onload = () => {
+    bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
+};
+
+canvas.width = window.innerWidth; //may need to make a change here
+canvas.height = window.innerHeight; //may need to make a change here
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
 ctx.lineWidth = "1";
@@ -80,10 +112,10 @@ function draw(event){
     [lastX, lastY] = [event.offsetX, event.offsetY];
 }
 
-canvas.addEventListener("mousemove", draw);
-canvas.addEventListener("mousedown", () => {
+drawCanvas.addEventListener("mousemove", draw);
+drawCanvas.addEventListener("mousedown", () => {
     isDrawing = true;
     [lastX, lastY] = [event.offsetX, event.offsetY];
 });
-canvas.addEventListener("mouseup", () => isDrawing = false);
-canvas.addEventListener("mouseout", () => isDrawing = false);
+drawCanvas.addEventListener("mouseup", () => isDrawing = false);
+drawCanvas.addEventListener("mouseout", () => isDrawing = false);
