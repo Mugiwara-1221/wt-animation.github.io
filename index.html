@@ -78,140 +78,16 @@
         </nav>
 
         <div class="tools">
-            <button onclick="setTool('draw')">Pen</button>
-            <button onclick="setTool('erase')">Eraser</button>
-            <button onclick="clearCanvas()">Clear</button>
-            <button onclick="saveImage()">Save</button>
+            <button onclick="setTool('draw')">🖊️ Pen</button>
+            <button onclick="setTool('erase')">🧽 Eraser</button>
+            <button onclick="clearCanvas()">🧹 Clear</button>
+            <button onclick="saveImage()">💾 Save</button>
         </div>
 
         <canvas id="bgCanvas"></canvas>
         <canvas id="drawCanvas"></canvas>
 
-        <script>
-            const bgCanvas = document.getElementById("bgCanvas");
-            const drawCanvas = document.getElementById("drawCanvas");
-            const bgCtx = bgCanvas.getContext("2d");
-            const ctx = drawCanvas.getContext("2d");
-
-            const colorInput = document.querySelector(".pick-color");
-            const lineWidthInput = document.querySelector(".line-width-input");
-            const colorBtn = document.querySelector(".color-btn");
-            const lineWidthBtn = document.querySelector(".line-width-btn");
-
-            let drawing = false;
-            let currentTool = "draw";
-            let brushSize = parseInt(lineWidthInput.value);
-            let brushColor = colorInput.value;
-            let prevX = null;
-            let prevY = null;
-
-            bgCanvas.width = drawCanvas.width = window.innerWidth;
-            bgCanvas.height = drawCanvas.height = window.innerHeight;
-
-            const img = new Image();
-            img.src = "your-background.jpg"; // replace with your image path
-            img.onload = () => {
-                bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
-            };
-
-            drawCanvas.addEventListener("mousedown", (e) => {
-                drawing = true;
-                [prevX, prevY] = getPos(e);
-            });
-
-            drawCanvas.addEventListener("mouseup", () => {
-                drawing = false;
-                prevX = prevY = null;
-            });
-
-            drawCanvas.addEventListener("mouseout", () => {
-                drawing = false;
-                prevX = prevY = null;
-            });
-
-            drawCanvas.addEventListener("mousemove", draw);
-
-            drawCanvas.addEventListener("touchstart", (e) => {
-                drawing = true;
-                [prevX, prevY] = getPos(e.touches[0]);
-            });
-
-            drawCanvas.addEventListener("touchend", () => {
-                drawing = false;
-                prevX = prevY = null;
-            });
-
-            drawCanvas.addEventListener("touchcancel", () => {
-                drawing = false;
-                prevX = prevY = null;
-            });
-
-            drawCanvas.addEventListener("touchmove", (e) => {
-                e.preventDefault();
-                draw(e.touches[0]);
-            }, { passive: false });
-
-            function getPos(e) {
-                const rect = drawCanvas.getBoundingClientRect();
-                return [e.clientX - rect.left, e.clientY - rect.top];
-            }
-
-            function setTool(tool) {
-                currentTool = tool;
-            }
-
-            function draw(e) {
-                if (!drawing) return;
-                const [x, y] = getPos(e);
-
-                ctx.lineWidth = brushSize;
-                ctx.lineCap = "round";
-
-                if (currentTool === "erase") {
-                    ctx.globalCompositeOperation = "destination-out";
-                } else {
-                    ctx.globalCompositeOperation = "source-over";
-                    ctx.strokeStyle = brushColor;
-                }
-
-                ctx.beginPath();
-                ctx.moveTo(prevX ?? x, prevY ?? y);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-
-                prevX = x;
-                prevY = y;
-            }
-
-            function clearCanvas() {
-                ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-            }
-
-            function saveImage() {
-                const mergedCanvas = document.createElement("canvas");
-                mergedCanvas.width = drawCanvas.width;
-                mergedCanvas.height = drawCanvas.height;
-                const mergedCtx = mergedCanvas.getContext("2d");
-
-                mergedCtx.drawImage(bgCanvas, 0, 0);
-                mergedCtx.drawImage(drawCanvas, 0, 0);
-
-                const link = document.createElement('a');
-                link.download = 'my_drawing.png';
-                link.href = mergedCanvas.toDataURL();
-                link.click();
-            }
-
-            colorBtn.addEventListener("click", () => {
-                brushColor = colorInput.value;
-                document.querySelector(".color-info").textContent = brushColor;
-            });
-
-            lineWidthBtn.addEventListener("click", () => {
-                brushSize = parseInt(lineWidthInput.value);
-                document.querySelector(".line-width-info").textContent = brushSize;
-            });
-        </script>
+        <script src="script.js"></script>
     </body>
 </html>
 
