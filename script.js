@@ -6,12 +6,12 @@ let toggleStatus = 1;
 
 function toggleMenu(){
     if(toggleStatus === 1){
-        navLeft.style.left = "251px";
-        toggleLeft.style.backgroundImage = "url('images/navigateRight.png')";
+        navLeft.style.left = "-251px";
+        toggleLeft.style.backgroundImage = "url('navigateRight.png')";
         toggleStatus = 0;
     } else if(toggleStatus === 0){
         navLeft.style.left = "0px";
-        toggleLeft.style.backgroundImage = "url('images/navigateLeft.png')";
+        toggleLeft.style.backgroundImage = "url('navigateLeft.png')";
         toggleStatus = 1;
     }
 }
