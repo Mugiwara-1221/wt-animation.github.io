@@ -57,7 +57,7 @@ body {
 }
 
 #navLeft .nav-content span {
-    font-weight: 500;
+    font-weight: 300; /*700*/
 }
 
 #navLeft .nav-content input {
@@ -85,17 +85,17 @@ body {
 }
 
 table {
-    width: 225px;
-    height: 100px;
+    width: 200px; /*225*/
+    height: 80px; /*100*/
     background: #fff;
 }
 
 th, td {
-    padding: 5px;
+    padding: 2px;
     text-align: center;
 }
 
 table, th, td {
-    border: 2px solid var(--drawing-color);
+    border: 1px solid black; /*var(--drawing-color);*/
     border-collapse: collapse;
 }
