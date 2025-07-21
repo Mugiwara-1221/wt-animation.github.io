@@ -81,8 +81,8 @@
 
         <canvas id="canvas"></canvas>
 
-        <!-- <script src="script.js"></script> -->
-        <script src = "script.js">
+        <script src="script.js"></script>
+        <script>
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
 
@@ -90,28 +90,58 @@
             const lineWidthInput = document.querySelector(".line-width-input");
             const colorBtn = document.querySelector(".color-btn");
             const lineWidthBtn = document.querySelector(".line-width-btn");
-            const sizeSlider = document.createElement("input");
 
             let drawing = false;
             let currentTool = "draw";
             let brushSize = parseInt(lineWidthInput.value);
             let brushColor = colorInput.value;
+            let prevX = null;
+            let prevY = null;
 
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            canvas.addEventListener("mousedown", () => drawing = true);
-            canvas.addEventListener("mouseup", () => drawing = false);
-            canvas.addEventListener("mouseout", () => drawing = false);
+            canvas.addEventListener("mousedown", (e) => {
+                drawing = true;
+                [prevX, prevY] = getPos(e);
+            });
+
+            canvas.addEventListener("mouseup", () => {
+                drawing = false;
+                prevX = prevY = null;
+            });
+
+            canvas.addEventListener("mouseout", () => {
+                drawing = false;
+                prevX = prevY = null;
+            });
+
             canvas.addEventListener("mousemove", draw);
 
-            canvas.addEventListener("touchstart", () => drawing = true);
-            canvas.addEventListener("touchend", () => drawing = false);
-            canvas.addEventListener("touchcancel", () => drawing = false);
+            canvas.addEventListener("touchstart", (e) => {
+                drawing = true;
+                [prevX, prevY] = getPos(e.touches[0]);
+            });
+
+            canvas.addEventListener("touchend", () => {
+                drawing = false;
+                prevX = prevY = null;
+            });
+
+            canvas.addEventListener("touchcancel", () => {
+                drawing = false;
+                prevX = prevY = null;
+            });
+
             canvas.addEventListener("touchmove", (e) => {
                 e.preventDefault();
                 draw(e.touches[0]);
             }, { passive: false });
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                return [e.clientX - rect.left, e.clientY - rect.top];
+            }
 
             function setTool(tool) {
                 currentTool = tool;
@@ -119,9 +149,7 @@
 
             function draw(e) {
                 if (!drawing) return;
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+                const [x, y] = getPos(e);
 
                 ctx.lineWidth = brushSize;
                 ctx.lineCap = "round";
@@ -134,9 +162,12 @@
                 }
 
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + 0.1, y + 0.1);
+                ctx.moveTo(prevX ?? x, prevY ?? y);
+                ctx.lineTo(x, y);
                 ctx.stroke();
+
+                prevX = x;
+                prevY = y;
             }
 
             function clearCanvas() {
