@@ -38,7 +38,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
-ctx.lineWidth = "5";
+ctx.lineWidth = "1";
 ctx.strokeStyle = "#000000";
 
 lineJoinBtn.addEventListener("click", () => {
