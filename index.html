@@ -75,8 +75,6 @@
         <div class="tools">
             <button onclick="setTool('draw')">🖊️ Pen</button>
             <button onclick="setTool('erase')">🧽 Eraser</button>
-            <label>Brush/Eraser Size:</label>
-            <input type="range" min="1" max="50" value="5" id="sizeSlider">
             <button onclick="clearCanvas()">🧹 Clear</button>
             <button onclick="saveImage()">💾 Save</button>
         </div>
@@ -87,9 +85,17 @@
         <script>
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
-            const sizeSlider = document.getElementById("sizeSlider");
+
+            const colorInput = document.querySelector(".pick-color");
+            const lineWidthInput = document.querySelector(".line-width-input");
+            const colorBtn = document.querySelector(".color-btn");
+            const lineWidthBtn = document.querySelector(".line-width-btn");
+            const sizeSlider = document.createElement("input");
+
             let drawing = false;
             let currentTool = "draw";
+            let brushSize = parseInt(lineWidthInput.value);
+            let brushColor = colorInput.value;
 
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -117,14 +123,14 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                ctx.lineWidth = parseInt(sizeSlider.value);
+                ctx.lineWidth = brushSize;
                 ctx.lineCap = "round";
 
                 if (currentTool === "erase") {
                     ctx.globalCompositeOperation = "destination-out";
                 } else {
                     ctx.globalCompositeOperation = "source-over";
-                    ctx.strokeStyle = document.querySelector(".pick-color").value;
+                    ctx.strokeStyle = brushColor;
                 }
 
                 ctx.beginPath();
@@ -143,6 +149,16 @@
                 link.href = canvas.toDataURL();
                 link.click();
             }
+
+            colorBtn.addEventListener("click", () => {
+                brushColor = colorInput.value;
+                document.querySelector(".color-info").textContent = brushColor;
+            });
+
+            lineWidthBtn.addEventListener("click", () => {
+                brushSize = parseInt(lineWidthInput.value);
+                document.querySelector(".line-width-info").textContent = brushSize;
+            });
         </script>
     </body>
 </html>
