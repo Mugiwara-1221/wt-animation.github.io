@@ -73,18 +73,32 @@
         </nav>
 
         <div class="tools">
-            <button onclick="setTool('draw')">🖊️ Pen</button>
-            <button onclick="setTool('erase')">🧽 Eraser</button>
-            <button onclick="clearCanvas()">🧹 Clear</button>
-            <button onclick="saveImage()">💾 Save</button>
+            <button onclick="setTool('draw')">Pen</button>
+            <button onclick="setTool('erase')">Eraser</button>
+            <button onclick="clearCanvas()">Clear</button>
+            <button onclick="saveImage()">Save</button>
         </div>
 
-        <canvas id="canvas"></canvas>
+        <canvas id="bgCanvas"></canvas>
+        <canvas id="drawCanvas"></canvas>
 
         <script src="script.js"></script>
         <script>
-            const canvas = document.getElementById("canvas");
-            const ctx = canvas.getContext("2d");
+            const bgCanvas = document.getElementById("bgCanvas");
+            const drawCanvas = document.getElementById("drawCanvas");
+            bgCanvas.width = drawCanvas.width = window.innerWidth;
+            bgCanvas.height = drawCanvas.height = window.innerHeight;
+            const bgCtx = bgCanvas.getContext("2d");
+            const ctx = drawCanvas.getContext("2d"); // drawing happens here
+            // load your image
+            const img = new Image();
+            img.src = 'your-background-image.jpg'; // put your image path here
+            img.onload = () => {
+                bgCtx.drawImage(img, 0, 0, bgCanvas.width, bgCanvas.height);
+            };
+            
+            //const canvas = document.getElementById("canvas");
+            //const ctx = canvas.getContext("2d");
 
             const colorInput = document.querySelector(".pick-color");
             const lineWidthInput = document.querySelector(".line-width-input");
