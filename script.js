@@ -89,6 +89,60 @@ function draw(e) {
     prevY = y;
 }
 
+const toolsPanel = document.querySelector(".tools");
+
+let isDragging = false;
+let offsetX, offsetY;
+
+function startDrag(e) {
+    isDragging = true;
+    toolsPanel.style.cursor = "grabbing";
+
+    const rect = toolsPanel.getBoundingClientRect();
+
+    if (e.type.startsWith("touch")) {
+        offsetX = e.touches[0].clientX - rect.left;
+        offsetY = e.touches[0].clientY - rect.top;
+    } else {
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+    }
+}
+
+//Draggable Tool Box
+function duringDrag(e) {
+    if (!isDragging) return;
+
+    e.preventDefault();
+
+    let clientX, clientY;
+
+    if (e.type.startsWith("touch")) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+
+    toolsPanel.style.left = `${clientX - offsetX}px`;
+    toolsPanel.style.top = `${clientY - offsetY}px`;
+}
+
+function endDrag() {
+    isDragging = false;
+    toolsPanel.style.cursor = "grab";
+}
+
+toolsPanel.addEventListener("mousedown", startDrag);
+toolsPanel.addEventListener("touchstart", startDrag);
+
+window.addEventListener("mousemove", duringDrag);
+window.addEventListener("touchmove", duringDrag, { passive: false });
+
+window.addEventListener("mouseup", endDrag);
+window.addEventListener("touchend", endDrag);
+
 // Clear & Save
 function clearCanvas() {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
