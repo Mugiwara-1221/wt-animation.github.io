@@ -29,7 +29,7 @@ bgCanvas.height = drawCanvas.height = window.innerHeight;
 
 // Load background image
 const bgImage = new Image();
-bgImage.src = "url('backgroundtest.jpg')"; // Replace with your actual image path
+bgImage.src = "url('backgroundtest.jpg')"; // Background Image (Setting)
 bgImage.onload = () => {
     bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
 };
