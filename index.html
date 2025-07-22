@@ -15,17 +15,18 @@
                 overflow: hidden;
             }
             .tools {
-                position: fixed;
+                position: absolute;
                 top: 10px;
                 right: 10px;
                 background: white;
                 padding: 10px;
-                z-index: 100;
+                z-index: 20;
                 display: flex;
                 flex-direction: column;
                 gap: 8px;
                 border-radius: 8px;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                cursor: move;
             }
             .tools button, .tools input {
                 font-size: 14px;
@@ -46,9 +47,13 @@
             #drawCanvas {
                 pointer-events: auto;
             }
-            nav#navLeft, .tools {
-                z-index: 10;
-                position: relative;
+            nav#navLeft {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 15;
+                background: white;
+                height: 100%;
             }
         </style>
     </head>
@@ -95,7 +100,7 @@
             </div>
         </nav>
 
-        <div class="tools">
+        <div class="tools" id="toolPanel">
             <button onclick="setTool('draw')">🖊️ Pen</button>
             <button onclick="setTool('erase')">🧽 Eraser</button>
             <button onclick="clearCanvas()">🧹 Clear</button>
@@ -106,8 +111,29 @@
         <canvas id="drawCanvas"></canvas>
 
         <script src="script.js"></script>
+        <script>
+            const panel = document.getElementById("toolPanel");
+            let offsetX, offsetY, isDragging = false;
+
+            panel.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                offsetX = e.clientX - panel.offsetLeft;
+                offsetY = e.clientY - panel.offsetTop;
+            });
+
+            document.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                panel.style.left = `${e.clientX - offsetX}px`;
+                panel.style.top = `${e.clientY - offsetY}px`;
+            });
+
+            document.addEventListener("mouseup", () => {
+                isDragging = false;
+            });
+        </script>
     </body>
 </html>
+
 
 <!-- <!DOCTYPE html>
 <html>
