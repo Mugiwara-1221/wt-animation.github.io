@@ -8,6 +8,14 @@ body {
     overflow: hidden;
 }
 
+.tools {
+  position: fixed; /* or absolute */
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  cursor: grab;
+}
+
 .toggleNavLeft {
     position: fixed;
     width: 35px;
