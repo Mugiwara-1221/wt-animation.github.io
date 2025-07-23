@@ -36,14 +36,15 @@ body {
 .toggleNavLeft {
     border: 2px solid red; /*temporary*/
     position: fixed;
+    top: 0; /*temporary*/
+    z-index: 10;
     width: 35px;
     height: 35px;
-    background: url(images/navigateLeft.png) center;
+    background: url("images/navigateLeft.png") center; /*background-image?*/
     background-size: cover;
     border-bottom-right-radius: 5px;
     border: 1px solid #ccc;
     cursor: pointer;
-    z-index: 10;
     transition: all 200ms;
     -webkit-transition: all 200ms;
 }
