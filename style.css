@@ -37,7 +37,7 @@ body {
     position: fixed;
     width: 35px;
     height: 35px;
-    background: url(navigateLeft.png) center;
+    background: url(images/navigateLeft.png) center;
     background-size: cover;
     border-bottom-right-radius: 5px;
     border: 1px solid #ccc;
