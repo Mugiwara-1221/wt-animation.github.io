@@ -8,11 +8,11 @@ let toggleStatus = 1;
 function toggleMenu() {
     if (toggleStatus === 1) {
         navLeft.style.left = "-251px";
-        toggleLeft.style.backgroundImage = "url('navigateRight.png')";
+        toggleLeft.style.backgroundImage = "url('images/navigateRight.png')";
         toggleStatus = 0;
     } else {
         navLeft.style.left = "0px";
-        toggleLeft.style.backgroundImage = "url('navigateLeft.png')";
+        toggleLeft.style.backgroundImage = "url('images/navigateLeft.png')";
         toggleStatus = 1;
     }
 }
@@ -29,7 +29,7 @@ bgCanvas.height = drawCanvas.height = window.innerHeight;
 
 // Load background image
 const bgImage = new Image();
-bgImage.src = "url('backgroundtest.jpg')"; // Background Image (Setting)
+bgImage.src = "url('images/backgroundtest.jpg')"; // Background Image (Setting)
 bgImage.onload = () => {
     bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
 };
