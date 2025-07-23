@@ -34,6 +34,7 @@ body {
 }
 
 .toggleNavLeft {
+    border: 2px solid red; /*temporary*/
     position: fixed;
     width: 35px;
     height: 35px;
