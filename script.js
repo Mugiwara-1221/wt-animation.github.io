@@ -13,7 +13,7 @@ function toggleMenu() {
     } else {
         navLeft.style.left = "0px";
         toggleLeft.style.backgroundImage = "url('images/navigateLeft.png')";
-        toggleStatus = 1;
+        toggleStatus = 1; 
     }
 }
 toggleLeft.addEventListener("click", toggleMenu);
