@@ -3,7 +3,8 @@ Developed by Windtree Technology
 
 The Windtree Animation Canvas is a collaborative web-based drawing and animation tool designed to spark creativity and storytelling through student-driven character animation.
 
-🎨 Project Overview
+
+## 🎨 Project Overview
 This tool allows students to:
 
 Draw and design their own unique characters using an intuitive canvas interface.
@@ -12,7 +13,8 @@ Apply basic animation actions like walking, jumping, and talking to bring their 
 
 Submit their creations to be compiled into a unified animated storyline, showcasing all student-contributed characters in an engaging narrative format.
 
-🚀 Key Features
+
+## 🚀 Key Features
 Custom Drawing Tools – Designed for simplicity and creativity.
 
 Animation Presets – Easily apply core animation movements to characters.
@@ -21,7 +23,8 @@ Character Submission – Each student's work is saved and stored for compilation
 
 Story Integration – Final product features an animated sequence incorporating all contributions.
 
-🌐 Use Case
+
+## 🌐 Use Case
 Windtree Animation Canvas is perfect for classrooms, after-school programs, and creative workshops. It encourages:
 
 Artistic expression
@@ -32,7 +35,8 @@ Introductory animation skills
 
 Collaborative project-based learning
 
-🛠️ Technologies Used
+
+## 🛠️ Technologies Used
 HTML5 Canvas
 
 JavaScript (Vanilla and ES6+)
@@ -41,19 +45,21 @@ CSS3
 
 Wix Studio + Velo API (for integration with Windtree’s platform)
 
-📁 Folder Structure
+
+## 📁 Folder Structure
 bash
 Copy
 Edit
 📦windtree-animation-canvas
- ┣ 📂assets
- ┃ ┣ 📜images/
- ┃ ┗ 📜icons/
+ ┃ 📜images/
+ ┃ ┗ 📜icons
  ┣ 📜index.html
  ┣ 📜style.css
  ┣ 📜main.js
  ┣ 📜README.md
-📦 How to Use
+ 
+ 
+## 📦 How to Use
 Clone the repo:
 
 bash
@@ -66,7 +72,8 @@ Start drawing and animating your character.
 
 Export or submit your character when complete.
 
-💡 Future Plans
+
+##💡 Future Plans
 Add onion skinning for frame-by-frame animation.
 
 Enable audio sync with animations.
@@ -75,8 +82,6 @@ Create a teacher dashboard for managing submissions and playback.
 
 Implement AI-assisted animation suggestions.
 
-👩‍💻 Contributing
-We welcome contributions! Please open issues or submit pull requests for any ideas, features, or bug fixes.
 
-📜 License
+## 📜 License
 This project is licensed under the MIT License.
