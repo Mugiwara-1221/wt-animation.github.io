@@ -1,12 +1,9 @@
-// Optional: log clicked character
-document.querySelectorAll("area").forEach(area => {
-    area.addEventListener("click", (e) => {
-        const charName = area.alt || "Unknown";
-        console.log(`Selected character: ${charName}`);
+// Character selection logic
+document.querySelectorAll(".character").forEach(char => {
+    char.addEventListener("click", () => {
+        const selected = char.getAttribute("data-char") || "unknown";
+        console.log(`Selected character: ${selected}`);
+        window.location.href = `canvas.html?char=${selected}`;
     });
 });
-
-// Example: redirect after selecting a character
-// window.location.href = ""; //canvas.html redirect
-
-// Future feature: highlight hovered areas if not using <area> but <div>s or SVG
+// Direct to Canvas.HTML: Source Index.html
