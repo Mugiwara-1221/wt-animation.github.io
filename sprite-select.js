@@ -7,6 +7,6 @@ document.querySelectorAll("area").forEach(area => {
 });
 
 // Example: redirect after selecting a character
-window.location.href = "canvas.html";
+window.location.href = ""; //canvas.html redirect
 
 // Future feature: highlight hovered areas if not using <area> but <div>s or SVG
