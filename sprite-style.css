@@ -5,7 +5,7 @@ body, html {
     height: 100%;
     overflow: hidden;
     font-family: sans-serif;
-    background: linear-gradient(to bottom, #4d8ad5, #f0f0f0); /* Soft #fffbea, added*/
+    background: linear-gradient(to bottom, #4d8ad5, #89b1e1); /* Soft #fffbea, added*/
     display: flex; /*added*/
     flex-direction: column; /*added*/
     align-items: center; /*added*/
