@@ -1,22 +1,15 @@
+/*Sprite Selection*/
+
 body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
     font-family: sans-serif;
-    background: linear-gradient(to bottom, #4d8ad5, #89b1e1); /* Soft #fffbea, added*/
-    display: flex; /*added*/
-    flex-direction: column; /*added*/
-    align-items: center; /*added*/
-    /*text-align: center;*/
-}
-
-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /*cover*/
-    display: block;
+    background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 h2 {
@@ -29,7 +22,6 @@ h2 {
     letter-spacing: 1px;
 }
 
-/* Main image wrapper */
 .scene-wrapper {
     position: relative;
     max-width: 80vw;
@@ -41,21 +33,31 @@ h2 {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Main image itself */
 #scene {
-    max-width: 80vw;
-    max-height: 80vh;
-    width: auto;
+    width: 100%;
     height: auto;
     display: block;
-    object-fit: contain;
     border-radius: 12px;
 }
 
-/* Optional: style for highlighting sprites if using hover overlays later */
-.highlight-area {
+/* Character Image Styling */
+.character {
     position: absolute;
-    border: 2px dashed rgba(0, 0, 0, 0.4);
-    pointer-events: none;
-    display: none;
+    width: 8%; /* Base size, tweak if needed */
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
+
+/* Hover effect */
+.character:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+}
+
+/* Positioning characters over background */
+.hare     { top: 55%; left: 15%; }
+.tortoise { top: 60%; left: 25%; }
+.bear     { top: 48%; left: 45%; }
+.squirrel { top: 40%; left: 65%; }
+.bird1    { top: 15%; left: 30%; }
+.bird2    { top: 10%; left: 70%; }
