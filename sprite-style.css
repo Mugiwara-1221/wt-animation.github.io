@@ -5,7 +5,7 @@ body, html {
     height: 100%;
     overflow: hidden;
     font-family: sans-serif;
-    background: linear-gradient(to bottom, #fffbea, #f0f0f0); /* Soft, added*/
+    background: linear-gradient(to bottom, #4D8AD5, #f0f0f0); /* Soft #fffbea, added*/
     display: flex; /*added*/
     flex-direction: column; /*added*/
     align-items: center; /*added*/
@@ -32,8 +32,8 @@ h2 {
 /* Main image wrapper */
 .scene-wrapper {
     position: relative;
-    max-width: 95vw;
-    max-height: 90vh;
+    max-width: 90vw;
+    max-height: 85vh;
     overflow: hidden;
     border: 4px solid #ccc;
     border-radius: 12px;
