@@ -8,12 +8,16 @@
 <body>
   <h2>Select your Character!</h2>
   <div class="scene-wrapper">
-    <img src="images/colored-background.png" usemap="#spriteMap" id="scene" alt="Scene">
+    <!-- Background Scene -->
+    <img src="images/colored-background.png" id="scene" alt="Scene">
 
-    <map name="spriteMap">
-      <area shape="rect" coords="100,150,200,250" alt="Duckling 1" href="canvas.html?char=duck1">
-      <area shape="rect" coords="250,150,350,250" alt="Tree" href="canvas.html?char=tree1">
-    </map>
+    <!-- Overlay Character Images -->
+    <img src="images/trimmed_Hare.png" class="character hare" alt="Hare" data-char="hare">
+    <img src="images/trimmed_Tortoise.png" class="character tortoise" alt="Tortoise" data-char="tortoise">
+    <img src="images/trimmed_Bear.png" class="character bear" alt="Bear" data-char="bear">
+    <img src="images/trimmed_Squirrel.png" class="character squirrel" alt="Squirrel" data-char="squirrel">
+    <img src="images/trimmed_Bird 1.png" class="character bird1" alt="Bird 1" data-char="bird1">
+    <img src="images/trimmed_Bird 2.png" class="character bird2" alt="Bird 2" data-char="bird2">
   </div>
 
   <script src="sprite-select.js"></script>
