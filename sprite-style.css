@@ -60,7 +60,7 @@ h2 {
 /* Character Image Styling */
 .character {
     position: absolute;
-    width: 8%; /* Base size, tweak if needed */
+    width: 80px; /* Base size, tweak if needed 8%*/
     cursor: pointer;
     transition: transform 0.2s ease, filter 0.2s ease;
 }
@@ -72,9 +72,9 @@ h2 {
 }
 
 /* Positioning characters over background */
-.hare     { top: 55%; left: 15%; }
-.tortoise { top: 60%; left: 25%; }
-.bear     { top: 48%; left: 45%; }
-.squirrel { top: 40%; left: 65%; }
-.bird1    { top: 15%; left: 30%; }
-.bird2    { top: 10%; left: 70%; }
+.hare     { top: 430px; left: 80px; }
+.tortoise { top: 460px; left: 200px; }
+.bear     { top: 290px; left: 460px; }
+.squirrel { top: 290px; left: 620px; }
+.bird1    { top: 100px; left: 250px; }
+.bird2    { top: 90px;  left: 700px; }
