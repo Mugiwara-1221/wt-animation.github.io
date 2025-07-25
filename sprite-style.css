@@ -43,7 +43,9 @@ h2 {
 
 /* Main image itself */
 #scene {
-    width: 100%;
+    max-width: 80vw;
+    max-height: 80vh;
+    width: auto;
     height: auto;
     display: block;
     object-fit: contain;
