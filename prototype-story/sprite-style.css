@@ -1,1 +1,33 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background: #f0f0f0;
+    text-align: center;
+}
 
+h2 {
+    margin-top: 20px;
+    color: #333;
+}
+
+.scene-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+#scene {
+    width: 90%;
+    max-width: 1000px;
+    height: auto;
+    border: 2px solid #ccc;
+}
+
+/* Optional: style for highlighting sprites if using hover overlays later */
+.highlight-area {
+    position: absolute;
+    border: 2px dashed rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    display: none;
+}
