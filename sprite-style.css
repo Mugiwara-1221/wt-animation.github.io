@@ -5,7 +5,7 @@ body, html {
     height: 100%;
     overflow: hidden;
     font-family: sans-serif;
-    background: linear-gradient(to bottom, #4D8AD5, #f0f0f0); /* Soft #fffbea, added*/
+    background: linear-gradient(to bottom, #4d8ad5, #f0f0f0); /* Soft #fffbea, added*/
     display: flex; /*added*/
     flex-direction: column; /*added*/
     align-items: center; /*added*/
@@ -32,8 +32,8 @@ h2 {
 /* Main image wrapper */
 .scene-wrapper {
     position: relative;
-    max-width: 90vw;
-    max-height: 85vh;
+    max-width: 95vw;
+    max-height: 90vh;
     overflow: hidden;
     border: 4px solid #ccc;
     border-radius: 12px;
@@ -43,7 +43,7 @@ h2 {
 
 /* Main image itself */
 #scene {
-    width: 100%;
+    width: 90%;
     height: auto;
     display: block;
     object-fit: contain;
