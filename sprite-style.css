@@ -43,7 +43,7 @@ h2 {
 
 /* Main image itself */
 #scene {
-    width: 90%;
+    width: 80%;
     height: auto;
     display: block;
     object-fit: contain;
