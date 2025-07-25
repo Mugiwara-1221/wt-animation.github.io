@@ -33,7 +33,7 @@ h2 {
 .scene-wrapper {
     position: relative;
     max-width: 80vw;
-    max-height: 75vh;
+    max-height: 80vh;
     overflow: hidden;
     border: 4px solid #ccc;
     border-radius: 12px;
