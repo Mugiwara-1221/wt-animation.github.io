@@ -14,7 +14,7 @@ body, html {
 
 h2 {
     margin-top: 20px;
-    color: #bc941;
+    color: #b8c941;
     font-size: 3.2rem;
     font-weight: 600;
     text-align: center;
@@ -66,7 +66,7 @@ h2 {
 
 /* Positioning characters over background y,x */
 .hare     { top: 400px; left: 90px; }
-.tortoise { top: 420px; left: 550px; }
+.tortoise { top: 430px; left: 550px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
 .bird1    { top: 100px; left: 250px; }
