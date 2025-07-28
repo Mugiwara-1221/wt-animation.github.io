@@ -78,13 +78,13 @@ h2 {
 }
 
 .tortoise {
-  width: 400px;
+  width: 300px;
   height: auto;
 }
 
 /* Positioning characters over background y,x */
-.hare     { top: 450px; left: 120px; }
-.tortoise { top: 480px; left: 600px; }
+.hare     { top: 350px; left: 120px; }
+.tortoise { top: 380px; left: 600px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
 .bird1    { top: 100px; left: 250px; }
