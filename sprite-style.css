@@ -65,7 +65,7 @@ h2 {
 }
 
 .bear {
-  width: 150px;
+  width: 155px;
   height: auto;
 }
 
@@ -90,4 +90,4 @@ h2 {
 .bear     { top: 158px; left: 505px; }
 .squirrel { top: 260px; left: 640px; }
 .bird1    { top: 142px; left: 337px; } 
-.bird2    { top: 145px;  left: 380px; }
+.bird2    { top: 150px;  left: 385px; }
