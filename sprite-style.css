@@ -78,7 +78,7 @@ h2 {
 }
 
 /* Positioning characters over background y,x */
-.hare     { top: 600px; left: 240px; }
+.hare     { top: 450px; left: 200px; }
 .tortoise { top: 460px; left: 200px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
