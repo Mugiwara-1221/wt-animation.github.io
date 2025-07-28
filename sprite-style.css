@@ -47,7 +47,7 @@ h2 {
   width: auto;
   height: auto;
   max-width: 80vh;
-  max-height: 80vh:
+  max-height: 90vh:
   border-radius: 12px;
 }
 
@@ -73,12 +73,12 @@ h2 {
 }
 
 .hare {
-  transform: scale(1.5); /* increase hare size by 1.5x */
-  transform-origin: top left;
+  width: 120px;
+  height: auto;
 }
 
 /* Positioning characters over background y,x */
-.hare     { top: 1100px; left: 580px; }
+.hare     { top: 600px; left: 580px; }
 .tortoise { top: 460px; left: 200px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
