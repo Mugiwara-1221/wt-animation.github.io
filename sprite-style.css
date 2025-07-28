@@ -64,10 +64,30 @@ h2 {
   height: auto;
 }
 
+.bear {
+  width: 300px;
+  height: auto;
+}
+
+.squirrel {
+  width: 150px;
+  height: auto;
+}
+
+.bird1 {
+  width: 200px;
+  height: auto;
+}
+
+.bird2 {
+  width: 100px;
+  height: auto;
+}
+
 /* Positioning characters over background y,x */
 .hare     { top: 400px; left: 90px; }
 .tortoise { top: 450px; left: 520px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
-.bird1    { top: 100px; left: 250px; }
-.bird2    { top: 90px;  left: 700px; }
+.bird1    { top: 80px; left: 200px; }
+.bird2    { top: 120px;  left: 350px; }
