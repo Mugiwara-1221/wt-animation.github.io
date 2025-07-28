@@ -111,7 +111,7 @@
         <canvas id="drawCanvas"></canvas>
 
         <script> //added 7/28
-        // Get selected character from query string
+            // Get selected character from query string
             const urlParams = new URLSearchParams(window.location.search);
             const selectedChar = urlParams.get("char") || "none"; // default to none if not found
             window.selectedChar = selectedChar; // Pass it globally so script.js can access
