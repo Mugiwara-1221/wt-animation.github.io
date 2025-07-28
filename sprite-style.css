@@ -47,7 +47,7 @@ h2 {
   width: auto;
   height: auto;
   max-width: 80vh;
-  max-height: 90vh:
+  max-height: 100vh:
   border-radius: 12px;
 }
 
@@ -78,7 +78,7 @@ h2 {
 }
 
 /* Positioning characters over background y,x */
-.hare     { top: 600px; left: 580px; }
+.hare     { top: 500px; left: 380px; }
 .tortoise { top: 460px; left: 200px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
