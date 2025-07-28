@@ -75,19 +75,19 @@ h2 {
 }
 
 .bird1 {
-  width: 55px;
+  width: 45px;
   height: auto;
 }
 
 .bird2 {
-  width: 75px;
+  width: 65px;
   height: auto;
 }
 
 /* Positioning characters over background y,x bird1 = little bird*/
 .hare     { top: 425px; left: 90px; }
-.tortoise { top: 460px; left: 510px; }
-.bear     { top: 150px; left: 520px; }
+.tortoise { top: 470px; left: 510px; }
+.bear     { top: 140px; left: 500px; }
 .squirrel { top: 250px; left: 650px; }
-.bird1    { top: 80px; left: 300px; } 
+.bird1    { top: 100px; left: 320px; } 
 .bird2    { top: 120px;  left: 370px; }
