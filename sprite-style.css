@@ -46,8 +46,8 @@ h2 {
   display: block;
   width: auto;
   height: auto;
-  /*max-width: 80vh;*/
-  max-height: 80vh:
+  max-width: 80vh;
+  /*max-height: 80vh:*/
   border-radius: 12px;
 }
 
