@@ -55,7 +55,7 @@ h2 {
 }
 
 .hare {
-  width: 400px;
+  width: 350px;
   height: auto;
 }
 
@@ -66,7 +66,7 @@ h2 {
 
 /* Positioning characters over background y,x */
 .hare     { top: 400px; left: 90px; }
-.tortoise { top: 430px; left: 550px; }
+.tortoise { top: 450px; left: 520px; }
 .bear     { top: 290px; left: 460px; }
 .squirrel { top: 290px; left: 620px; }
 .bird1    { top: 100px; left: 250px; }
