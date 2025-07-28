@@ -60,17 +60,17 @@ h2 {
 }
 
 .tortoise {
-  width: 300px;
+  width: 280px;
   height: auto;
 }
 
 .bear {
-  width: 160px;
+  width: 170px;
   height: auto;
 }
 
 .squirrel {
-  width: 75px;
+  width: 85px;
   height: auto;
 }
 
@@ -80,14 +80,14 @@ h2 {
 }
 
 .bird2 {
-  width: 90px;
+  width: 80px;
   height: auto;
 }
 
-/* Positioning characters over background y,x */
+/* Positioning characters over background y,x bird1 = little bird*/
 .hare     { top: 430px; left: 90px; }
-.tortoise { top: 450px; left: 510px; }
-.bear     { top: 240px; left: 460px; }
-.squirrel { top: 290px; left: 620px; }
-.bird1    { top: 40px; left: 250px; }
-.bird2    { top: 80px;  left: 350px; }
+.tortoise { top: 440px; left: 510px; }
+.bear     { top: 200px; left: 480px; }
+.squirrel { top: 240px; left: 700px; }
+.bird1    { top: 70px; left: 3000px; } 
+.bird2    { top: 100px;  left: 370px; }
