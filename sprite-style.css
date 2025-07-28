@@ -13,7 +13,7 @@ body, html {
 }
 
 h2 {
-    margin-top: 30px;
+    margin-top: 20px;
     color: #b8c941;
     font-size: 3.2rem;
     font-weight: 600;
@@ -65,22 +65,22 @@ h2 {
 }
 
 .bear {
-  width: 300px;
-  height: auto;
-}
-
-.squirrel {
-  width: 150px;
-  height: auto;
-}
-
-.bird1 {
   width: 200px;
   height: auto;
 }
 
+.squirrel {
+  width: 75px;
+  height: auto;
+}
+
+.bird1 {
+  width: 80px;
+  height: auto;
+}
+
 .bird2 {
-  width: 100px;
+  width: 125px;
   height: auto;
 }
 
