@@ -6,19 +6,34 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#drawCanvas {
+    pointer-events: auto;
 }
 
 .tools {
     position: fixed;
     top: 10px;
     right: 10px;
-    width: 160px; /* Locks the width to prevent stretching */
+    width: 160px;
     z-index: 1000;
     cursor: grab;
     background: white;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -26,27 +41,26 @@ body {
 }
 
 .tools button {
-    width: 100%;         /* Make buttons full width */
+    width: 100%;
     box-sizing: border-box;
-    flex-shrink: 0;      /* Prevent stretching during drag */
-    min-height: 32px;    /* Consistent button size */
+    flex-shrink: 0;
+    min-height: 32px;
     font-size: 14px;
 }
 
 .toggleNavLeft {
-    border: 2px solid red; /*temporary*/
     position: fixed;
-    top: 0; /*temporary*/
+    top: 0;
+    left: 0;
     z-index: 10;
     width: 35px;
     height: 35px;
-    background-image: url("images/navigateLeft.png") center; /*background?*/
+    background: url("images/navigateLeft.png") center no-repeat;
     background-size: cover;
     border-bottom-right-radius: 5px;
     border: 1px solid #ccc;
     cursor: pointer;
     transition: all 200ms;
-    -webkit-transition: all 200ms;
 }
 
 #navLeft {
@@ -58,10 +72,10 @@ body {
     width: 250px;
     height: 100%;
     background: #f4f4f4;
-    overflow: auto;
+    overflow-y: auto;
     border-right: 1px solid #ccc;
     transition: all 500ms;
-    -webkit-transition: all 500ms;
+    z-index: 900;
 }
 
 #navLeft .nav-content {
@@ -71,6 +85,7 @@ body {
     flex-direction: column;
     width: 250px;
     height: 125px;
+    padding: 10px 0;
 }
 
 #navLeft .nav-content:nth-child(1) {
@@ -84,7 +99,7 @@ body {
 }
 
 #navLeft .nav-content span {
-    font-weight: 300; /*700*/
+    font-weight: 500;
 }
 
 #navLeft .nav-content input {
@@ -112,17 +127,18 @@ body {
 }
 
 table {
-    width: 200px; /*225*/
-    height: 80px; /*100*/
+    width: 200px;
+    height: 80px;
     background: #fff;
+    border-collapse: collapse;
 }
 
 th, td {
     padding: 2px;
     text-align: center;
+    border: 1px solid black;
 }
 
-table, th, td {
-    border: 1px solid black; /*var(--drawing-color);*/
-    border-collapse: collapse;
-}
+
+
+/*                                                       */
