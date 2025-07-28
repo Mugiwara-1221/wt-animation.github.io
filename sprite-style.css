@@ -46,7 +46,7 @@ h2 {
   display: block;
   width: auto;
   height: auto;
-  max-width: 80vh;
+  /*max-width: 80vh;*/
   max-height: 100vh:
   border-radius: 12px;
 }
@@ -73,7 +73,7 @@ h2 {
 }
 
 .hare {
-  width: 150px;
+  width: 180px;
   height: auto;
 }
 
