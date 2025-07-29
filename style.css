@@ -85,7 +85,7 @@ canvas {
 .nav-content button {
     width: 70%;
     padding: 8px;
-    background-color: #337ab7;
+    background-color: #BADA55; /*#337ab7;*/
     color: white;
     border: none;
     border-radius: 5px;
