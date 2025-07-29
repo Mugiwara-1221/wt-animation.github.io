@@ -24,6 +24,11 @@ const drawCanvas = document.getElementById("drawCanvas");
 const bgCtx = bgCanvas.getContext("2d");
 const ctx = drawCanvas.getContext("2d");
 
+const urlParams = new URLSearchParams(window.location.search); //added 7/28
+const selectedChar = urlParams.get("char") || "tortoise";
+window.selectedChar = selectedChar.toLowerCase();
+console.log("Selected character:", window.selectedChar);
+
 bgCanvas.width = drawCanvas.width = window.innerWidth;
 bgCanvas.height = drawCanvas.height = window.innerHeight;
 
