@@ -90,12 +90,12 @@ canvas {
     border: none;
     border-radius: 5px;
     margin: 5px 0;
-    font-size: 14px;
+    font-size: 18px;
     cursor: pointer;
 }
 
 .nav-content button:hover {
-    background-color: #285e8e;
+    background-color: #BADA55; /* #285e8e; */
 }
 
 /* Toggle Arrow */
@@ -120,6 +120,7 @@ canvas {
     top: 10px;
     right: 10px;
     width: 160px;
+    color: #BADA55; /* added 7/29 4:42 */
     background: white;
     border-radius: 8px;
     padding: 10px;
