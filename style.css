@@ -16,11 +16,23 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    pointer-events: none;
 }
 
+/* Background canvas: white + silhouette image */
+#bgCanvas {
+    z-index: 1;
+}
+
+/* Drawing canvas: user coloring */
 #drawCanvas {
-    pointer-events: auto;
+    z-index: 10;
+    pointer-events: auto; /* Drawing happens here */
+}
+
+/* Sprite outline canvas: always stays on top */
+#spriteCanvas {
+    z-index: 20;
 }
 
 .tools {
