@@ -1,6 +1,6 @@
 :root {
     --drawing-color: #000000;
-    --panel-bg: #f8f8f8;
+    --panel-bg: #4d8ad5; /*#f8f8f8;*/
     --panel-border: #ccc;
     --panel-shadow: rgba(0, 0, 0, 0.1);
 }
