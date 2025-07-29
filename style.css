@@ -69,7 +69,8 @@ canvas {
 .nav-content span {
     font-weight: bold;
     margin-bottom: 5px;
-    font-size: 14px;
+    font-size: 18px;
+    color: white; /* added 7/29 4:47 */
     text-align: center;
 }
 
@@ -90,7 +91,7 @@ canvas {
     border: none;
     border-radius: 5px;
     margin: 5px 0;
-    font-size: 18px;
+    font-size: 16px;
     cursor: pointer;
 }
 
@@ -120,7 +121,6 @@ canvas {
     top: 10px;
     right: 10px;
     width: 160px;
-    color: #BADA55; /* added 7/29 4:42 */
     background: white;
     border-radius: 8px;
     padding: 10px;
