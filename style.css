@@ -1,6 +1,6 @@
 :root {
     --drawing-color: #000000;
-    --panel-bg: #4d8ad5; /*#f8f8f8;*/
+    --panel-bg: #4d8ad5;
     --panel-border: #ccc;
     --panel-shadow: rgba(0, 0, 0, 0.1);
 }
@@ -14,7 +14,6 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* Canvas layers */
 canvas {
     position: absolute;
     top: 0;
@@ -41,34 +40,49 @@ canvas {
     top: 0;
     left: 0;
     width: 250px;
-    height: 100%;
+    height: 100vh;
     background-color: var(--panel-bg);
     border-right: 1px solid var(--panel-border);
     z-index: 100;
     overflow-y: auto;
     transition: left 0.4s ease;
     box-shadow: 2px 0 6px var(--panel-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
 }
 
+/* Section wrapper for grouping tools */
+.nav-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Individual tool settings */
 .nav-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 15px 10px;
-    border-bottom: 1px solid #ddd;
+    width: 100%;
+    padding: 10px 0;
+    border-bottom: 1px solid #ccc;
 }
 
 .nav-content label,
 .nav-content span {
     font-weight: bold;
-    margin-bottom: 5px;
     font-size: 14px;
+    margin-bottom: 5px;
+    color: white;
 }
 
 .nav-content input[type="color"],
 .nav-content input[type="range"],
 .nav-content select {
-    width: 90%;
+    width: 80%;
     margin-bottom: 8px;
 }
 
@@ -80,24 +94,18 @@ canvas {
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
-    width: 90%;
+    width: 80%;
+    margin-bottom: 4px;
 }
 
 .nav-content button:hover {
     background-color: #285e8e;
 }
 
-.nav-content .section-divider {
-    height: 1px;
-    background-color: #ddd;
-    width: 100%;
-    margin: 10px 0;
-}
-
-/* Toggle arrow */
+/* Toggle Button */
 .toggleNavLeft {
     position: fixed;
-    top: 0;
+    top: 10px;
     left: 250px;
     width: 35px;
     height: 35px;
@@ -109,33 +117,6 @@ canvas {
     cursor: pointer;
     transition: left 0.4s ease;
 }
-
-/* Draggable Tools Box (if retained) */
-.tools {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    width: 160px;
-    background: white;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 200;
-    cursor: grab;
-    user-select: none;
-}
-
-.tools button {
-    width: 100%;
-    min-height: 32px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-
 
 /* :root {
     --drawing-color: #000000;
