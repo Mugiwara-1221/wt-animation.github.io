@@ -46,10 +46,10 @@ spriteImage.src = `images/${window.selectedChar}.png`;
 
 spriteImage.onload = () => {
     const spriteBox = {
-        width: 500, /* 150*/
-        height: 500,
-        x: (bgCanvas.width - 500) / 2,
-        y: (bgCanvas.height - 500) / 2,
+        width: 600, /* 150*/
+        height: 600,
+        x: (bgCanvas.width - 600) / 2,
+        y: (bgCanvas.height - 600) / 2,
     };
 
     bgCtx.drawImage(spriteImage, spriteBox.x, spriteBox.y, spriteBox.width, spriteBox.height);
