@@ -4,6 +4,7 @@
 const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
+
 function toggleMenu() {
     if (toggleStatus === 1) {
         navLeft.style.left = "-251px";
@@ -26,41 +27,52 @@ const ctx = drawCanvas.getContext("2d");
 bgCanvas.width = drawCanvas.width = window.innerWidth;
 bgCanvas.height = drawCanvas.height = window.innerHeight;
 
-// Get selected character
+// Character selection
 const urlParams = new URLSearchParams(window.location.search);
 const selectedChar = urlParams.get("char") || "tortoise";
 window.selectedChar = selectedChar.toLowerCase();
 console.log("Selected character:", window.selectedChar);
 
-// Drawing bounds and sprite image
+// Placeholder bounding box
 let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
+
+// Offscreen cache canvas
+let spriteCacheCanvas = document.createElement("canvas");
+let spriteCacheCtx = spriteCacheCanvas.getContext("2d");
+
+function cacheSprite(spriteImage, bbox) {
+    spriteCacheCanvas.width = bbox.width;
+    spriteCacheCanvas.height = bbox.height;
+    spriteCacheCtx.clearRect(0, 0, bbox.width, bbox.height);
+    spriteCacheCtx.drawImage(spriteImage, 0, 0, bbox.width, bbox.height);
+}
+
+function drawSpriteToBG(bbox) {
+    // White background first
+    bgCtx.fillStyle = "white";
+    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    // Draw cached sprite
+    bgCtx.drawImage(spriteCacheCanvas, bbox.x, bbox.y);
+}
+
+// Load and cache sprite image
 const spriteImage = new Image();
 spriteImage.src = `images/${window.selectedChar}.png`;
 
-const spriteBox = {
-    width: 600,
-    height: 600,
-    x: (bgCanvas.width - 600) / 2,
-    y: (bgCanvas.height - 600) / 2
-};
-
 spriteImage.onload = () => {
-    // Set drawing bounds
+    const spriteBox = {
+        width: 600,
+        height: 600,
+        x: (bgCanvas.width - 600) / 2,
+        y: (bgCanvas.height - 600) / 2
+    };
+
     allowedArea = { ...spriteBox };
-
-    // Draw white background
-    bgCtx.fillStyle = "white";
-    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-
-    // Overlay sprite initially
-    drawSpriteOverlay();
+    cacheSprite(spriteImage, spriteBox);
+    drawSpriteToBG(spriteBox);
 };
 
-function drawSpriteOverlay() {
-    ctx.drawImage(spriteImage, spriteBox.x, spriteBox.y, spriteBox.width, spriteBox.height);
-}
-
-// UI Elements
+// Tool UI
 const colorInput = document.querySelector(".pick-color");
 const lineWidthInput = document.querySelector(".line-width-input");
 const colorBtn = document.querySelector(".color-btn");
@@ -116,8 +128,6 @@ function draw(e) {
 
     prevX = x;
     prevY = y;
-
-    drawSpriteOverlay(); // <== redrawing sprite above stroke
 }
 
 // Draggable panel
@@ -151,10 +161,9 @@ window.addEventListener("touchmove", duringDrag, { passive: false });
 window.addEventListener("mouseup", endDrag);
 window.addEventListener("touchend", endDrag);
 
-// Clear & Save
 function clearCanvas() {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-    drawSpriteOverlay();
+    drawSpriteToBG(allowedArea); // Redraw sprite after clearing
 }
 
 function saveImage() {
@@ -165,14 +174,16 @@ function saveImage() {
 
     mergedCtx.fillStyle = "white";
     mergedCtx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
+    drawSpriteToBG(allowedArea); // Draw sprite from cache
     mergedCtx.drawImage(drawCanvas, 0, 0);
+
     const link = document.createElement("a");
     link.download = "my_drawing.png";
     link.href = mergedCanvas.toDataURL();
     link.click();
 }
 
-// UI Event listeners
+// Tool UI Updates
 colorBtn.addEventListener("click", () => {
     brushColor = colorInput.value;
     document.querySelector(".color-info").textContent = brushColor;
@@ -186,12 +197,12 @@ lineJoinBtn.addEventListener("click", () => {
     document.querySelector(".line-join-info").textContent = ctx.lineJoin;
 });
 
-// Display initial values
+// Display initial settings
 document.querySelector(".line-join-info").textContent = ctx.lineJoin;
 document.querySelector(".line-width-info").textContent = brushSize;
 document.querySelector(".color-info").textContent = brushColor;
 
-// Mouse draw events
+// Draw events
 drawCanvas.addEventListener("mousedown", (e) => {
     const [x, y] = getPos(e);
     if (isInBounds(x, y)) {
@@ -209,7 +220,7 @@ drawCanvas.addEventListener("mouseout", () => {
 });
 drawCanvas.addEventListener("mousemove", draw);
 
-// Touch draw events
+// Touch support
 drawCanvas.addEventListener("touchstart", (e) => {
     const [x, y] = getPos(e);
     if (isInBounds(x, y)) {
