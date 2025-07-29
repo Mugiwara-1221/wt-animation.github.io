@@ -278,7 +278,7 @@ spriteImage.src = `images/${window.selectedChar}.png`;
 
 spriteImage.onload = () => {
     const spriteBox = {
-        width: 600, /* 150*/
+        width: 600, /* 150
         height: 600,
         x: (bgCanvas.width - 600) / 2,
         y: (bgCanvas.height - 600) / 2,
