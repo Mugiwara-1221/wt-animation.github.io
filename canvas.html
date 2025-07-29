@@ -99,37 +99,14 @@
                 </table>
             </div>
         </nav>
-
         <div class="tools" id="toolPanel">
             <button onclick="setTool('draw')">Brush</button>
             <button onclick="setTool('erase')">Eraser</button>
-            <button onclick="clearCanvas()">Clear</button>
-            <button onclick="saveImage()">Save</button>
+            <button onclick="clearCanvas()">Clear Page</button>
+            <button onclick="saveImage()">Save Page</button>
         </div>
-
         <canvas id="bgCanvas"></canvas>
         <canvas id="drawCanvas"></canvas>
-
         <script src="script.js"></script>
-        <!-- <script>
-            const panel = document.getElementById("toolPanel");
-            let offsetX, offsetY, isDragging = false;
-
-            panel.addEventListener("mousedown", (e) => {
-                isDragging = true;
-                offsetX = e.clientX - panel.offsetLeft;
-                offsetY = e.clientY - panel.offsetTop;
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (!isDragging) return;
-                panel.style.left = `${e.clientX - offsetX}px`;
-                panel.style.top = `${e.clientY - offsetY}px`;
-            });
-
-            document.addEventListener("mouseup", () => {
-                isDragging = false;
-            });
-        </script> -->
     </body>
 </html>
