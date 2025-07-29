@@ -4,7 +4,6 @@
 const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
-
 function toggleMenu() {
     if (toggleStatus === 1) {
         navLeft.style.left = "-251px";
@@ -33,202 +32,40 @@ const selectedChar = urlParams.get("char") || "tortoise";
 window.selectedChar = selectedChar.toLowerCase();
 console.log("Selected character:", window.selectedChar);
 
-// Fill background with white
-bgCtx.fillStyle = "white";
-bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-
-// Load and draw sprite image
+// Drawing bounds and sprite image
 let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
-
 const spriteImage = new Image();
 spriteImage.src = `images/${window.selectedChar}.png`;
 
-spriteImage.onload = () => {
-    const spriteBox = {
-        width: 600,
-        height: 600,
-        x: (bgCanvas.width - 600) / 2,
-        y: (bgCanvas.height - 600) / 2
-    };
+const spriteBox = {
+    width: 600,
+    height: 600,
+    x: (bgCanvas.width - 600) / 2,
+    y: (bgCanvas.height - 600) / 2
+};
 
-    // Set bounds
+spriteImage.onload = () => {
+    // Set drawing bounds
     allowedArea = { ...spriteBox };
 
-    // Redraw white background (in case needed)
+    // Draw white background
     bgCtx.fillStyle = "white";
     bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
 
-    // Draw sprite on top of white background
-    bgCtx.drawImage(spriteImage, spriteBox.x, spriteBox.y, spriteBox.width, spriteBox.height);
+    // Overlay sprite initially
+    drawSpriteOverlay();
 };
+
+function drawSpriteOverlay() {
+    ctx.drawImage(spriteImage, spriteBox.x, spriteBox.y, spriteBox.width, spriteBox.height);
+}
 
 // UI Elements
 const colorInput = document.querySelector(".pick-color");
 const lineWidthInput = document.querySelector(".line-width-input");
 const colorBtn = document.querySelector(".color-btn");
-const lineWidthBtn = document.querySelector(".line-width-btn");
-const lineJoinBtn = document.querySelector(".line-join-btn");
+const l
 
-let drawing = false;
-let currentTool = "draw";
-let brushSize = parseInt(lineWidthInput.value);
-let brushColor = colorInput.value;
-let prevX = null;
-let prevY = null;
-
-ctx.lineJoin = document.querySelector(".line-join-select").value;
-ctx.lineCap = "round";
-ctx.lineWidth = brushSize;
-ctx.strokeStyle = brushColor;
-
-function setTool(tool) {
-    currentTool = tool;
-}
-
-function getPos(e) {
-    const rect = drawCanvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-    return [x, y];
-}
-
-function isInBounds(x, y) {
-    return (
-        x >= allowedArea.x &&
-        x <= allowedArea.x + allowedArea.width &&
-        y >= allowedArea.y &&
-        y <= allowedArea.y + allowedArea.height
-    );
-}
-
-function draw(e) {
-    if (!drawing) return;
-    const [x, y] = getPos(e);
-    if (!isInBounds(x, y)) return;
-
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = "round";
-    ctx.globalCompositeOperation = currentTool === "erase" ? "destination-out" : "source-over";
-    ctx.strokeStyle = brushColor;
-
-    ctx.beginPath();
-    ctx.moveTo(prevX ?? x, prevY ?? y);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-
-    prevX = x;
-    prevY = y;
-}
-
-// Draggable tool panel
-const toolsPanel = document.querySelector(".tools");
-let isDragging = false;
-let offsetX, offsetY;
-
-function startDrag(e) {
-    isDragging = true;
-    toolsPanel.style.cursor = "grabbing";
-    const rect = toolsPanel.getBoundingClientRect();
-    offsetX = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    offsetY = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-}
-function duringDrag(e) {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.clientX || e.touches?.[0]?.clientX;
-    const y = e.clientY || e.touches?.[0]?.clientY;
-    toolsPanel.style.left = `${x - offsetX}px`;
-    toolsPanel.style.top = `${y - offsetY}px`;
-}
-function endDrag() {
-    isDragging = false;
-    toolsPanel.style.cursor = "grab";
-}
-toolsPanel.addEventListener("mousedown", startDrag);
-toolsPanel.addEventListener("touchstart", startDrag);
-window.addEventListener("mousemove", duringDrag);
-window.addEventListener("touchmove", duringDrag, { passive: false });
-window.addEventListener("mouseup", endDrag);
-window.addEventListener("touchend", endDrag);
-
-function clearCanvas() {
-    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-}
-
-function saveImage() {
-    const mergedCanvas = document.createElement("canvas");
-    mergedCanvas.width = drawCanvas.width;
-    mergedCanvas.height = drawCanvas.height;
-    const mergedCtx = mergedCanvas.getContext("2d");
-
-    mergedCtx.fillStyle = "white";
-    mergedCtx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
-    mergedCtx.drawImage(bgCanvas, 0, 0);
-    mergedCtx.drawImage(drawCanvas, 0, 0);
-
-    const link = document.createElement("a");
-    link.download = "my_drawing.png";
-    link.href = mergedCanvas.toDataURL();
-    link.click();
-}
-
-// UI Button Events
-colorBtn.addEventListener("click", () => {
-    brushColor = colorInput.value;
-    document.querySelector(".color-info").textContent = brushColor;
-});
-lineWidthBtn.addEventListener("click", () => {
-    brushSize = parseInt(lineWidthInput.value);
-    document.querySelector(".line-width-info").textContent = brushSize;
-});
-lineJoinBtn.addEventListener("click", () => {
-    ctx.lineJoin = document.querySelector(".line-join-select").value;
-    document.querySelector(".line-join-info").textContent = ctx.lineJoin;
-});
-
-// Display initial values
-document.querySelector(".line-join-info").textContent = ctx.lineJoin;
-document.querySelector(".line-width-info").textContent = brushSize;
-document.querySelector(".color-info").textContent = brushColor;
-
-// Drawing events
-drawCanvas.addEventListener("mousedown", (e) => {
-    const [x, y] = getPos(e);
-    if (isInBounds(x, y)) {
-        drawing = true;
-        [prevX, prevY] = [x, y];
-    }
-});
-drawCanvas.addEventListener("mouseup", () => {
-    drawing = false;
-    prevX = prevY = null;
-});
-drawCanvas.addEventListener("mouseout", () => {
-    drawing = false;
-    prevX = prevY = null;
-});
-drawCanvas.addEventListener("mousemove", draw);
-
-// Touch support
-drawCanvas.addEventListener("touchstart", (e) => {
-    const [x, y] = getPos(e);
-    if (isInBounds(x, y)) {
-        drawing = true;
-        [prevX, prevY] = [x, y];
-    }
-});
-drawCanvas.addEventListener("touchend", () => {
-    drawing = false;
-    prevX = prevY = null;
-});
-drawCanvas.addEventListener("touchcancel", () => {
-    drawing = false;
-    prevX = prevY = null;
-});
-drawCanvas.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    draw(e.touches[0]);
-}, { passive: false });
 
 
 /* "use strict";
