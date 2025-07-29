@@ -4,7 +4,6 @@
 const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
-
 function toggleMenu() {
     if (toggleStatus === 1) {
         navLeft.style.left = "-251px";
@@ -19,57 +18,56 @@ function toggleMenu() {
 toggleLeft.addEventListener("click", toggleMenu);
 
 // Canvas setup
-const bgCanvas = document.getElementById("bgCanvas");
-const drawCanvas = document.getElementById("drawCanvas");
+const bgCanvas = document.getElementById("bgCanvas");       // white background
+const drawCanvas = document.getElementById("drawCanvas");   // drawing
+const spriteCanvas = document.getElementById("spriteCanvas"); // sprite outline (top)
 const bgCtx = bgCanvas.getContext("2d");
 const ctx = drawCanvas.getContext("2d");
+const spriteCtx = spriteCanvas.getContext("2d");
 
-bgCanvas.width = drawCanvas.width = window.innerWidth;
-bgCanvas.height = drawCanvas.height = window.innerHeight;
+bgCanvas.width = drawCanvas.width = spriteCanvas.width = window.innerWidth;
+bgCanvas.height = drawCanvas.height = spriteCanvas.height = window.innerHeight;
 
-// Character selection
+// Get selected character
 const urlParams = new URLSearchParams(window.location.search);
 const selectedChar = urlParams.get("char") || "tortoise";
 window.selectedChar = selectedChar.toLowerCase();
 console.log("Selected character:", window.selectedChar);
 
-// Placeholder bounding box
+// Bounding box
 let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 
-// Offscreen cache canvas
-let spriteCacheCanvas = document.createElement("canvas");
-let spriteCacheCtx = spriteCacheCanvas.getContext("2d");
-
-function cacheSprite(spriteImage, bbox) {
-    spriteCacheCanvas.width = bbox.width;
-    spriteCacheCanvas.height = bbox.height;
-    spriteCacheCtx.clearRect(0, 0, bbox.width, bbox.height);
-    spriteCacheCtx.drawImage(spriteImage, 0, 0, bbox.width, bbox.height);
-}
-
-function drawSpriteToBG(bbox) {
-    // White background first
-    bgCtx.fillStyle = "white";
-    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-    // Draw cached sprite
-    bgCtx.drawImage(spriteCacheCanvas, bbox.x, bbox.y);
-}
-
-// Load and cache sprite image
+// Sprite caching
 const spriteImage = new Image();
 spriteImage.src = `images/${window.selectedChar}.png`;
+const spriteCache = document.createElement("canvas");
+const spriteCacheCtx = spriteCache.getContext("2d");
+
+function cacheAndDrawSprite(img, box) {
+    spriteCache.width = box.width;
+    spriteCache.height = box.height;
+    spriteCacheCtx.clearRect(0, 0, box.width, box.height);
+    spriteCacheCtx.drawImage(img, 0, 0, box.width, box.height);
+
+    spriteCtx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+    spriteCtx.drawImage(spriteCache, box.x, box.y);
+}
 
 spriteImage.onload = () => {
-    const spriteBox = {
+    const box = {
         width: 600,
         height: 600,
         x: (bgCanvas.width - 600) / 2,
         y: (bgCanvas.height - 600) / 2
     };
+    allowedArea = { ...box };
 
-    allowedArea = { ...spriteBox };
-    cacheSprite(spriteImage, spriteBox);
-    drawSpriteToBG(spriteBox);
+    // Draw solid white bg
+    bgCtx.fillStyle = "white";
+    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+    // Cache and draw the sprite outline on top
+    cacheAndDrawSprite(spriteImage, box);
 };
 
 // Tool UI
@@ -117,7 +115,6 @@ function draw(e) {
     if (!isInBounds(x, y)) return;
 
     ctx.lineWidth = brushSize;
-    ctx.lineCap = "round";
     ctx.globalCompositeOperation = currentTool === "erase" ? "destination-out" : "source-over";
     ctx.strokeStyle = brushColor;
 
@@ -130,7 +127,7 @@ function draw(e) {
     prevY = y;
 }
 
-// Draggable panel
+// Draggable tools panel
 const toolsPanel = document.querySelector(".tools");
 let isDragging = false;
 let offsetX, offsetY;
@@ -163,27 +160,29 @@ window.addEventListener("touchend", endDrag);
 
 function clearCanvas() {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-    drawSpriteToBG(allowedArea); // Redraw sprite after clearing
+    spriteCtx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+    cacheAndDrawSprite(spriteImage, allowedArea); // Redraw sprite on top
 }
 
 function saveImage() {
-    const mergedCanvas = document.createElement("canvas");
-    mergedCanvas.width = drawCanvas.width;
-    mergedCanvas.height = drawCanvas.height;
-    const mergedCtx = mergedCanvas.getContext("2d");
+    const merged = document.createElement("canvas");
+    merged.width = drawCanvas.width;
+    merged.height = drawCanvas.height;
+    const mCtx = merged.getContext("2d");
 
-    mergedCtx.fillStyle = "white";
-    mergedCtx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
-    drawSpriteToBG(allowedArea); // Draw sprite from cache
-    mergedCtx.drawImage(drawCanvas, 0, 0);
+    // Background
+    mCtx.fillStyle = "white";
+    mCtx.fillRect(0, 0, merged.width, merged.height);
+    mCtx.drawImage(drawCanvas, 0, 0);
+    mCtx.drawImage(spriteCanvas, 0, 0); // draw outline last
 
     const link = document.createElement("a");
     link.download = "my_drawing.png";
-    link.href = mergedCanvas.toDataURL();
+    link.href = merged.toDataURL();
     link.click();
 }
 
-// Tool UI Updates
+// Tool button listeners
 colorBtn.addEventListener("click", () => {
     brushColor = colorInput.value;
     document.querySelector(".color-info").textContent = brushColor;
@@ -197,12 +196,12 @@ lineJoinBtn.addEventListener("click", () => {
     document.querySelector(".line-join-info").textContent = ctx.lineJoin;
 });
 
-// Display initial settings
+// Init UI
 document.querySelector(".line-join-info").textContent = ctx.lineJoin;
 document.querySelector(".line-width-info").textContent = brushSize;
 document.querySelector(".color-info").textContent = brushColor;
 
-// Draw events
+// Mouse/touch drawing
 drawCanvas.addEventListener("mousedown", (e) => {
     const [x, y] = getPos(e);
     if (isInBounds(x, y)) {
