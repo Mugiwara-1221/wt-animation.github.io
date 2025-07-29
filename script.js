@@ -64,9 +64,171 @@ function drawSpriteOverlay() {
 const colorInput = document.querySelector(".pick-color");
 const lineWidthInput = document.querySelector(".line-width-input");
 const colorBtn = document.querySelector(".color-btn");
-const l
+const lineWidthBtn = document.querySelector(".line-width-btn");
+const lineJoinBtn = document.querySelector(".line-join-btn");
 
+let drawing = false;
+let currentTool = "draw";
+let brushSize = parseInt(lineWidthInput.value);
+let brushColor = colorInput.value;
+let prevX = null;
+let prevY = null;
 
+ctx.lineJoin = document.querySelector(".line-join-select").value;
+ctx.lineCap = "round";
+ctx.lineWidth = brushSize;
+ctx.strokeStyle = brushColor;
+
+function setTool(tool) {
+    currentTool = tool;
+}
+
+function getPos(e) {
+    const rect = drawCanvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+    return [x, y];
+}
+
+function isInBounds(x, y) {
+    return (
+        x >= allowedArea.x &&
+        x <= allowedArea.x + allowedArea.width &&
+        y >= allowedArea.y &&
+        y <= allowedArea.y + allowedArea.height
+    );
+}
+
+function draw(e) {
+    if (!drawing) return;
+    const [x, y] = getPos(e);
+    if (!isInBounds(x, y)) return;
+
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = "round";
+    ctx.globalCompositeOperation = currentTool === "erase" ? "destination-out" : "source-over";
+    ctx.strokeStyle = brushColor;
+
+    ctx.beginPath();
+    ctx.moveTo(prevX ?? x, prevY ?? y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    prevX = x;
+    prevY = y;
+
+    drawSpriteOverlay(); // <== redrawing sprite above stroke
+}
+
+// Draggable panel
+const toolsPanel = document.querySelector(".tools");
+let isDragging = false;
+let offsetX, offsetY;
+
+function startDrag(e) {
+    isDragging = true;
+    toolsPanel.style.cursor = "grabbing";
+    const rect = toolsPanel.getBoundingClientRect();
+    offsetX = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+    offsetY = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+}
+function duringDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.clientX || e.touches?.[0]?.clientX;
+    const y = e.clientY || e.touches?.[0]?.clientY;
+    toolsPanel.style.left = `${x - offsetX}px`;
+    toolsPanel.style.top = `${y - offsetY}px`;
+}
+function endDrag() {
+    isDragging = false;
+    toolsPanel.style.cursor = "grab";
+}
+toolsPanel.addEventListener("mousedown", startDrag);
+toolsPanel.addEventListener("touchstart", startDrag);
+window.addEventListener("mousemove", duringDrag);
+window.addEventListener("touchmove", duringDrag, { passive: false });
+window.addEventListener("mouseup", endDrag);
+window.addEventListener("touchend", endDrag);
+
+// Clear & Save
+function clearCanvas() {
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    drawSpriteOverlay();
+}
+
+function saveImage() {
+    const mergedCanvas = document.createElement("canvas");
+    mergedCanvas.width = drawCanvas.width;
+    mergedCanvas.height = drawCanvas.height;
+    const mergedCtx = mergedCanvas.getContext("2d");
+
+    mergedCtx.fillStyle = "white";
+    mergedCtx.fillRect(0, 0, mergedCanvas.width, mergedCanvas.height);
+    mergedCtx.drawImage(drawCanvas, 0, 0);
+    const link = document.createElement("a");
+    link.download = "my_drawing.png";
+    link.href = mergedCanvas.toDataURL();
+    link.click();
+}
+
+// UI Event listeners
+colorBtn.addEventListener("click", () => {
+    brushColor = colorInput.value;
+    document.querySelector(".color-info").textContent = brushColor;
+});
+lineWidthBtn.addEventListener("click", () => {
+    brushSize = parseInt(lineWidthInput.value);
+    document.querySelector(".line-width-info").textContent = brushSize;
+});
+lineJoinBtn.addEventListener("click", () => {
+    ctx.lineJoin = document.querySelector(".line-join-select").value;
+    document.querySelector(".line-join-info").textContent = ctx.lineJoin;
+});
+
+// Display initial values
+document.querySelector(".line-join-info").textContent = ctx.lineJoin;
+document.querySelector(".line-width-info").textContent = brushSize;
+document.querySelector(".color-info").textContent = brushColor;
+
+// Mouse draw events
+drawCanvas.addEventListener("mousedown", (e) => {
+    const [x, y] = getPos(e);
+    if (isInBounds(x, y)) {
+        drawing = true;
+        [prevX, prevY] = [x, y];
+    }
+});
+drawCanvas.addEventListener("mouseup", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("mouseout", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("mousemove", draw);
+
+// Touch draw events
+drawCanvas.addEventListener("touchstart", (e) => {
+    const [x, y] = getPos(e);
+    if (isInBounds(x, y)) {
+        drawing = true;
+        [prevX, prevY] = [x, y];
+    }
+});
+drawCanvas.addEventListener("touchend", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("touchcancel", () => {
+    drawing = false;
+    prevX = prevY = null;
+});
+drawCanvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    draw(e.touches[0]);
+}, { passive: false });
 
 /* "use strict";
 
