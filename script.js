@@ -39,10 +39,6 @@ bgImage.onload = () => {
     bgCtx.drawImage(bgImage, 0, 0, bgCanvas.width, bgCanvas.height);
 };
 
-// Parse selected character from URL
-const urlParams = new URLSearchParams(window.location.search);
-const selectedChar = urlParams.get("char");
-
 // Define bounding boxes (adjust as needed for your layout)
 const spriteBoundingBoxes = {
     duck1: { x: 150, y: 200, width: 120, height: 120 },
