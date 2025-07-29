@@ -1,7 +1,7 @@
 :root {
     --drawing-color: #000000;
     --panel-bg: #4d8ad5;
-    --panel-border: #ccc;
+    --panel-border: white;
     --panel-shadow: rgba(0, 0, 0, 0.1);
 }
 
