@@ -237,6 +237,25 @@ toggleLeft.addEventListener("click", toggleMenu);
 
 
 
+// SLIDER STYLING
+
+
+
+// Update slider fill effect dynamically
+function updateSliderFill(slider) {
+    const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+    slider.style.backgroundSize = `${value}% 100%`;
+}
+
+// Apply on load and input for brush and opacity
+[brushSlider, opacitySlider].forEach(slider => {
+    updateSliderFill(slider); // Initial
+    slider.addEventListener("input", () => updateSliderFill(slider));
+});
+
+
+
+
 /*"use strict";
 
 // Navigation toggle
