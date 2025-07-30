@@ -146,14 +146,84 @@ canvas {
 
 
 
-/* ==== Slider Styling ==== */
+/* ==== Slider Styling (Updated) ==== */
 
-/* Webkit browsers (Chrome, Edge, Safari) */
 input[type="range"] {
     -webkit-appearance: none;
     width: 80%;
     height: 8px;
-    background: #ddd; /* Track color */
+    background: white;
+    border-radius: 4px;
+    outline: none;
+    background-image: linear-gradient(to right, #BADA55 var(--percent, 0%), white var(--percent, 0%));
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #BADA55;
+    cursor: pointer;
+    margin-top: -4px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+    background: white;
+    height: 8px;
+    border-radius: 4px;
+}
+input[type="range"]::-moz-range-progress {
+    background-color: #BADA55;
+    height: 8px;
+}
+input[type="range"]::-moz-range-thumb {
+    background: #BADA55;
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* IE / Edge */
+input[type="range"]::-ms-track {
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+    height: 8px;
+}
+input[type="range"]::-ms-fill-lower {
+    background: #BADA55;
+    border-radius: 4px;
+}
+input[type="range"]::-ms-fill-upper {
+    background: white;
+    border-radius: 4px;
+}
+input[type="range"]::-ms-thumb {
+    background: #BADA55;
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* ==== Slider Styling ====
+
+/* Webkit browsers (Chrome, Edge, Safari)
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 80%;
+    height: 8px;
+    background: #ddd; /* Track color
     border-radius: 4px;
     outline: none;
 }
@@ -163,12 +233,12 @@ input[type="range"]::-webkit-slider-thumb {
     height: 16px;
     width: 16px;
     border-radius: 50%;
-    background: #f08030; /* Thumb color */
+    background: #f08030; /* Thumb color 
     cursor: pointer;
-    margin-top: -4px; /* Align thumb with track */
+    margin-top: -4px; /* Align thumb with track 
 }
 
-/* Firefox */
+/* Firefox 
 input[type="range"]::-moz-range-track {
     background: #ddd;
     height: 8px;
@@ -184,7 +254,7 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
 }
 
-/* Microsoft Edge / IE */
+/* Microsoft Edge / IE 
 input[type="range"]::-ms-track {
     background: transparent;
     border-color: transparent;
@@ -211,14 +281,14 @@ input[type="range"]::-ms-thumb {
     cursor: pointer;
 }
 
-/* === Slider Track Fill Styling Using CSS Variables === */
+/* === Slider Track Fill Styling Using CSS Variables === 
 input[type="range"] {
     --fill: #f08030;
     background: linear-gradient(to right, var(--fill) 0%, #ddd 0%) no-repeat;
     background-size: 0% 100%;
 }
 
-/* WebKit */
+/* WebKit 
 input[type="range"]::-webkit-slider-runnable-track {
     background: transparent;
 }
@@ -227,7 +297,7 @@ input[type="range"]::-webkit-slider-thumb {
     z-index: 1;
 }
 
-/* Firefox */
+/* Firefox 
 input[type="range"]::-moz-range-track {
     background: transparent;
-}
+} */
