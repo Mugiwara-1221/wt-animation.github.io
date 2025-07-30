@@ -252,3 +252,14 @@ function updateSliderFill(slider) {
     updateSliderFill(slider); // Initial
     slider.addEventListener("input", () => updateSliderFill(slider));
 });
+
+// Added 7/30 10:27am
+
+document.querySelectorAll('input[type="range"]').forEach(slider => {
+    const updateBackground = () => {
+        const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+        slider.style.setProperty('--percent', `${val}%`);
+    };
+    slider.addEventListener('input', updateBackground);
+    updateBackground(); // initialize on load
+});
