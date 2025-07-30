@@ -210,3 +210,24 @@ input[type="range"]::-ms-thumb {
     border-radius: 50%;
     cursor: pointer;
 }
+
+/* === Slider Track Fill Styling Using CSS Variables === */
+input[type="range"] {
+    --fill: #f08030;
+    background: linear-gradient(to right, var(--fill) 0%, #ddd 0%) no-repeat;
+    background-size: 0% 100%;
+}
+
+/* WebKit */
+input[type="range"]::-webkit-slider-runnable-track {
+    background: transparent;
+}
+input[type="range"]::-webkit-slider-thumb {
+    position: relative;
+    z-index: 1;
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+    background: transparent;
+}
