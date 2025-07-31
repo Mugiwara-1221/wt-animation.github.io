@@ -181,12 +181,21 @@ drawCanvas.addEventListener("touchend", () => {
     prevX = prevY = null;
 });
 
-// Clear + Save
+// Clear Page
+
 function clearCanvas() {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     cacheAndDrawSprite(spriteImage, allowedArea);
 }
-function saveImage() {
+
+// Save Image Options
+
+function toggleSaveOptions() {
+    const saveDropdown = document.getElementById("saveOptions");
+    saveDropdown.classList.toggle("hidden");
+}
+
+function downloadImage() {
     const merged = document.createElement("canvas");
     merged.width = drawCanvas.width;
     merged.height = drawCanvas.height;
@@ -201,9 +210,45 @@ function saveImage() {
     link.download = "my_drawing.png";
     link.href = merged.toDataURL();
     link.click();
+
+    // Optional: Hide dropdown after action
+    document.getElementById("saveOptions").classList.add("hidden");
 }
 
-// Zoom
+function sendToStoryboard() {
+    const merged = document.createElement("canvas");
+    merged.width = drawCanvas.width;
+    merged.height = drawCanvas.height;
+    const mCtx = merged.getContext("2d");
+
+    mCtx.fillStyle = "white";
+    mCtx.fillRect(0, 0, merged.width, merged.height);
+    mCtx.drawImage(drawCanvas, 0, 0);
+    mCtx.drawImage(spriteCanvas, 0, 0);
+
+    const dataURL = merged.toDataURL();
+    localStorage.setItem("coloredCharacter", dataURL);
+    window.location.href = "storyboard.html";
+}
+
+/* function saveImage() {
+    const merged = document.createElement("canvas");
+    merged.width = drawCanvas.width;
+    merged.height = drawCanvas.height;
+    const mCtx = merged.getContext("2d");
+
+    mCtx.fillStyle = "white";
+    mCtx.fillRect(0, 0, merged.width, merged.height);
+    mCtx.drawImage(drawCanvas, 0, 0);
+    mCtx.drawImage(spriteCanvas, 0, 0);
+
+    const link = document.createElement("a");
+    link.download = "my_drawing.png";
+    link.href = merged.toDataURL();
+    link.click();
+} */
+
+// Zoom In + Out
 function zoomIn() {
     zoomLevel *= 1.1;
     applyZoom();
