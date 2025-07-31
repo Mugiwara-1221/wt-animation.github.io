@@ -150,16 +150,13 @@ input[type="range"] {
     -webkit-appearance: none;
     width: 80%;
     height: 8px;
-    background: white;
+    background: linear-gradient(to right, #BADA55 0%, #BADA55 var(--percent), white var(--percent), white 100%);
     border-radius: 4px;
     outline: none;
-    background-image: linear-gradient(to right, #BADA55 var(--percent, 0%), white var(--percent, 0%));
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
     padding: 0;
 }
 
-/* WebKit (Chrome, Edge, Safari) */
+/* WebKit */
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     height: 16px;
@@ -167,9 +164,8 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     background: #BADA55;
     cursor: pointer;
+    margin-top: -4px;
     position: relative;
-    top: 50%;
-    transform: translateY(-50%);
     z-index: 1;
 }
 
