@@ -241,6 +241,22 @@ toggleLeft.addEventListener("click", toggleMenu);
 
 
 
+//added 7/30
+
+// Dynamically update --percent for all sliders
+function updateSliderFill(slider) {
+    const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+    slider.style.setProperty('--percent', `${value}%`);
+}
+
+// Attach to all sliders on input
+document.querySelectorAll('input[type="range"]').forEach(slider => {
+    updateSliderFill(slider);
+    slider.addEventListener('input', () => updateSliderFill(slider));
+});
+
+//added 7/30 ^
+
 // Update slider fill effect dynamically
 function updateSliderFill(slider) {
     const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
