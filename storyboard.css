@@ -1,1 +1,32 @@
 
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+.scene-container {
+  position: relative;
+  display: inline-block;
+  margin-top: 20px;
+}
+
+#storyBackground {
+  width: 800px;
+  height: auto;
+}
+
+#coloredCharacter {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: 150px;
+  transform: translateX(-50%);
+  animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-20px); }
+}
