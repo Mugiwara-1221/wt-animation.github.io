@@ -257,10 +257,10 @@ document.querySelectorAll('input[type="range"]').forEach(slider => {
 
 //added 7/30 ^
 
-// Update slider fill effect dynamically
+// Slider fill effect dynamically
 function updateSliderFill(slider) {
     const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-    slider.style.backgroundSize = `${value}% 100%`;
+    slider.style.setProperty('--percent', `${value}%`);
 }
 
 // Apply on load and input for brush and opacity
