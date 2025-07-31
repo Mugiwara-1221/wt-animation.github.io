@@ -156,7 +156,6 @@ input[type="range"] {
     background-image: linear-gradient(to right, #BADA55 var(--percent, 0%), white var(--percent, 0%));
     background-size: 100% 100%;
     background-repeat: no-repeat;
-    vertical-align: middle;
     padding: 0;
 }
 
@@ -186,30 +185,6 @@ input[type="range"]::-moz-range-progress {
     border-radius: 4px;
 }
 input[type="range"]::-moz-range-thumb {
-    background: #BADA55;
-    border: none;
-    height: 16px;
-    width: 16px;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-/* Microsoft Edge / IE */
-input[type="range"]::-ms-track {
-    background: transparent;
-    border-color: transparent;
-    color: transparent;
-    height: 8px;
-}
-input[type="range"]::-ms-fill-lower {
-    background: #BADA55;
-    border-radius: 4px;
-}
-input[type="range"]::-ms-fill-upper {
-    background: white;
-    border-radius: 4px;
-}
-input[type="range"]::-ms-thumb {
     background: #BADA55;
     border: none;
     height: 16px;
