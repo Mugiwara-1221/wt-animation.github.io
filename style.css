@@ -140,6 +140,22 @@ canvas {
     cursor: pointer;
 }
 
+/* Save dropdown styling */
+.save-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+    background-color: white;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.hidden {
+    display: none;
+}
+
 
 
 /* Slider Styling */
