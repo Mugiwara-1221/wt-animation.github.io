@@ -165,6 +165,7 @@ canvas {
     padding: 5px;
     font-size: 14px;
     border: none;
+    align-items: center; /* Added */
     background-color: #ffffff;
     cursor: pointer;
 }
