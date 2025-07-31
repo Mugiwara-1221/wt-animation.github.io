@@ -44,7 +44,11 @@
             <button onclick="undo()">Undo</button>
             <button onclick="redo()">Redo</button>
             <button onclick="clearCanvas()">Clear</button>
-            <button onclick="saveImage()">Save</button>
+            <button onclick="toggleSaveOptions()">Save ▼</button>
+            <div id="saveOptions" class="save-options hidden">
+                <button onclick="downloadImage()">Download Image</button>
+                <button onclick="sendToStoryboard()">Send to Storyboard</button>
+            </div>
         </div>
 
         <div class="nav-content">
