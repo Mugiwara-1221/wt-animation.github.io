@@ -224,12 +224,35 @@ function sendToStoryboard() {
     merged.height = drawCanvas.height;
     const mCtx = merged.getContext("2d");
 
-    mCtx.fillStyle = "white";
-    mCtx.fillRect(0, 0, merged.width, merged.height);
     mCtx.drawImage(drawCanvas, 0, 0);
-    mCtx.drawImage(spriteCanvas, 0, 0);
 
-    const dataURL = merged.toDataURL();
+    // Get non-transparent bounding box
+    const imageData = mCtx.getImageData(0, 0, merged.width, merged.height);
+    const data = imageData.data;
+
+    let top = merged.height, bottom = 0, left = merged.width, right = 0;
+    for (let y = 0; y < merged.height; y++) {
+        for (let x = 0; x < merged.width; x++) {
+            const index = (y * merged.width + x) * 4 + 3;
+            if (data[index] > 0) {
+                if (x < left) left = x;
+                if (x > right) right = x;
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+            }
+        }
+    }
+
+    const cropWidth = right - left + 1;
+    const cropHeight = bottom - top + 1;
+    const croppedCanvas = document.createElement("canvas");
+    croppedCanvas.width = cropWidth;
+    croppedCanvas.height = cropHeight;
+    const croppedCtx = croppedCanvas.getContext("2d");
+
+    croppedCtx.drawImage(merged, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    const dataURL = croppedCanvas.toDataURL();
+
     localStorage.setItem("coloredCharacter", dataURL);
     window.location.href = "storyboard.html";
 }
