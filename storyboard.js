@@ -9,3 +9,7 @@ if (coloredDataURL && selectedChar) {
 } else {
   alert("No character image found. Please color your character first.");
 }
+
+localStorage.removeItem("coloredCharacter");
+localStorage.removeItem("selectedCharacter");
+
