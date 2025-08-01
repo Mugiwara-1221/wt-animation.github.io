@@ -19,14 +19,31 @@ body {
 
 #coloredCharacter {
   position: absolute;
-  left: 50%;
-  bottom: 20px;
-  width: 150px;
-  transform: translateX(-50%);
   animation: bounce 2s infinite ease-in-out;
 }
 
+.character {
+  position: absolute;
+  cursor: pointer;
+}
+
+/* Size adjustments */
+.hare     { width: 350px; height: auto; }
+.tortoise { width: 280px; height: auto; }
+.bear     { width: 145px; height: auto; }
+.squirrel { width: 85px;  height: auto; }
+.bird1    { width: 45px;  height: auto; }
+.bird2    { width: 60px;  height: auto; }
+
+/* Positioning characters over background */
+.hare     { top: 423px; left: 90px; }
+.tortoise { top: 466px; left: 510px; }
+.bear     { top: 156px; left: 505px; }
+.squirrel { top: 260px; left: 640px; }
+.bird1    { top: 142px; left: 337px; } 
+.bird2    { top: 147px; left: 385px; }
+
 @keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-20px); }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-20px); }
 }
