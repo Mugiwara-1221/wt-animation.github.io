@@ -1,77 +1,69 @@
 
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: #f0f0f0;
-  text-align: center;
+const coloredDataURL = localStorage.getItem("coloredCharacter");
+const selectedChar = localStorage.getItem("selectedCharacter");
+
+const sceneWrapper = document.querySelector(".scene-wrapper");
+
+if (coloredDataURL && selectedChar) {
+  const img = document.createElement("img");
+  img.src = coloredDataURL;
+  img.classList.add("character", selectedChar.toLowerCase());
+  sceneWrapper.appendChild(img);
+
+  if (selectedChar.toLowerCase() === "tortoise") {
+    startTortoiseAnimation(img); // <-- animate outline on top
+  }
+
+} else {
+  alert("No character image found. Please color your character first.");
 }
 
-.scene-wrapper {
-  position: relative;
-  display: inline-block;
-  border: 4px solid #ffffff;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+// Clear storage to prevent reuse
+localStorage.removeItem("coloredCharacter");
+localStorage.removeItem("selectedCharacter");
+
+// Function to animate outline frames for tortoise
+function startTortoiseAnimation(underImage) {
+  const frames = [
+    "images/frames/tortoise/tortoise1.png",
+    "images/frames/tortoise/tortoise2.png",
+    "images/frames/tortoise/tortoise3.png",
+    "images/frames/tortoise/tortoise4.png"
+  ];
+
+  const animCanvas = document.createElement("canvas");
+  animCanvas.className = "animation-layer tortoise";
+  sceneWrapper.appendChild(animCanvas);
+
+  const ctx = animCanvas.getContext("2d");
+
+  function resizeCanvas() {
+    const bounds = underImage.getBoundingClientRect();
+    animCanvas.width = underImage.width;
+    animCanvas.height = underImage.height;
+    animCanvas.style.left = underImage.style.left || underImage.offsetLeft + "px";
+    animCanvas.style.top = underImage.style.top || underImage.offsetTop + "px";
+  }
+
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  let frameIndex = 0;
+  const frameImages = frames.map(src => {
+    const img = new Image();
+    img.src = src;
+    return img;
+  });
+
+  function drawFrame() {
+    ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+    const frame = frameImages[frameIndex];
+    if (frame.complete) {
+      ctx.drawImage(frame, 0, 0, animCanvas.width, animCanvas.height);
+    }
+    frameIndex = (frameIndex + 1) % frameImages.length;
+  }
+
+  setInterval(drawFrame, 200); // Change frame every 200ms
 }
 
-#storyBackground {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 110vh;
-  border-radius: 12px;
-}
-
-#coloredCharacter {
-  position: absolute;
-  animation: bounce 2s infinite ease-in-out;
-}
-
-.character {
-  position: absolute;
-  cursor: pointer;
-}
-
-.hare {
-  width: 350px;
-  height: auto;
-}
-
-.tortoise {
-  width: 280px;
-  height: auto;
-}
-
-.bear {
-  width: 145px;
-  height: auto;
-}
-
-.squirrel {
-  width: 85px;
-  height: auto;
-}
-
-.bird1 {
-  width: 45px;
-  height: auto;
-}
-
-.bird2 {
-  width: 60px;
-  height: auto;
-}
-
-/* Positioning characters over background */
-.hare     { top: 423px; left: 90px; }
-.tortoise { top: 466px; left: 510px; }
-.bear     { top: 156px; left: 505px; }
-.squirrel { top: 260px; left: 640px; }
-.bird1    { top: 142px; left: 337px; } 
-.bird2    { top: 147px; left: 385px; }
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-20px); }
-}
