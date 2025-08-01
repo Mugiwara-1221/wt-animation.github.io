@@ -8,9 +8,15 @@
 </head>
 <body>
   <h1>Story Scene: The Hare and The Tortoise</h1>
+
   <div class="scene-wrapper">
     <img id="storyBackground" src="images/colored-background2.png" alt="Story Scene">
+
+    <!-- Static image fallback for non-animated characters -->
     <img id="coloredCharacter" alt="Your Character">
+
+    <!-- Container for animation frames -->
+    <canvas id="animatedCharacter" width="300" height="300" style="position: absolute; display: none;"></canvas>
   </div>
 
   <script src="storyboard.js"></script>
