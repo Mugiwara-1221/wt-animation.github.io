@@ -6,10 +6,13 @@ body {
   text-align: center;
 }
 
-.scene-container {
+.scene-wrapper {
   position: relative;
   display: inline-block;
-  margin-top: 20px;
+  border: 4px solid #ffffff;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #storyBackground {
