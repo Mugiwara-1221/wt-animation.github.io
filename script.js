@@ -219,40 +219,20 @@ function downloadImage() {
 }
 
 function sendToStoryboard() {
-    const merged = document.createElement("canvas");
-    merged.width = drawCanvas.width;
-    merged.height = drawCanvas.height;
-    const mCtx = merged.getContext("2d");
+    const spriteBounds = allowedArea;  // this was set when the sprite was loaded
+    const trimmedCanvas = document.createElement("canvas");
+    trimmedCanvas.width = spriteBounds.width;
+    trimmedCanvas.height = spriteBounds.height;
+    const tCtx = trimmedCanvas.getContext("2d");
 
-    mCtx.drawImage(drawCanvas, 0, 0);
+    // Draw color layer (cropped to sprite bounds)
+    tCtx.drawImage(drawCanvas, spriteBounds.x, spriteBounds.y, spriteBounds.width, spriteBounds.height, 0, 0, spriteBounds.width, spriteBounds.height);
 
-    // Get non-transparent bounding box
-    const imageData = mCtx.getImageData(0, 0, merged.width, merged.height);
-    const data = imageData.data;
+    // Draw sprite outline layer (transparent parts preserved)
+    tCtx.drawImage(spriteCache, 0, 0);
 
-    let top = merged.height, bottom = 0, left = merged.width, right = 0;
-    for (let y = 0; y < merged.height; y++) {
-        for (let x = 0; x < merged.width; x++) {
-            const index = (y * merged.width + x) * 4 + 3;
-            if (data[index] > 0) {
-                if (x < left) left = x;
-                if (x > right) right = x;
-                if (y < top) top = y;
-                if (y > bottom) bottom = y;
-            }
-        }
-    }
-
-    const cropWidth = right - left + 1;
-    const cropHeight = bottom - top + 1;
-    const croppedCanvas = document.createElement("canvas");
-    croppedCanvas.width = cropWidth;
-    croppedCanvas.height = cropHeight;
-    const croppedCtx = croppedCanvas.getContext("2d");
-
-    croppedCtx.drawImage(merged, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-    const dataURL = croppedCanvas.toDataURL();
-
+    // Export to PNG
+    const dataURL = trimmedCanvas.toDataURL("image/png");
     localStorage.setItem("coloredCharacter", dataURL);
     window.location.href = "storyboard.html";
 }
