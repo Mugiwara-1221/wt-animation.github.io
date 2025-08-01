@@ -13,8 +13,11 @@ body {
 }
 
 #storyBackground {
-  width: 800px;
+  display: block;
+  width: auto;
   height: auto;
+  max-width: 110vh;
+  border-radius: 12px;
 }
 
 #coloredCharacter {
