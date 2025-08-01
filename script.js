@@ -24,6 +24,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const selectedChar = urlParams.get("char") || "tortoise";
 window.selectedChar = selectedChar.toLowerCase();
 
+// Store the character in localStorage for use in storyboard.html 8/1 10:36
+localStorage.setItem("selectedCharacter", window.selectedChar);
+
 // Sprite caching
 const spriteImage = new Image();
 spriteImage.src = `images/${window.selectedChar}.png`;
