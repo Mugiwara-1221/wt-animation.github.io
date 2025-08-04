@@ -1,1 +1,44 @@
 
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background-color: #f4f4f4;
+  padding: 40px;
+}
+
+.session-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.session-box {
+  background: white;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input[type="text"] {
+  padding: 8px;
+  width: 70%;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4d8ad5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #3c6db3;
+}
+
+.error {
+  color: red;
+  font-size: 0.9em;
+}
