@@ -1,62 +1,57 @@
 
+// sprite-select.js
 import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
-// Firebase Realtime Database
-const db = getDatabase();
-const sessionId = localStorage.getItem("sessionId"); // Ensure session ID is saved earlier
+// Get session ID from query string
+const urlParams = new URLSearchParams(window.location.search);
+const sessionId = urlParams.get("session");
+
 if (!sessionId) {
-    alert("No session ID found. Please join or create a session first.");
-    window.location.href = "session.html"; // adjust if needed
+  alert("No session ID found. Please join or create a session first.");
+  window.location.href = "session.html"; // fallback if no session
 }
 
-const characters = document.querySelectorAll(".character");
+const db = getDatabase();
+const charactersRef = ref(db, `sessions/${sessionId}/characters`);
 
-// Step 1: Check lock status
-function updateCharacterStatus() {
-    const sessionRef = ref(db, `sessions/${sessionId}/characters`);
-    onValue(sessionRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        characters.forEach(char => {
-            const charKey = char.dataset.char;
-            const lockedBy = data[charKey];
-            if (lockedBy) {
-                char.style.opacity = 0.4;
-                char.style.pointerEvents = "none";
-            } else {
-                char.style.opacity = 1;
-                char.style.pointerEvents = "auto";
-            }
-        });
-    });
-}
+// Load current character lock state
+onValue(charactersRef, snapshot => {
+  const data = snapshot.val() || {};
 
-// Step 2: Handle character selection and locking
-characters.forEach(char => {
-    char.addEventListener("click", () => {
-        const selectedChar = char.dataset.char;
-        const charRef = ref(db, `sessions/${sessionId}/characters/${selectedChar}`);
-
-        // Lock the character only if not already locked
-        get(charRef).then(snapshot => {
-            if (snapshot.exists()) {
-                alert("This character has already been selected.");
-                return;
-            }
-
-            const userId = localStorage.getItem("userId") || crypto.randomUUID();
-            localStorage.setItem("userId", userId);
-            localStorage.setItem("selectedCharacter", selectedChar);
-
-            set(charRef, userId).then(() => {
-                console.log(`Locked ${selectedChar} for ${userId}`);
-                window.location.href = `canvas.html?char=${selectedChar}`;
-            });
-        });
-    });
+  document.querySelectorAll(".character").forEach(char => {
+    const charKey = char.getAttribute("data-char");
+    if (data[charKey]) {
+      char.classList.add("locked");
+      char.style.opacity = "0.4";
+      char.style.pointerEvents = "none";
+    } else {
+      char.classList.remove("locked");
+      char.style.opacity = "1";
+      char.style.pointerEvents = "auto";
+    }
+  });
 });
 
-// Initial fetch
-updateCharacterStatus();
+// Handle selection
+document.querySelectorAll(".character").forEach(char => {
+  char.addEventListener("click", async () => {
+    const selectedChar = char.getAttribute("data-char");
+    const charRef = ref(db, `sessions/${sessionId}/characters/${selectedChar}`);
+
+    // Check if character is already taken
+    const snapshot = await get(charRef);
+    if (snapshot.exists()) {
+      alert("Sorry, this character is already taken.");
+      return;
+    }
+
+    // Lock character in database
+    await set(charRef, true);
+
+    // Redirect to canvas with char and session
+    window.location.href = `canvas.html?char=${selectedChar}&session=${sessionId}`;
+  });
+});
 
 /*// Character selection logic
 document.querySelectorAll(".character").forEach(char => {
