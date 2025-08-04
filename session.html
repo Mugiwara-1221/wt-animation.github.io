@@ -1,1 +1,29 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Join or Create a Session</title>
+  <link rel="stylesheet" href="session.css">
+  <script type="module" src="firebase-init.js"></script>
+  <script type="module" src="session.js"></script>
+</head>
+<body>
+  <div class="session-container">
+    <h1>Welcome to Windtree Animation</h1>
+
+    <div class="session-box">
+      <h2>Create a Session</h2>
+      <button id="createSessionBtn">Generate Session</button>
+      <p id="sessionCodeDisplay"></p>
+    </div>
+
+    <div class="session-box">
+      <h2>Join a Session</h2>
+      <input type="text" id="joinCodeInput" placeholder="Enter Session Code">
+      <button id="joinSessionBtn">Join</button>
+      <p id="joinError" class="error"></p>
+    </div>
+  </div>
+</body>
+</html>
