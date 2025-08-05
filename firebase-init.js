@@ -4,7 +4,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getDatabase } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyCRO_uKJ5RFU61rOgS7_xmFvGTt-kcw6f4",
   authDomain: "animationcollab-15353.firebaseapp.com",   // Replace with actual
   projectId: "animationcollab-15353",                     // Replace with actual
