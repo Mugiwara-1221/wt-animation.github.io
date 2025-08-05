@@ -1,37 +1,37 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-import { firebaseConfig } from "./firebase-init.js"; // if you exported it there
+import { firebaseConfig } from "./firebase-init.js"; // Make sure firebase-init.js exports this
 
-// Initialize Firebase
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Elements
+// DOM Elements
 const createBtn = document.getElementById("createSession");
 const joinBtn = document.getElementById("joinSession");
 const joinInput = document.getElementById("joinCode");
 
-// Create a 6-digit session code
+// Utility: Generate 6-digit session code
 function generateSessionCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Create session
+// Create new session
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
   const sessionRef = ref(db, "sessions/" + sessionCode);
 
   await set(sessionRef, {
     createdAt: Date.now(),
-    characters: {}, // Tracks locked characters
+    characters: {}
   });
 
   localStorage.setItem("sessionCode", sessionCode);
-  window.location.href = "index.html";
+  window.location.href = `index.html?session=${sessionCode}`;
 });
 
-// Join session
+// Join existing session
 joinBtn.addEventListener("click", async () => {
   const code = joinInput.value.trim();
   if (code.length !== 6) {
@@ -42,7 +42,7 @@ joinBtn.addEventListener("click", async () => {
   const snapshot = await get(child(ref(db), "sessions/" + code));
   if (snapshot.exists()) {
     localStorage.setItem("sessionCode", code);
-    window.location.href = "index.html";
+    window.location.href = `index.html?session=${code}`;
   } else {
     alert("Session not found.");
   }
