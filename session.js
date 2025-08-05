@@ -22,6 +22,7 @@ function generateSessionCode() {
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
   const sessionRef = ref(db, "sessions/" + sessionCode);
+  console.log("Here");
 
   await set(sessionRef, {
     createdAt: Date.now(),
