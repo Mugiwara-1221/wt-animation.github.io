@@ -22,7 +22,7 @@ function generateSessionCode() {
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
   const members = [];
-  for ( i=0; i<6; i++) {
+  for ( let i=0; i<6; i++) {
     members.push(i);
   }
   const sessionRef = set(ref(db, "sessions/" + sessionCode), {
