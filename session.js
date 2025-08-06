@@ -25,16 +25,7 @@ createBtn.addEventListener("click", async () => {
   for ( let i=0; i<6; i++) {
     members.push(i);
   }
-  const sessionRef = set(ref(db, "sessions/" + sessionCode), {
-    id1: members[0],
-    id2: members[1],
-    id3: members[2],
-    id4: members[3],
-    id5: members[4],
-    id6: members[5],
-  });
-
-  console.log('worked');
+  const sessionRef = ref(db, "sessions/" + sessionCode);
 
   await set(sessionRef, {
     createdAt: Date.now(),
