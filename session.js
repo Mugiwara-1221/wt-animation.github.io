@@ -23,6 +23,11 @@ createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
   const sessionRef = ref(db, "sessions/" + sessionCode);
 
+  const members = [];
+  for ( i=0; i<6; i++) {
+    members.push(i);
+  }
+
   await set(sessionRef, {
     createdAt: Date.now(),
     characters: {}
