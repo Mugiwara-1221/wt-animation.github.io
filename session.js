@@ -30,12 +30,12 @@ createBtn.addEventListener("click", async () => {
   await set(sessionRef, {
     createdAt: Date.now(),
     characters: {},
-    id1: members[0],
-    id2: members[1],
-    id3: members[2],
-    id4: members[3],
-    id5: members[4],
-    id6: members[5],
+    id1: 1,
+    id2: 2,
+    id3: 3,
+    id4: 4,
+    id5: 5,
+    id6: 6,
   });
 
   localStorage.setItem("sessionCode", sessionCode);
