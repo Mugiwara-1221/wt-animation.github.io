@@ -36,7 +36,7 @@ input[type="text"] {
   margin-bottom: 10px;
 }
 
-button {
+.session-box button#joinSession {
   padding: 10px 20px;
   background-color: #4d8ad5;
   color: white;
