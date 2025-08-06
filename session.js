@@ -21,7 +21,6 @@ function generateSessionCode() {
 // Create a new session
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
-  console.log("Here");
   const sessionRef = ref(db, "sessions/" + sessionCode);
 
   await set(sessionRef, {
