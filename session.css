@@ -36,13 +36,15 @@ input[type="text"] {
   margin-bottom: 10px;
 }
 
-.session-box button#joinSession {
+button {
   padding: 10px 20px;
   background-color: #4d8ad5;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  max-width: fit-content;
+  max-height: fit-content;
 }
 
 button:hover {
