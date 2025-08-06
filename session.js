@@ -11,6 +11,7 @@ const db = getDatabase(app);
 const createBtn = document.getElementById("createSession");
 const joinBtn = document.getElementById("joinSession");
 const joinInput = document.getElementById("joinCode");
+const joinId = document.getElementById("joinCodeId");
 const sessionCodeDisplay = document.getElementById("sessionCodeDisplay");
 
 // Utility: Generate 6-digit session code
@@ -46,8 +47,13 @@ createBtn.addEventListener("click", async () => {
 // Join an existing session
 joinBtn.addEventListener("click", async () => {
   const code = joinInput.value.trim();
-  if (code.length !== 6) {
+  const idCode = joinId.value.trim();
+  if (code.length !== 6 )  {
     alert("Please enter a valid 6-digit session code.");
+    return;
+  }
+  if (!idCode) {
+    alert("Enter Member ID");
     return;
   }
 
