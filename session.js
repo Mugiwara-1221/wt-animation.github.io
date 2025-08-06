@@ -58,7 +58,8 @@ joinBtn.addEventListener("click", async () => {
   }
 
   const snapshot = await get(child(ref(db), "sessions/" + code));
-  if (snapshot.exists()) {
+  const idCheck = await get(child(ref(db), `sessions/${code}/${idCode}`))
+  if (snapshot.exists() && idCheck.exists()) {
     localStorage.setItem("sessionCode", code);
     window.location.href = `index.html?session=${code}`;
   } else {
