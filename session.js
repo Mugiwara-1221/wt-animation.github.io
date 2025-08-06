@@ -22,10 +22,9 @@ function generateSessionCode() {
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
   const members = [];
-  for ( let i=0; i<6; i++) {
+  for ( let i=1; i<7; i++) {
     members.push(i);
   }
-
   const sessionRef = ref(db, "sessions/" + sessionCode);
 
   await set(sessionRef, {
@@ -38,15 +37,6 @@ createBtn.addEventListener("click", async () => {
     id5: members[4],
     id6: members[5],
   });
-
-  /*await set(sessionRef, {
-    id1: members[0],
-    id2: members[1],
-    id3: members[2],
-    id4: members[3],
-    id5: members[4],
-    id6: members[5],
-  })*/
 
   localStorage.setItem("sessionCode", sessionCode);
   sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
