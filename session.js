@@ -34,7 +34,7 @@ createBtn.addEventListener("click", async () => {
     id6: members[5],
   });
 
-  console.log(sessionRef);
+  console.log('worked');
 
   await set(sessionRef, {
     createdAt: Date.now(),
