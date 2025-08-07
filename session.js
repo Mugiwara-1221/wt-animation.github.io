@@ -71,7 +71,7 @@ joinBtn.addEventListener("click", async () => {
     return;
   }
   if (!idCode || idCode > 6) {
-    alert("Enter Member ID");
+    alert("Enter Valid Member ID");
     return;
   }
 
@@ -80,7 +80,7 @@ joinBtn.addEventListener("click", async () => {
   claimSlot(code, idCode, deviceToken);
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   console.log(tokenCheck.val());
-  if (snapshot.exists() && tokenCheck.exists()) {
+  if (snapshot.exists() && tokenCheck.val() === deviceToken) {
     localStorage.setItem("sessionCode", code);
     window.location.href = `index.html?session=${code}`;
     console.log(tokenCheck.val());
