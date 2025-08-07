@@ -70,7 +70,7 @@ joinBtn.addEventListener("click", async () => {
     alert("Please enter a valid 6-digit session code.");
     return;
   }
-  if (!idCode) {
+  if (!idCode || idCode > 6) {
     alert("Enter Member ID");
     return;
   }
