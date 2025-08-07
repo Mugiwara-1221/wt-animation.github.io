@@ -78,7 +78,7 @@ joinBtn.addEventListener("click", async () => {
 
   const snapshot = await get(child(ref(db), "sessions/" + code));
   const idCheck = await get(child(ref(db), `sessions/${code}/id${idCode}`));
-  const userCheck = userMemberId(code, idCode)
+  const userCheck = useMemberId(code, idCode)
   console.log(userCheck);
   if (snapshot.exists() && idCheck.exists()) {
     localStorage.setItem("sessionCode", code);
