@@ -19,6 +19,18 @@ function generateSessionCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function getDeviceToken() {
+  let token = localStorage.getItem('deviceToken');
+  if (!token) {
+    token = crypto.randomUUID(); 
+    localStorage.setItem('deviceToken', token);
+  }
+  return token;
+}
+
+const deviceToken = getDeviceToken();
+console.log('This device token is:', deviceToken);
+
 // Create a new session
 createBtn.addEventListener("click", async () => {
   const sessionCode = generateSessionCode();
