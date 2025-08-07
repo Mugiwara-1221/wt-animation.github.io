@@ -56,7 +56,9 @@ async function claimSlot(sessionCode, slotKey, deviceToken) {
 
   const result = await runTransaction(slotRef, (current) => {
     console.log(current);
-    if (current != null) return; // already taken
+    if (current != null) {
+      alert("This ID is already Taken");
+      return}; // already taken
     return deviceToken; // mark with unique device token
   });
 
