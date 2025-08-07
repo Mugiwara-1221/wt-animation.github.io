@@ -48,13 +48,14 @@ async function useMemberId(sessionId, idKey) {
   const idRef = ref(db, `sessions/${sessionId}/id${idKey}`);
 
   const result = await runTransaction(idRef, (current) => {
-    if (current === null || current === 0) {
+    let user = "User Used";
+    if (current === null) {
       return; // ID doesn’t exist or already used
     }
-    return 0; // Mark as used by setting to 0 (or any sentinel)
+    return user; // Mark as used by setting to 0 (or any sentinel)
   });
 
-  if (!result.committed) {
+  if (result.committed) {
     console.log("Member ID doesn’t exist or is already used.");
     return false;
   }
