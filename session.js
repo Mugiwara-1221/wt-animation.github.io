@@ -55,6 +55,7 @@ async function claimSlot(sessionCode, slotKey, deviceToken) {
   const slotRef = ref(db, `sessions/${sessionCode}/members/${slotKey}`);
 
   const result = await runTransaction(slotRef, (current) => {
+    console.log(current);
     if (current != null) return; // already taken
     return deviceToken; // mark with unique device token
   });
