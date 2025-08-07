@@ -29,7 +29,6 @@ function getDeviceToken() {
 }
 
 const deviceToken = getDeviceToken();
-console.log('This device token is:', deviceToken);
 
 // Create a new session
 createBtn.addEventListener("click", async () => {
@@ -39,12 +38,7 @@ createBtn.addEventListener("click", async () => {
   await set(sessionRef, {
     createdAt: Date.now(),
     characters: {},
-    id1: 1,
-    id2: 2,
-    id3: 3,
-    id4: 4,
-    id5: 5,
-    id6: 6
+    members: {id1: null, id2: null, id3: null, id4: null, id5: null, id6: null}
   });
 
   localStorage.setItem("sessionCode", sessionCode);
@@ -56,24 +50,16 @@ createBtn.addEventListener("click", async () => {
   }, 2000);
 });
 
-async function useMemberId(sessionId, idKey) {
-  const idRef = ref(db, `sessions/${sessionId}/id${idKey}`);
+async function claimSlot(sessionCode, slotKey, deviceToken) {
+  const db = getDatabase();
+  const slotRef = ref(db, `sessions/${sessionCode}/members/${slotKey}`);
 
-  const result = await runTransaction(idRef, (current) => {
-    let user = "User Used";
-    if (current === null) {
-      return; // ID doesn’t exist or already used
-    }
-    return user; // Mark as used by setting to 0 (or any sentinel)
+  const result = await runTransaction(slotRef, (current) => {
+    if (current != null) return; // already taken
+    return deviceToken; // mark with unique device token
   });
 
-  if (result.committed) {
-    console.log("Member ID doesn’t exist or is already used.");
-    return false;
-  }
-
-  console.log("Member ID successfully marked as used!");
-  return true;
+  return result.committed; // true if slot claimed successfully
 }
 
 // Join an existing session
@@ -90,9 +76,8 @@ joinBtn.addEventListener("click", async () => {
   }
 
   const snapshot = await get(child(ref(db), "sessions/" + code));
-  const idCheck = await get(child(ref(db), `sessions/${code}/id${idCode}`));
-  const userCheck = useMemberId(code, idCode)
-  console.log(userCheck);
+  const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
+  claimSlot(code, idCode, deviceToken);
   if (snapshot.exists() && idCheck.exists()) {
     localStorage.setItem("sessionCode", code);
     window.location.href = `index.html?session=${code}`;
