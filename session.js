@@ -83,6 +83,7 @@ joinBtn.addEventListener("click", async () => {
   if (snapshot.exists() && tokenCheck.exists()) {
     localStorage.setItem("sessionCode", code);
     window.location.href = `index.html?session=${code}`;
+    console.log(tokenCheck.val());
   } else if (!idCheck.exists()) {
     alert("All Members have Joined this Session.");
   } else {
