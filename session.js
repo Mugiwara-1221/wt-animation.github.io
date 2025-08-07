@@ -79,8 +79,7 @@ joinBtn.addEventListener("click", async () => {
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
   const tokenCheck = await get(ref(db), `sessions/${code}/members/${idCode}`);
-  console.log(tokenCheck.value());
-  console.log("Hello");
+  console.log(tokenCheck);
   if (snapshot.exists() && idCheck === deviceToken) {
     localStorage.setItem("sessionCode", code);
     window.location.href = `index.html?session=${code}`;
