@@ -1,5 +1,5 @@
 
-import { colorAFrameAdvanced } from './js/color-map-advanced.js';
+// import { colorAFrameAdvanced } from './js/color-map-advanced.js';
 
 const coloredDataURL = localStorage.getItem("coloredCharacter");
 const selectedChar = (localStorage.getItem("selectedCharacter") || "").toLowerCase();
