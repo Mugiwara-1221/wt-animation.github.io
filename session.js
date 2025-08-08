@@ -57,7 +57,7 @@ async function claimSlot(sessionCode, slotKey, deviceToken) {
 
   const result = await runTransaction(slotRef, (current) => {
     if (current != null) {
-      alert("This ID is already Taken");
+      //alert("This ID is already Taken");
       return
     }; // already taken
     return deviceToken; // mark with unique device token
@@ -83,6 +83,10 @@ joinBtn.addEventListener("click", async () => {
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
+  if (tokenCheck != null) {
+    alert("This ID is already Taken");
+    return
+  }
   console.log(tokenCheck.val());
   if (snapshot.exists() && tokenCheck.val() === deviceToken) {
     localStorage.setItem("sessionCode", code);
