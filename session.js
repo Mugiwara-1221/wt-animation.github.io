@@ -83,7 +83,7 @@ joinBtn.addEventListener("click", async () => {
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
-  if (tokenCheck != null) {
+  if (tokenCheck != tokenCheck) {
     alert("This ID is already Taken");
     return
   }
