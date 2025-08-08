@@ -43,6 +43,7 @@ createBtn.addEventListener("click", async () => {
 
   localStorage.setItem("sessionCode", sessionCode);
   sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+  claimSlot(sessionCode, 1, deviceToken)
 
   // Wait 2 seconds so user sees the session code
   setTimeout(() => {
@@ -59,7 +60,6 @@ async function claimSlot(sessionCode, slotKey, deviceToken) {
       alert("This ID is already Taken");
       return
     }; // already taken
-    console.log(current);
     return deviceToken; // mark with unique device token
   });
 
@@ -82,7 +82,6 @@ joinBtn.addEventListener("click", async () => {
   const snapshot = await get(child(ref(db), "sessions/" + code));
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
-  console.log(claimSlot(code, idCode, deviceToken));
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   console.log(tokenCheck.val());
   if (snapshot.exists() && tokenCheck.val() === deviceToken) {
