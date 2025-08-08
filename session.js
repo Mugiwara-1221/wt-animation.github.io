@@ -83,10 +83,10 @@ joinBtn.addEventListener("click", async () => {
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
-  if (tokenCheck != deviceToken) {
+  /*if (tokenCheck != deviceToken) {
     alert("This ID is already Taken");
     return
-  }
+  }*/
   console.log(tokenCheck.val());
   if (snapshot.exists() && tokenCheck.val() === deviceToken) {
     localStorage.setItem("sessionCode", code);
