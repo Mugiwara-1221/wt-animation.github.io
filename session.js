@@ -82,6 +82,7 @@ joinBtn.addEventListener("click", async () => {
   const snapshot = await get(child(ref(db), "sessions/" + code));
   const idCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   claimSlot(code, idCode, deviceToken);
+  console.log(claimSlot(code, idCode, deviceToken));
   const tokenCheck = await get(child(ref(db), `sessions/${code}/members/${idCode}`));
   console.log(tokenCheck.val());
   if (snapshot.exists() && tokenCheck.val() === deviceToken) {
