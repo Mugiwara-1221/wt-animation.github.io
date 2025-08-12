@@ -12,7 +12,7 @@ async function api(path, options = {}) {
 export const getSession = (sessionCode) =>
   api(`/session/${sessionCode}`, { method: "GET" });
 
-async function api(path, options = {}) {
+/*async function api(path, options = {}) {
   const url = `${API_BASE}${path}${API_KEY ? `?code=${API_KEY}` : ""}`;
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -21,7 +21,7 @@ async function api(path, options = {}) {
   });
   if (!res.ok) throw new Error(await res.text());
   return res.status === 204 ? null : res.json();
-}
+}*/
 
 // Sessions
 export const createSession = (maxSeats=6) =>
