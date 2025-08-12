@@ -1,11 +1,11 @@
 // azure-api.js
-const API_BASE = "https://<YOUR-FUNCTION-APP>.azurewebsites.net/api";
-const API_KEY  = "<YOUR_FUNCTION_KEY>"; // or leave empty if using anonymous
+const API_BASE = "https://windtreetechnology.documents.azure.com:443/"; // or leave empty if using anonymous
 
 async function api(path, options = {}) {
   const url = `${API_BASE}${path}${API_KEY ? `?code=${API_KEY}` : ""}`;
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options
   });
   if (!res.ok) throw new Error(await res.text());
