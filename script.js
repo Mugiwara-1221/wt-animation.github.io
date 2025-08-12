@@ -1,4 +1,7 @@
+
 "use strict";
+
+import { submitDrawing } from "./azure-api.js";
 
 // Canvas setup
 const bgCanvas = document.getElementById("bgCanvas");
@@ -23,8 +26,6 @@ window.addEventListener("resize", resizeCanvas);
 const urlParams = new URLSearchParams(window.location.search);
 const selectedChar = urlParams.get("char") || "tortoise";
 window.selectedChar = selectedChar.toLowerCase();
-
-// Store the character in localStorage for use in storyboard.html 8/1 10:36
 localStorage.setItem("selectedCharacter", window.selectedChar);
 
 // Sprite caching
@@ -85,11 +86,9 @@ brushSlider.addEventListener("input", () => {
 opacitySlider.addEventListener("input", () => {
     opacity = parseFloat(opacitySlider.value);
 });
-brushTypeSelect.addEventListener("change", () => {
-    // Optional: Set specific settings for brush type later
-});
+brushTypeSelect.addEventListener("change", () => {});
 
-// Drawing
+// Drawing helpers
 function getPos(e) {
     const rect = drawCanvas.getBoundingClientRect();
     const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
@@ -114,8 +113,8 @@ let redoStack = [];
 
 function saveHistory() {
     history.push(ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
-    if (history.length > 50) history.shift(); // Prevent memory overload
-    redoStack = []; // Clear redo stack
+    if (history.length > 50) history.shift();
+    redoStack = [];
 }
 function undo() {
     if (history.length === 0) return;
@@ -184,15 +183,13 @@ drawCanvas.addEventListener("touchend", () => {
     prevX = prevY = null;
 });
 
-// Clear Page
-
+// Clear Canvas
 function clearCanvas() {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     cacheAndDrawSprite(spriteImage, allowedArea);
 }
 
-// Save Image Options
-
+// Save Options
 function toggleSaveOptions() {
     const saveDropdown = document.getElementById("saveOptions");
     saveDropdown.classList.toggle("hidden");
@@ -214,74 +211,39 @@ function downloadImage() {
     link.href = merged.toDataURL();
     link.click();
 
-    // Optional: Hide dropdown after action
     document.getElementById("saveOptions").classList.add("hidden");
 }
 
-function sendToStoryboard() {
-    const spriteBounds = allowedArea;  // this was set when the sprite was loaded
+// Send to storyboard + Azure
+async function sendToStoryboard() {
+    const spriteBounds = allowedArea;
     const trimmedCanvas = document.createElement("canvas");
     trimmedCanvas.width = spriteBounds.width;
     trimmedCanvas.height = spriteBounds.height;
     const tCtx = trimmedCanvas.getContext("2d");
 
-    // Draw color layer (cropped to sprite bounds)
     tCtx.drawImage(drawCanvas, spriteBounds.x, spriteBounds.y, spriteBounds.width, spriteBounds.height, 0, 0, spriteBounds.width, spriteBounds.height);
-
-    // Draw sprite outline layer (transparent parts preserved)
     tCtx.drawImage(spriteCache, 0, 0);
 
-    // Export to PNG
     const dataURL = trimmedCanvas.toDataURL("image/png");
     localStorage.setItem("coloredCharacter", dataURL);
-    window.location.href = "storyboard.html";
+
+    const sessionCode = new URLSearchParams(window.location.search).get("session") 
+        || localStorage.getItem("sessionCode");
+    const uid = localStorage.getItem("deviceToken") || crypto.randomUUID();
+
+    try {
+        await submitDrawing(sessionCode, window.selectedChar, dataURL, uid);
+    } catch (e) {
+        console.warn("Server submit failed, showing local only:", e.message);
+    }
+
+    window.location.href = `storyboard.html?session=${sessionCode}`;
 }
 
-import { submitDrawing } from "./azure-api.js";
-
-// ... inside sendToStoryboard()
-const dataURL = trimmedCanvas.toDataURL("image/png");
-localStorage.setItem("coloredCharacter", dataURL);  // keep local fallback
-
-const sessionCode = new URLSearchParams(window.location.search).get("session") 
-  || localStorage.getItem("sessionCode");
-const uid = localStorage.getItem("deviceToken") || crypto.randomUUID();
-
-try {
-  await submitDrawing(sessionCode, window.selectedChar, dataURL, uid);
-} catch (e) {
-  console.warn("Server submit failed, showing local only:", e.message);
-}
-
-window.location.href = `storyboard.html?session=${sessionCode}`;
-
-
-/* function saveImage() {
-    const merged = document.createElement("canvas");
-    merged.width = drawCanvas.width;
-    merged.height = drawCanvas.height;
-    const mCtx = merged.getContext("2d");
-
-    mCtx.fillStyle = "white";
-    mCtx.fillRect(0, 0, merged.width, merged.height);
-    mCtx.drawImage(drawCanvas, 0, 0);
-    mCtx.drawImage(spriteCanvas, 0, 0);
-
-    const link = document.createElement("a");
-    link.download = "my_drawing.png";
-    link.href = merged.toDataURL();
-    link.click();
-} */
-
-// Zoom In + Out
-function zoomIn() {
-    zoomLevel *= 1.1;
-    applyZoom();
-}
-function zoomOut() {
-    zoomLevel /= 1.1;
-    applyZoom();
-}
+// Zoom
+function zoomIn() { zoomLevel *= 1.1; applyZoom(); }
+function zoomOut() { zoomLevel /= 1.1; applyZoom(); }
 function applyZoom() {
     drawCanvas.style.transform = `scale(${zoomLevel})`;
     spriteCanvas.style.transform = `scale(${zoomLevel})`;
@@ -305,47 +267,12 @@ function toggleMenu() {
 }
 toggleLeft.addEventListener("click", toggleMenu);
 
-
-
-// SLIDER STYLING
-
-
-
-//added 7/30
-
-// Dynamically update --percent for all sliders
+// Slider styling
 function updateSliderFill(slider) {
     const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
     slider.style.setProperty('--percent', `${value}%`);
 }
-
-// Attach to all sliders on input
-document.querySelectorAll('input[type="range"]').forEach(slider => {
-    updateSliderFill(slider);
-    slider.addEventListener('input', () => updateSliderFill(slider));
-});
-
-//added 7/30 ^
-
-// Slider fill effect dynamically
-function updateSliderFill(slider) {
-    const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-    slider.style.setProperty('--percent', `${value}%`);
-}
-
-// Apply on load and input for brush and opacity
 [brushSlider, opacitySlider].forEach(slider => {
-    updateSliderFill(slider); // Initial
+    updateSliderFill(slider);
     slider.addEventListener("input", () => updateSliderFill(slider));
-});
-
-// Added 7/30 10:27am
-
-document.querySelectorAll('input[type="range"]').forEach(slider => {
-    const updateBackground = () => {
-        const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
-        slider.style.setProperty('--percent', `${val}%`);
-    };
-    slider.addEventListener('input', updateBackground);
-    updateBackground(); // initialize on load
 });
