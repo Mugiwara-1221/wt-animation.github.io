@@ -1,6 +1,6 @@
 // azure-api.js
 import { DefaultAzureCredential } from "https://cdn.skypack.dev/@azure/identity";
-import { SecretClient } from "@azure/keyvault-secrets";
+import { SecretClient } from "https://cdn.skypack.dev/@azure/keyvault-secrets";
 
 const API_BASE = "https://windtreetechnology.documents.azure.com:443/"; // or leave empty if using anonymous
 
