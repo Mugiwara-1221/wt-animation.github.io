@@ -1,16 +1,28 @@
 
-// import { colorAFrameAdvanced } from './js/color-map-advanced.js';
-
-const coloredDataURL = localStorage.getItem("coloredCharacter");
-const selectedChar = (localStorage.getItem("selectedCharacter") || "").toLowerCase();
+// storyboard.js
+import { getSubmissions } from "./azure-api.js";
 
 const container = document.querySelector(".scene-wrapper");
 const fallbackImg = document.getElementById("coloredCharacter");
 
-if (!coloredDataURL || !selectedChar) {
-  alert("No character image found. Please color your character first.");
-} else if (selectedChar === "tortoise") {
-  // --- CONFIG ---
+// Try to get session from URL, then from localStorage
+const urlParams = new URLSearchParams(window.location.search);
+const sessionCode = urlParams.get("session") || localStorage.getItem("sessionCode");
+
+// Fallback to legacy localStorage single-user flow (if no server data yet)
+const localColored = localStorage.getItem("coloredCharacter");
+const localSelected = (localStorage.getItem("selectedCharacter") || "").toLowerCase();
+
+function placeStaticCharacter(character, dataURL) {
+  const img = document.createElement("img");
+  img.src = dataURL;
+  img.alt = character;
+  img.className = `character ${character}`;
+  img.style.zIndex = 2;
+  container.appendChild(img);
+}
+
+function placeAnimatedTortoise(dataURL) {
   const frameURLs = [
     "images/frames/tortoise/tortoise1.png",
     "images/frames/tortoise/tortoise2.png",
@@ -18,27 +30,25 @@ if (!coloredDataURL || !selectedChar) {
     "images/frames/tortoise/tortoise4.png"
   ];
   const frameMs = 300;
-  const logicalW = 600; // internal drawing size that matches your sprite pipeline
+  const logicalW = 600;
   const logicalH = 600;
 
-  // Canvas that will sit where the CSS puts the tortoise
   const canvas = document.createElement("canvas");
-  canvas.className = `character ${selectedChar}`; // reuse your CSS: position + width/height
+  canvas.className = `character tortoise`;
   canvas.style.zIndex = 2;
   container.appendChild(canvas);
 
-  // HiDPI rendering
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(logicalW * dpr);
   canvas.height = Math.round(logicalH * dpr);
+  canvas.style.width = `${logicalW}px`;
+  canvas.style.height = `${logicalH}px`;
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
 
-  // Load the student's color as an image
   const colorLayer = new Image();
-  colorLayer.src = coloredDataURL;
+  colorLayer.src = dataURL;
 
-  // Preload all frames first
   Promise.all(frameURLs.map(src => new Promise((res, rej) => {
     const im = new Image();
     im.onload = () => res(im);
@@ -51,40 +61,55 @@ if (!coloredDataURL || !selectedChar) {
     function tick(now) {
       if (now - last >= frameMs) {
         last = now;
-        // draw: color first, outline on top
         ctx.clearRect(0, 0, logicalW, logicalH);
-        if (colorLayer.complete) {
-          ctx.drawImage(colorLayer, 0, 0, logicalW, logicalH);
-        }
+        if (colorLayer.complete) ctx.drawImage(colorLayer, 0, 0, logicalW, logicalH);
         ctx.drawImage(frames[i], 0, 0, logicalW, logicalH);
         i = (i + 1) % frames.length;
       }
       requestAnimationFrame(tick);
     }
 
-    // Once color is ready, start animating
-    if (colorLayer.complete) {
-      requestAnimationFrame(tick);
-    } else {
-      colorLayer.onload = () => requestAnimationFrame(tick);
-    }
-
-    // Clear storage after we’ve kicked off
-    localStorage.removeItem("coloredCharacter");
-    localStorage.removeItem("selectedCharacter");
+    if (colorLayer.complete) requestAnimationFrame(tick);
+    else colorLayer.onload = () => requestAnimationFrame(tick);
   }).catch(err => {
-    console.error("Frame preload failed:", err);
-    // Fallback: static image
-    fallbackImg.src = coloredDataURL;
-    fallbackImg.classList.add(selectedChar);
+    console.error("Tortoise frames failed; falling back to static:", err);
+    placeStaticCharacter("tortoise", dataURL);
   });
-
-} else {
-  // Non-animated characters: show static
-  fallbackImg.src = coloredDataURL;
-  fallbackImg.classList.add(selectedChar);
-
-  localStorage.removeItem("coloredCharacter");
-  localStorage.removeItem("selectedCharacter");
 }
 
+async function loadFromServer() {
+  if (!sessionCode) return false;
+
+  try {
+    const submissions = await getSubmissions(sessionCode);
+    // Expected: [{ character: "hare"|"tortoise"|..., dataURL: "data:image/png;base64,..."}]
+    if (!Array.isArray(submissions) || submissions.length === 0) return false;
+
+    submissions.forEach(({ character, dataURL }) => {
+      const key = (character || "").toLowerCase();
+      if (key === "tortoise") placeAnimatedTortoise(dataURL);
+      else placeStaticCharacter(key, dataURL);
+    });
+    return true;
+  } catch (e) {
+    console.error("Server submissions load failed:", e);
+    return false;
+  }
+}
+
+(async function init() {
+  const ok = await loadFromServer();
+  if (!ok) {
+    // Fallback: legacy local single
+    if (!localColored || !localSelected) {
+      alert("No character images found yet. Please color your character first.");
+      return;
+    }
+    if (localSelected === "tortoise") placeAnimatedTortoise(localColored);
+    else placeStaticCharacter(localSelected, localColored);
+  }
+
+  // Clear legacy storage to avoid confusion on refresh
+  localStorage.removeItem("coloredCharacter");
+  localStorage.removeItem("selectedCharacter");
+})();
