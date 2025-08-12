@@ -1,5 +1,5 @@
 // azure-api.js
-import { DefaultAzureCredential } from "@azure/identity";
+import { DefaultAzureCredential } from "https://esm.sh/@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 
 const API_BASE = "https://windtreetechnology.documents.azure.com:443/"; // or leave empty if using anonymous
