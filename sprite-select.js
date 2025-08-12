@@ -1,12 +1,10 @@
 
-import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+// sprite-select.js
+import { getSession, lockCharacter } from "./azure-api.js";
 
-//
-
-// Pixel-accurate hover & click for .character images
+// --- Pixel-accurate hover & click for .character images ---
 const characters = Array.from(document.querySelectorAll('.character'));
 
-// build an offscreen canvas for each image once it loads
 function buildHitCanvas(img) {
   const c = document.createElement('canvas');
   c.width = img.naturalWidth || img.width;
@@ -16,30 +14,21 @@ function buildHitCanvas(img) {
   return { canvas: c, ctx: cx };
 }
 
-// return true if mouse over a non-transparent pixel
 function isOverInk(img, off, evt) {
   const rect = img.getBoundingClientRect();
-  // mouse position relative to the *displayed* element
   const xEl = evt.clientX - rect.left;
   const yEl = evt.clientY - rect.top;
-
-  // scale to intrinsic pixel coords
   const scaleX = (img.naturalWidth || img.width) / rect.width;
   const scaleY = (img.naturalHeight || img.height) / rect.height;
   const x = Math.floor(xEl * scaleX);
   const y = Math.floor(yEl * scaleY);
-
   if (x < 0 || y < 0 || x >= off.canvas.width || y >= off.canvas.height) return false;
-
   const { data } = off.ctx.getImageData(x, y, 1, 1);
-  const alpha = data[3];                 // 0..255
-  return alpha > 10;                     // small threshold
+  return data[3] > 10; // alpha threshold
 }
 
-const hitData = new Map(); // img -> {canvas,ctx}
-
+const hitData = new Map();
 characters.forEach(img => {
-  // ensure intrinsic size is available
   if (img.complete) {
     hitData.set(img, buildHitCanvas(img));
   } else {
@@ -51,32 +40,12 @@ characters.forEach(img => {
     if (!off) return;
     const overInk = isOverInk(img, off, e);
     img.classList.toggle('hovered', overInk);
-    img.style.pointerEvents = 'auto'; // keep events flowing
   });
 
-  img.addEventListener('mouseleave', () => {
-    img.classList.remove('hovered');
-  });
-
-  // Gate the click so you can’t select via empty pixels
-  img.addEventListener('click', e => {
-    const off = hitData.get(img);
-    if (!off || !isOverInk(img, off, e)) {
-      // ignore clicks on transparent areas
-      e.stopPropagation();
-      e.preventDefault();
-      return;
-    }
-    // proceed with your existing selection logic
-    const selected = img.getAttribute('data-char') || 'unknown';
-    // If you have session logic, keep it; otherwise:
-    window.location.href = `canvas.html?char=${selected}`;
-  }, true);
+  img.addEventListener('mouseleave', () => img.classList.remove('hovered'));
 });
 
-//
-
-// Get session ID from query string
+// --- Session + locking via Azure ---
 const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get("session");
 
@@ -85,39 +54,45 @@ if (!sessionId) {
   window.location.href = "session.html";
 }
 
-const db = getDatabase();
-const charactersRef = ref(db, `sessions/${sessionId}/characters`);
+const deviceToken = localStorage.getItem("deviceToken") || crypto.randomUUID();
 
-// Load current character lock state
-onValue(charactersRef, snapshot => {
-  const data = snapshot.val() || {};
+async function refreshLocks() {
+  try {
+    const sess = await getSession(sessionId);
+    const taken = sess?.locks || {};
+    document.querySelectorAll(".character").forEach(el => {
+      const key = el.getAttribute("data-char");
+      if (taken[key]) el.classList.add("locked");
+      else el.classList.remove("locked");
+    });
+  } catch (e) {
+    // fail quietly to avoid UI spam during transient errors
+    console.debug("refreshLocks error:", e.message);
+  }
+}
+setInterval(refreshLocks, 1000);
+refreshLocks();
 
-  document.querySelectorAll(".character").forEach(char => {
-    const charKey = char.getAttribute("data-char");
-    if (data[charKey]) {
-      char.classList.add("locked");
-    } else {
-      char.classList.remove("locked");
-    }
-  });
-});
-
-// Handle character selection
-document.querySelectorAll(".character").forEach(char => {
-  char.addEventListener("click", async () => {
-    const selectedChar = char.getAttribute("data-char");
-    const charRef = ref(db, `sessions/${sessionId}/characters/${selectedChar}`);
-
-    const snapshot = await get(charRef);
-    if (snapshot.exists()) {
-      alert("Sorry, this character is already taken.");
+document.querySelectorAll(".character").forEach(charEl => {
+  charEl.addEventListener("click", async (e) => {
+    // block transparent clicks
+    const off = hitData.get(charEl);
+    if (!off || !isOverInk(charEl, off, e)) {
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
-    await set(charRef, true); // Lock character
-
-    // Redirect to canvas with char and session
-    window.location.href = `canvas.html?char=${selectedChar}&session=${sessionId}`;
-  });
+    const selectedChar = charEl.getAttribute("data-char");
+    try {
+      const res = await lockCharacter(sessionId, selectedChar, deviceToken);
+      if (!res || !res.locks || res.locks[selectedChar] !== deviceToken) {
+        alert("Sorry, this character is already taken.");
+        return;
+      }
+      window.location.href = `canvas.html?char=${selectedChar}&session=${sessionId}`;
+    } catch (err) {
+      alert("Failed to lock character. It may already be taken.");
+    }
+  }, true);
 });
-
