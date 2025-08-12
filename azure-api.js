@@ -1,5 +1,5 @@
 // azure-api.js
-const API_BASE = "https://windtreetechnology.documents.azure.com:443/"; // or leave empty if using anonymous
+const API_PROXY_BASE = "https://windtreetechnology.documents.azure.com:443/"; // or leave empty if using anonymous
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_PROXY_BASE}/proxySession?path=${encodeURIComponent(path)}`, {
