@@ -237,6 +237,25 @@ function sendToStoryboard() {
     window.location.href = "storyboard.html";
 }
 
+import { submitDrawing } from "./azure-api.js";
+
+// ... inside sendToStoryboard()
+const dataURL = trimmedCanvas.toDataURL("image/png");
+localStorage.setItem("coloredCharacter", dataURL);  // keep local fallback
+
+const sessionCode = new URLSearchParams(window.location.search).get("session") 
+  || localStorage.getItem("sessionCode");
+const uid = localStorage.getItem("deviceToken") || crypto.randomUUID();
+
+try {
+  await submitDrawing(sessionCode, window.selectedChar, dataURL, uid);
+} catch (e) {
+  console.warn("Server submit failed, showing local only:", e.message);
+}
+
+window.location.href = `storyboard.html?session=${sessionCode}`;
+
+
 /* function saveImage() {
     const merged = document.createElement("canvas");
     merged.width = drawCanvas.width;
