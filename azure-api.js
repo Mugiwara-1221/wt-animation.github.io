@@ -9,9 +9,6 @@ async function api(path, options = {}) {
   return res.status === 204 ? null : res.json();
 }
 
-export const getSession = (sessionCode) =>
-  api(`/session/${sessionCode}`, { method: "GET" });
-
 /*async function api(path, options = {}) {
   const url = `${API_BASE}${path}${API_KEY ? `?code=${API_KEY}` : ""}`;
   const res = await fetch(url, {
