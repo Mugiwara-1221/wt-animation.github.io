@@ -1,6 +1,6 @@
 
 // session.js (Azure version)
-import { createSession } from "./azure-api.js";
+import { createSession, getSession } from "./azure-api.js";
 
 const createBtn = document.getElementById("createSession");
 const joinBtn = document.getElementById("joinSession");
@@ -18,15 +18,15 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
-// Create a new session (replaces Firebase set)
-createBtn.addEventListener("click", async () => {
+// Create a new session
+createBtn?.addEventListener("click", async () => {
   try {
     const session = await createSession(6);
     const sessionCode = session.sessionCode;
     localStorage.setItem("sessionCode", sessionCode);
-    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+    sessionCodeDisplay && (sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`);
 
-    // keep your “member slot” UX as-is (optional in Cosmos design)
+    // show code briefly, then go select
     setTimeout(() => {
       window.location.href = `index.html?session=${sessionCode}`;
     }, 2000);
@@ -35,11 +35,13 @@ createBtn.addEventListener("click", async () => {
   }
 });
 
-// Join existing session (front-end validation only; back-end authorize as needed)
-joinBtn.addEventListener("click", async () => {
-  const code = joinInput.value.trim();
-  const idCode = joinId.value.trim();
-  if (code.length !== 6 && !code.includes("-")) {  // supports both 6-digit and ABC-123
+// Join existing session
+joinBtn?.addEventListener("click", async () => {
+  const code = (joinInput?.value || "").trim();
+  const idCode = (joinId?.value || "").trim();
+
+  // support both 6-digit or ABC-123 formats
+  if ((code.length !== 6 && !code.includes("-"))) {
     alert("Enter a valid session code.");
     return;
   }
@@ -47,17 +49,17 @@ joinBtn.addEventListener("click", async () => {
     alert("Enter Valid Member ID (1-6)");
     return;
   }
+
   try {
     const s = await getSession(code);
     if (!s || s.status !== "active") throw new Error("Session not active");
+
     localStorage.setItem("sessionCode", code);
-    // store the device/member mapping locally (optional)
     localStorage.setItem("memberId", idCode);
     localStorage.setItem("deviceToken", deviceToken);
+
     window.location.href = `index.html?session=${code}`;
   } catch (e) {
     alert("Session not found or closed.");
   }
 });
-
-
