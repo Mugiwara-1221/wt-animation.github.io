@@ -1,5 +1,5 @@
 // azure-api.js
-import { DefaultAzureCredential } from "https://cdn.skypack.dev/@azure/identity";
+import { InteractiveBrowserCredential } from "https://cdn.skypack.dev/@azure/identity";
 import { SecretClient } from "https://cdn.skypack.dev/@azure/keyvault-secrets";
 
 const credential = new DefaultAzureCredential();
