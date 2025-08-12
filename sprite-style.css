@@ -48,11 +48,18 @@ h2 {
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-/* Hover effect */
+.character.hovered {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: pointer;
+}
+
+/* Hover effect
 .character:hover {
     transform: scale(1.15);
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
-}
+} */
 
 .character.locked {
   opacity: 0.4;
