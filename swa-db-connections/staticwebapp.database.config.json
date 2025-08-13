@@ -1,7 +1,7 @@
 {
   "$schema": "https://schemas.azure.com/swa-database-connection/2024-05-01/schema.json",
   "dataSource": "cosmosDB",
-  "connectionStringSetting": "CosmosDbConnectionString",
+  "connectionStringSetting": "https://animationkey.vault.azure.net/secrets/animationstring/f3ac2c7cac6d4208a7a7bda2e2d2e744",
   "collections": {
     "Products": {
       "allowedOperations": ["read", "create", "update", "delete"]
