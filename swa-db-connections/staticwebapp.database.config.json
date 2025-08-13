@@ -1,17 +1,4 @@
 {
-    "database": "my-azure-sql-db",
-    "connectionStringSetting": "MyDbConnectionString",
-    "tables": {
-        "Products": {
-            "allowedOperations": ["read"]
-        }
-    },
-    "Orders": {
-        "allowedOperations": ["read", "create", "update"]
-    }
-}
-
-{
   "$schema": "https://schemas.azure.com/swa-database-connection/2024-05-01/schema.json",
   "dataSource": "my-db",
   "connectionStringSetting": "MyDbConnectionString",
