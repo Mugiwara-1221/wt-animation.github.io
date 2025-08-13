@@ -1,13 +1,26 @@
 {
-  "$schema": "https://schemas.azure.com/swa-database-connection/2024-05-01/schema.json",
-  "dataSource": "cosmosDB",
-  "connectionStringSetting": "https://animationkey.vault.azure.net/secrets/animationstring/f3ac2c7cac6d4208a7a7bda2e2d2e744",
-  "collections": {
+  "$schema": "https://github.com/Azure/data-api-builder/releases/latest/download/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "cosmosdb_nosql",
+    "connection-string": "@env('COSMOS_DB_CONNECTION')",
+    "options": {
+      "database": "animationapp",
+      "schema": "staticwebapp.database.schema.gql"
+    }
+  },
+  "runtime": {
+    "rest": { "enabled": true, "path": "/rest" },
+    "graphql": { "enabled": true, "path": "/graphql" }
+  },
+  "entities": {
     "Products": {
-      "allowedOperations": ["read", "create", "update", "delete"]
+      "source": "Products",
+      "permissions": [ { "actions": ["read","create","update","delete"], "role": "anonymous" } ]
     },
     "Orders": {
-      "allowedOperations": ["read", "create"]
+      "source": "Orders",
+      "permissions": [ { "actions": ["read","create"], "role": "anonymous" } ]
     }
   }
 }
+
