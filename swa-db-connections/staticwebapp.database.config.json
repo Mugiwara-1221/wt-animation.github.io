@@ -1,10 +1,13 @@
 {
   "$schema": "https://schemas.azure.com/swa-database-connection/2024-05-01/schema.json",
-  "dataSource": "my-db",
-  "connectionStringSetting": "MyDbConnectionString",
-  "tables": {
+  "dataSource": "cosmosDB",
+  "connectionStringSetting": "CosmosDbConnectionString",
+  "collections": {
     "Products": {
-      "allowedOperations": ["read"]
+      "allowedOperations": ["read", "create", "update", "delete"]
+    },
+    "Orders": {
+      "allowedOperations": ["read", "create"]
     }
   }
 }
