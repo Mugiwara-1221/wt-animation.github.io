@@ -1,0 +1,12 @@
+{
+    "database": "my-azure-sql-db",
+    "connectionStringSetting": "MyDbConnectionString",
+    "tables": {
+        "Products": {
+            "allowedOperations": ["read"]
+        }
+    },
+    "Orders": {
+        "allowedOperations": ["read", "create", "update"]
+    }
+}
