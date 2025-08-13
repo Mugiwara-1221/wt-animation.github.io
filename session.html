@@ -7,6 +7,32 @@
   <link rel="stylesheet" href="session.css">
   <script type="module" src="azure-api.js"></script>
   <script type="module" src="session.js"></script>
+  <script type="module">
+  import { createSession } from './js/azure-api.js';
+
+  const btn = document.getElementById('createSessionBtn');
+  const joinBtn = document.getElementById('joinSessionBtn');
+  const codeEl = document.getElementById('joinCodeInput');
+  const display = document.getElementById('sessionCodeDisplay');
+
+  btn.addEventListener('click', async () => {
+    const { code } = await createSession();
+    display.textContent = `Session code: ${code}`;
+    // optional: auto-continue
+    localStorage.setItem('sessionCode', code);
+    window.location.href = `index.html?session=${code}`;
+  });
+
+  joinBtn.addEventListener('click', () => {
+    const code = codeEl.value.trim();
+    if (code.length === 6) {
+      localStorage.setItem('sessionCode', code);
+      window.location.href = `index.html?session=${code}`;
+    } else {
+      alert('Enter a valid 6‑digit code.');
+    }
+  });
+</script>
 </head>
 <body>
   <div class="session-container">
