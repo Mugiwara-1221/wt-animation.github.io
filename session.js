@@ -1,6 +1,6 @@
 
 // session.js (Azure version)
-import { createSession, getSession } from "./azure-api.js";
+//import { createSession, getSession } from "./azure-api.js";
 
 const createBtn = document.getElementById("createSession");
 const joinBtn = document.getElementById("joinSession");
