@@ -5,34 +5,6 @@
   <meta charset="UTF-8">
   <title>Join or Create a Session</title>
   <link rel="stylesheet" href="session.css">
-  <script type="module" src="azure-api.js"></script>
-  <script type="module" src="session.js"></script>
-  <script type="module">
-  import { createSession } from './js/azure-api.js';
-
-  const btn = document.getElementById('createSessionBtn');
-  const joinBtn = document.getElementById('joinSessionBtn');
-  const codeEl = document.getElementById('joinCodeInput');
-  const display = document.getElementById('sessionCodeDisplay');
-
-  btn.addEventListener('click', async () => {
-    const { code } = await createSession();
-    display.textContent = `Session code: ${code}`;
-    // optional: auto-continue
-    localStorage.setItem('sessionCode', code);
-    window.location.href = `index.html?session=${code}`;
-  });
-
-  joinBtn.addEventListener('click', () => {
-    const code = codeEl.value.trim();
-    if (code.length === 6) {
-      localStorage.setItem('sessionCode', code);
-      window.location.href = `index.html?session=${code}`;
-    } else {
-      alert('Enter a valid 6‑digit code.');
-    }
-  });
-</script>
 </head>
 <body>
   <div class="session-container">
@@ -41,18 +13,20 @@
     <!-- Create Session Section -->
     <div class="session-box">
       <h2>Create a Session</h2>
-      <button id="createSession">Generate Session</button>
+      <button id="createSessionBtn">Generate Session</button>
       <p id="sessionCodeDisplay"></p>
     </div>
 
     <!-- Join Session Section -->
     <div class="session-box">
       <h2>Join a Session</h2>
-      <input type="text" id="joinCode" placeholder="Enter Session Code">
-      <input type="text" id="joinCodeId" placeholder="ID">
-      <button id="joinSession">Join</button>
+      <input type="text" id="joinCodeInput" placeholder="Enter Session Code" maxlength="6">
+      <input type="text" id="joinCodeId" placeholder="Member ID (1-6)">
+      <button id="joinSessionBtn">Join</button>
       <p id="joinError" class="error"></p>
     </div>
   </div>
+
+  <script type="module" src="session.js"></script>
 </body>
 </html>
