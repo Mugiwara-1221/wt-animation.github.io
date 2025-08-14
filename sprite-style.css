@@ -1,30 +1,30 @@
-/*Sprite Selection*/
+/* Sprite Selection Page Styles */
 
 body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: sans-serif;
-    background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: sans-serif;
+  background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h2 {
-    margin-top: 20px;
-    color: #b8c941;
-    font-size: 3.2rem;
-    font-weight: 600;
-    text-align: center;
-    text-shadow: 2px 2px #151515;
-    letter-spacing: 1px;
+  margin-top: 20px;
+  color: #b8c941;
+  font-size: 3.2rem;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 2px 2px #151515;
+  letter-spacing: 1px;
 }
 
 .scene-wrapper {
   position: relative;
-  display: inline-block; /* Let size follow background */
+  display: inline-block;
   border: 4px solid #ffffff;
   border-radius: 12px;
   background: white;
@@ -36,30 +36,19 @@ h2 {
   width: auto;
   height: auto;
   max-width: 110vh;
-  /*max-height: 80vh:*/
   border-radius: 12px;
 }
 
-/* Character Image Styling */
 .character {
-    position: absolute;
-    width: 80px; /* Base size, tweak if needed 8%*/
-    cursor: pointer;
-    transition: transform 0.2s ease, filter 0.2s ease;
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .character.hovered {
   transform: scale(1.15);
   filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
-  transition: transform 0.15s ease, filter 0.15s ease;
-  cursor: pointer;
 }
-
-/* Hover effect
-.character:hover {
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
-} */
 
 .character.locked {
   opacity: 0.4;
