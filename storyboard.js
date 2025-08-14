@@ -1,6 +1,6 @@
 
 // storyboard.js
-import { getSubmissions } from "./azure-api.js";
+import { getSubmissions } from "./js/azure-api.js";
 
 const container = document.querySelector(".scene-wrapper");
 const fallbackImg = document.getElementById("coloredCharacter");
