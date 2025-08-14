@@ -1,9 +1,9 @@
 {
-  "name": "windtree-api",
+  "name": "your-app",
   "version": "1.0.0",
-  "main": "index.js",
-  "engines": { "node": ">=18" },
-  "dependencies": {
-    "@azure/data-tables": "^13.2.2"
-  }
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }
