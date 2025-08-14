@@ -67,9 +67,8 @@
   <!-- Azure client (provides submitDrawing, etc.) -->
   <script type="module" src="js/azure-api.js"></script>
 
-  <!-- Your canvas logic (now a module so it can import from azure-api.js)
-       Make sure this file loads transparent outline sprites:
-       spriteImage.src = `images/${window.selectedChar}-transparent.png`; -->
+  <!-- Your canvas logic (module) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
