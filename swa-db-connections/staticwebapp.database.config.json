@@ -10,6 +10,7 @@
       "allowedOperations": ["read", "create"]
     },
   "nationFallback": {
+    "rewrite": "/index.html",
     "exclude": ["/api/*"]
   }
   }
