@@ -1,0 +1,15 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "rewrite": "/session.html"
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/session.html",
+    "exclude": ["/images/*", "/js/*", "/css/*", "/api/*"]
+  },
+  "mimeTypes": {
+    ".js": "text/javascript"
+  }
+}
