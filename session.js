@@ -1,65 +1,77 @@
 
-// session.js (Azure version)
-//import { createSession, getSession } from "./azure-api.js";
+// session.js — Azure-ready, with local fallback
 
-const createBtn = document.getElementById("createSession");
-const joinBtn = document.getElementById("joinSession");
-const joinInput = document.getElementById("joinCode");
+// import { createSession, getSession } from "./azure-api.js";
+
+const createBtn = document.getElementById("createSessionBtn");
+const joinBtn = document.getElementById("joinSessionBtn");
+const joinInput = document.getElementById("joinCodeInput");
 const joinId = document.getElementById("joinCodeId");
 const sessionCodeDisplay = document.getElementById("sessionCodeDisplay");
+const joinError = document.getElementById("joinError");
 
 function getDeviceToken() {
-  let token = localStorage.getItem('deviceToken');
+  let token = localStorage.getItem("deviceToken");
   if (!token) {
     token = crypto.randomUUID();
-    localStorage.setItem('deviceToken', token);
+    localStorage.setItem("deviceToken", token);
   }
   return token;
 }
 const deviceToken = getDeviceToken();
 
+// Local fallback code generator
+const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
 // Create a new session
 createBtn?.addEventListener("click", async () => {
   try {
-    const session = await createSession(6);
-    const sessionCode = session.sessionCode;
-    localStorage.setItem("sessionCode", sessionCode);
-    sessionCodeDisplay && (sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`);
+    // Azure API version:
+    // const session = await createSession(6);
+    // const sessionCode = session.sessionCode;
 
-    // show code briefly, then go select
+    // Local fallback:
+    const sessionCode = makeCode();
+
+    localStorage.setItem("sessionCode", sessionCode);
+    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+
     setTimeout(() => {
       window.location.href = `index.html?session=${sessionCode}`;
-    }, 2000);
+    }, 1500);
   } catch (e) {
     alert("Failed to create session. " + e.message);
   }
 });
 
-// Join existing session
+// Join an existing session
 joinBtn?.addEventListener("click", async () => {
+  joinError.textContent = "";
+
   const code = (joinInput?.value || "").trim();
   const idCode = (joinId?.value || "").trim();
 
-  // support both 6-digit or ABC-123 formats
-  if ((code.length !== 6 && !code.includes("-"))) {
-    alert("Enter a valid session code.");
+  if (!/^\d{6}$/.test(code) && !code.includes("-")) {
+    joinError.textContent = "Enter a valid 6-digit or ABC-123 session code.";
     return;
   }
-  if (!idCode || Number(idCode) < 1 || Number(idCode) > 6) {
-    alert("Enter Valid Member ID (1-6)");
+  if (!/^[1-6]$/.test(idCode)) {
+    joinError.textContent = "Enter a valid Member ID (1–6).";
     return;
   }
 
   try {
-    const s = await getSession(code);
-    if (!s || s.status !== "active") throw new Error("Session not active");
+    // Azure API version:
+    // const s = await getSession(code);
+    // if (!s || s.status !== "active") throw new Error("Session not active");
 
+    // Local fallback always allows join:
     localStorage.setItem("sessionCode", code);
     localStorage.setItem("memberId", idCode);
     localStorage.setItem("deviceToken", deviceToken);
 
     window.location.href = `index.html?session=${code}`;
   } catch (e) {
-    alert("Session not found or closed.");
+    joinError.textContent = "Session not found or closed.";
   }
 });
