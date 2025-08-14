@@ -1,27 +1,31 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Storyboard</title>
-  <link rel="stylesheet" href="storyboard.css">
+  <link rel="stylesheet" href="storyboard.css" />
 </head>
 <body>
-  <h1>Story Scene: The Hare and The Tortoise</h1>
+  <h2>Story Scene: The Hare and The Tortoise</h2>
 
   <div class="scene-wrapper">
-    <img id="storyBackground" src="images/colored-background2.png" alt="Story Scene">
+    <!-- Same background sizing/ratio as the character select page -->
+    <img src="images/colored-background2.png" id="scene" alt="Scene">
 
-    <!-- Static image fallback for non-animated characters -->
-    <img id="coloredCharacter" alt="Your Character">
+    <!-- All six characters in their fixed locations -->
+    <!-- Default srcs are your selection images; JS can swap to colored dataURL for the last colored character -->
+    <img src="images/outline/hare-transparent.png"      class="character hare"      data-char="hare"      alt="Hare">
+    <img src="images/outline/tortoise-transparent.png"  class="character tortoise"  data-char="tortoise"  alt="Tortoise">
+    <img src="images/outline/bear-transparent.png"      class="character bear"      data-char="bear"      alt="Bear">
+    <img src="images/outline/squirrel-transparent.png"  class="character squirrel"  data-char="squirrel"  alt="Squirrel">
+    <img src="images/outline/bird1-transparent.png"     class="character bird1"     data-char="bird1"     alt="Bird 1">
+    <img src="images/outline/bird2-transparent.png"     class="character bird2"     data-char="bird2"     alt="Bird 2">
 
-    <!-- Container for animation frames -->
-    <canvas id="animatedCharacter" width="300" height="300" style="position: absolute; display: none;"></canvas>
+    <!-- Canvas for outline-frame animation (we position this over the tortoise only) -->
+    <canvas id="tortoiseAnim" width="600" height="600" style="position:absolute; pointer-events:none; display:none;"></canvas>
   </div>
 
-  <!-- Only keep module scripts -->
-  <script type="module" src="azure-api.js"></script>
   <script type="module" src="storyboard.js"></script>
 </body>
 </html>
-
