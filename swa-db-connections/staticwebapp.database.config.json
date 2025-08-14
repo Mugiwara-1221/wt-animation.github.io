@@ -1,5 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/staticwebapp.database.config.json",
+  "nationFallback": {
+  "rewrite": "/index.html",
+  "exclude": ["/api/*"]
+  }
   "dataSource": "cosmosDB",
   "connectionStringSetting": "COSMOS_DB_CONNECTION",
   "collections": {
@@ -8,10 +12,6 @@
     },
     "Orders": {
       "allowedOperations": ["read", "create"]
-    },
-  "nationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/api/*"]
-  }
+    }
   }
 }
