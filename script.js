@@ -251,7 +251,7 @@ function downloadImage() {
 }
 
 async function sendToStoryboard() {
-  // export only the sprite’s box: color layer + outline
+  // export only the sprite’s box: color layer + outline to database
   const spriteBounds = allowedArea;
   const trimmedCanvas = document.createElement("canvas");
   trimmedCanvas.width = spriteBounds.width;
