@@ -39,13 +39,21 @@ h2 {
   border-radius: 12px;
 }
 
+/* Characters */
 .character {
   position: absolute;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.character.hovered {
+/* JS-added pixel-accurate hover */
+.character.hovered:not(.locked) {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+}
+
+/* CSS fallback hover (works even if JS fails) */
+.character:not(.locked):hover {
   transform: scale(1.15);
   filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
 }
