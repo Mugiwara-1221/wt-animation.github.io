@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schemas.azure.com/swa-database-connection/2024-05-01/schema.json",
+  "$schema": "https://json.schemastore.org/staticwebapp.database.config.json",
   "dataSource": "cosmosDB",
   "connectionStringSetting": "COSMOS_DB_CONNECTION",
   "collections": {
