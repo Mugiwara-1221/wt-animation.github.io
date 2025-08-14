@@ -39,16 +39,15 @@ jobs:
             --query "[?name=='COSMOS_DB_CONNECTION'].value" -o tsv)
           echo "COSMOS_DB_CONNECTION=$CONNECTION_STRING" >> $GITHUB_ENV
 
-      - name: Deploy Static Web App using Azure CLI
-        run: |
-          az staticwebapp deploy \
-            --name "pntanimation" \
-            --resource-group "Animation" \
-            --source . \
-            --app-location "/" \
-            --api-location "/api" \
-            --output-location "/" \
-            --env-vars COSMOS_DB_CONNECTION=$COSMOS_DB_CONNECTION
+      - name: Deploy Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "upload"
+          app_location: "/"
+          api_location: "/api"
+          output_location: "/"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -68,3 +67,4 @@ jobs:
             --name "pntanimation" \
             --resource-group "Animation" \
             --environment-name "pull/${{ github.event.pull_request.number }}"
+
