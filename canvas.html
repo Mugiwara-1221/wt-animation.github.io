@@ -1,73 +1,75 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Animation Canvas</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Animation Canvas</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Left navigation toggle button -->
-    <div class="toggleNavLeft"></div>
+  <!-- Left navigation toggle button -->
+  <div class="toggleNavLeft"></div>
 
-    <!-- Sidebar Tools Panel -->
-    <nav id="navLeft">
-        <div class="nav-content">
-            <span>Brush Type</span>
-            <select class="brush-type-select">
-                <option value="basic">Basic</option>
-                <option value="soft">Soft</option>
-                <option value="marker">Marker</option>
-                <option value="water">Watercolor</option>
-            </select>
-        </div>
+  <!-- Sidebar Tools Panel -->
+  <nav id="navLeft">
+    <div class="nav-content">
+      <span>Brush Type</span>
+      <select class="brush-type-select">
+        <option value="basic">Basic</option>
+        <option value="soft">Soft</option>
+        <option value="marker">Marker</option>
+        <option value="water">Watercolor</option>
+      </select>
+    </div>
 
-        <div class="nav-content">
-            <span>Brush Size</span>
-            <input type="range" class="brush-size-slider" min="1" max="100" value="10">
-        </div>
+    <div class="nav-content">
+      <span>Brush Size</span>
+      <input type="range" class="brush-size-slider" min="1" max="100" value="10" />
+    </div>
 
-        <div class="nav-content">
-            <span>Opacity</span>
-            <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1">
-        </div>
+    <div class="nav-content">
+      <span>Opacity</span>
+      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" />
+    </div>
 
-        <div class="nav-content">
-            <span>Color</span>
-            <input class="pick-color" type="color" value="#000000">
-        </div>
+    <div class="nav-content">
+      <span>Color</span>
+      <input class="pick-color" type="color" value="#000000" />
+    </div>
 
-        <div class="nav-content">
-            <button onclick="setTool('draw')">Brush</button>
-            <button onclick="setTool('erase')">Eraser</button>
-            <button onclick="undo()">Undo</button>
-            <button onclick="redo()">Redo</button>
-            <button onclick="clearCanvas()">Clear</button>
-            <button onclick="toggleSaveOptions()">Save ▼</button>
-            <div id="saveOptions" class="save-options hidden">
-                <button onclick="downloadImage()">Download Image</button>
-                <button onclick="sendToStoryboard()">Send to Storyboard</button>
-            </div>
-        </div>
+    <div class="nav-content">
+      <button onclick="setTool('draw')">Brush</button>
+      <button onclick="setTool('erase')">Eraser</button>
+      <button onclick="undo()">Undo</button>
+      <button onclick="redo()">Redo</button>
+      <button onclick="clearCanvas()">Clear</button>
+      <button onclick="toggleSaveOptions()">Save ▼</button>
+      <div id="saveOptions" class="save-options hidden">
+        <button onclick="downloadImage()">Download Image</button>
+        <button onclick="sendToStoryboard()">Send to Storyboard</button>
+      </div>
+    </div>
 
-        <div class="nav-content">
-            <span>Zoom</span>
-            <button onclick="zoomIn()">+</button>
-            <button onclick="zoomOut()">-</button>
-        </div>
-    </nav>
+    <div class="nav-content">
+      <span>Zoom</span>
+      <button onclick="zoomIn()">+</button>
+      <button onclick="zoomOut()">-</button>
+    </div>
+  </nav>
 
-    <!-- Canvas Layers -->
-    <canvas id="bgCanvas"></canvas>
-    <canvas id="drawCanvas"></canvas>
-    <canvas id="spriteCanvas"></canvas>
+  <!-- Canvas Layers -->
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="drawCanvas"></canvas>
+  <canvas id="spriteCanvas"></canvas>
 
-    <!-- Firebase & Logic Scripts -->
-    <script type="module" src="firebase-init.js"></script>
-    <script type="module" src="canvas-session.js"></script> <!-- NEW SESSION SUPPORT -->
-    <script src="script.js"></script>
+  <!-- Azure client (provides submitDrawing, etc.) -->
+  <script type="module" src="js/azure-api.js"></script>
+
+  <!-- Your canvas logic (now a module so it can import from azure-api.js)
+       Make sure this file loads transparent outline sprites:
+       spriteImage.src = `images/${window.selectedChar}-transparent.png`; -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
-
