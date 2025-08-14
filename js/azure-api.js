@@ -1,69 +1,61 @@
-// azure-api.js
-/*const API_PROXY_BASE = "https://animationkey.vault.azure.net/"; // or leave empty if using anonymous
+// js/azure-api.js
 
-async function api(path, options = {}) {
-  const res = await fetch(`${API_PROXY_BASE}/proxySession?path=${encodeURIComponent(path)}`, {
-    ...options
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.status === 204 ? null : res.json();
-}
+// In Azure Static Web Apps, API routes live under /api by default
+const API_BASE = "/api";
 
-/*async function api(path, options = {}) {
-  const url = `${API_BASE}${path}${API_KEY ? `?code=${API_KEY}` : ""}`;
-  const res = await fetch(url, {
+/** -------- Sessions -------- **/
+export async function createSession(maxSeats = 6) {
+  const r = await fetch(`${API_BASE}/session`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    ...options
+    body: JSON.stringify({ maxSeats }),
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.status === 204 ? null : res.json();
-}*//*
-
-// Sessions
-export const createSession = (maxSeats=6) =>
-  api(`/session`, { method: "POST", body: JSON.stringify({ maxSeats }) });
-
-export const getSession = (sessionCode) =>
-  api(`/session/${sessionCode}`, { method: "GET" });
-
-export const lockCharacter = (sessionCode, character, uid) =>
-  api(`/lock`, { method: "POST", body: JSON.stringify({ sessionCode, character, uid }) });
-
-// Submissions (you’ll wire the backend next)
-export const submitDrawing = (sessionCode, character, dataURL, uid) =>
-  api(`/submit`, { method: "POST", body: JSON.stringify({ sessionCode, character, dataURL, uid }) });
-
-export const getSubmissions = (sessionCode) =>
-  api(`/submissions/${sessionCode}`, { method: "GET" });*/
-
-
-const API_BASE = "/api"; // in Static Web Apps, API is same origin
-
-export async function createSession() {
-  const r = await fetch(`${API_BASE}/session`, { method: "POST" });
   if (!r.ok) throw new Error("createSession failed");
-  return r.json(); // { code }
+  return r.json(); // e.g. { code: "123456" }
 }
 
 export async function getSession(code) {
   const r = await fetch(`${API_BASE}/session/${code}`);
   if (!r.ok) throw new Error("getSession failed");
-  return r.json(); // { exists, locks }
+  return r.json(); // e.g. { status:"active", locks:{...} }
 }
 
+/** -------- Locks -------- **/
 export async function lockCharacter(code, character, token) {
   const r = await fetch(`${API_BASE}/session/${code}/lock`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ character, token })
+    body: JSON.stringify({ character, token }),
   });
   if (!r.ok) throw new Error("lockCharacter failed");
-  return r.json(); // { ok, locks } or { ok:false, reason:'taken' }
+  return r.json(); // e.g. { ok:true, locks:{...} } or { ok:false, reason:"taken" }
 }
 
 export async function unlockCharacter(code, character) {
-  const r = await fetch(`${API_BASE}/session/${code}/lock/${character}`, { method: "DELETE" });
+  const r = await fetch(`${API_BASE}/session/${code}/lock/${character}`, {
+    method: "DELETE",
+  });
   if (!r.ok) throw new Error("unlock failed");
   return r.json();
+}
+
+/** -------- Submissions (NEW) -------- **/
+export async function submitDrawing(code, character, dataURL, userId) {
+  // Choose the route shape that matches your backend. This one aligns
+  // with your other session-scoped routes like /session/{code}/lock
+  const r = await fetch(`${API_BASE}/session/${code}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ character, dataURL, userId }),
+  });
+  if (!r.ok) throw new Error("submitDrawing failed");
+  return r.json(); // e.g. { ok:true }
+}
+
+export async function getSubmissions(code) {
+  const r = await fetch(`${API_BASE}/session/${code}/submissions`, {
+    method: "GET",
+  });
+  if (!r.ok) throw new Error("getSubmissions failed");
+  return r.json(); // e.g. { items:[...] }
 }
