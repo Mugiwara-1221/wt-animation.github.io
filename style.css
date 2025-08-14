@@ -1,226 +1,220 @@
+
 :root {
-    --drawing-color: #000000;
-    --panel-bg: #4d8ad5;
-    --panel-border: white;
-    --panel-shadow: rgba(0, 0, 0, 0.1);
+  --drawing-color: #000000;
+  --panel-bg: #4d8ad5;
+  --panel-border: white;
+  --panel-shadow: rgba(0, 0, 0, 0.1);
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  font-family: Arial, sans-serif;
 }
 
 /* Canvas layers */
 canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 #drawCanvas {
-    z-index: 10;
-    pointer-events: auto;
+  z-index: 10;
+  pointer-events: auto;
 }
 #bgCanvas {
-    z-index: 1;
+  z-index: 1;
 }
 #spriteCanvas {
-    z-index: 20;
+  z-index: 20;
 }
 
 /* Left Navigation Panel */
 #navLeft {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px;
-    height: 100%;
-    background-color: var(--panel-bg);
-    border-right: 1px solid var(--panel-border);
-    z-index: 100;
-    overflow-y: auto;
-    transition: left 0.4s ease;
-    box-shadow: 2px 0 6px var(--panel-shadow);
-    display: flex;
-    flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  z-index: 100;
+  overflow-y: auto;
+  transition: left 0.4s ease;
+  box-shadow: 2px 0 6px var(--panel-shadow);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Individual Sections */
 .nav-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* vertically center */
-    align-items: center;     /* horizontally center */
-    padding: 20px 0;
-    border-bottom: 1px solid #ccc;
-    box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertically center */
+  align-items: center;     /* horizontally center */
+  padding: 20px 0;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 /* Section Labels */
 .nav-content label,
 .nav-content span {
-    /* font-weight: bold; */
-    margin-bottom: 5px;
-    font-size: 18px;
-    color: white; /* added 7/29 4:47 */
-    text-align: center;
+  margin-bottom: 5px;
+  font-size: 18px;
+  color: white;
+  text-align: center;
 }
 
 /* Form Inputs */
 .nav-content input[type="color"],
 .nav-content input[type="range"],
 .nav-content select {
-    width: 80%;
-    margin-bottom: 10px;
+  width: 80%;
+  margin-bottom: 10px;
 }
 
 /* Buttons */
 .nav-content button {
-    width: 70%;
-    padding: 8px;
-    background-color: white;/* #BADA55; #337ab7; */
-    color: black;
-    border: none;
-    border-radius: 5px;
-    margin: 5px 0;
-    font-size: 16px;
-    cursor: pointer;
+  width: 70%;
+  padding: 8px;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  margin: 5px 0;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 .nav-content button:hover {
-    background-color: #BADA55; /* #285e8e; */
+  background-color: #BADA55;
 }
 
 /* Toggle Arrow */
-
 .toggleNavLeft {
-    position: fixed;
-    top: 10px;
-    left: 250px;
-    width: 35px;
-    height: 35px;
-    background: url("images/navigateLeft.png") center no-repeat;
-    background-size: contain;
-    border-bottom-right-radius: 5px;
-    border: 1px solid #aaa;
-    z-index: 150;
-    cursor: pointer;
-    transition: left 0.4s ease;
+  position: fixed;
+  top: 10px;
+  left: 250px;
+  width: 35px;
+  height: 35px;
+  background: url("images/navigateLeft.png") center no-repeat;
+  background-size: contain;
+  border-bottom-right-radius: 5px;
+  border: 1px solid #aaa;
+  z-index: 150;
+  cursor: pointer;
+  transition: left 0.4s ease;
 }
 
 /* Optional: Draggable tool panel */
-
 .tools {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    width: 160px;
-    background: white;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 200;
-    cursor: grab;
-    user-select: none;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 160px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  cursor: grab;
+  user-select: none;
 }
 
 .tools button {
-    width: 100%;
-    min-height: 32px;
-    font-size: 14px;
-    cursor: pointer;
+  width: 100%;
+  min-height: 32px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 /* Save dropdown styling */
-
 .save-options {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 5px;
-    background-color: white;
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 5px;
+  background-color: white;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  z-index: 200;
 }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 
 .save-options button {
-    width: 100%;
-    padding: 5px;
-    font-size: 14px;
-    border: none;
-    align-items: center; /* Added */
-    background-color: #ffffff;
-    cursor: pointer;
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
+  border: none;
+  align-items: center;
+  background-color: #ffffff;
+  cursor: pointer;
 }
 
 .save-options button:hover {
-    background-color: #BADA55;
+  background-color: #BADA55;
 }
 
-
-
 /* Slider Styling */
-
-
-
 input[type="range"] {
-    -webkit-appearance: none;
-    width: 80%;
-    height: 8px;
-    background: linear-gradient(to right, #BADA55 0%, #BADA55 var(--percent), white var(--percent), white 100%);
-    border-radius: 4px;
-    outline: none;
-    padding: 0;
+  -webkit-appearance: none;
+  width: 80%;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    #BADA55 0%,
+    #BADA55 var(--percent),
+    white var(--percent),
+    white 100%
+  );
+  border-radius: 4px;
+  outline: none;
+  padding: 0;
 }
 
 /* WebKit */
-
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 16px;
-    width: 16px;
-    border-radius: 50%;
-    background: #BADA55;
-    cursor: pointer;
-    margin-top: -4px;
-    position: relative;
-    z-index: 1;
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #BADA55;
+  cursor: pointer;
+  margin-top: -4px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Firefox */
-
 input[type="range"]::-moz-range-track {
-    background: white;
-    height: 8px;
-    border-radius: 4px;
+  background: white;
+  height: 8px;
+  border-radius: 4px;
 }
 input[type="range"]::-moz-range-progress {
-    background-color: #BADA55;
-    height: 8px;
-    border-radius: 4px;
+  background-color: #BADA55;
+  height: 8px;
+  border-radius: 4px;
 }
 input[type="range"]::-moz-range-thumb {
-    background: #BADA55;
-    border: none;
-    height: 16px;
-    width: 16px;
-    border-radius: 50%;
-    cursor: pointer;
+  background: #BADA55;
+  border: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  cursor: pointer;
 }
