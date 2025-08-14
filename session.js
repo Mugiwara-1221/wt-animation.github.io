@@ -92,4 +92,6 @@ createBtn?.addEventListener("click", async () => {
     window.location.href = `index.html?session=${sessionCode}`;
     }, 1500);
 });
+console.log("hello")
     // This file is used to create a new session and initialize members
+
