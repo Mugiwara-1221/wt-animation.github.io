@@ -41,7 +41,7 @@ localStorage.setItem("selectedCharacter", window.selectedChar);
 // ------- Sprite (outline) caching -------
 const spriteImage = new Image();
 // IMPORTANT: load the transparent outline, not the white-filled artwork
-spriteImage.src = `${OUTLINE_DIR}/${window.selectedChar}.png`;
+spriteImage.src = `${OUTLINE_DIR}/${window.selectedChar}-transparent.png`;
 
 const spriteCache = document.createElement("canvas");
 const spriteCacheCtx = spriteCache.getContext("2d");
