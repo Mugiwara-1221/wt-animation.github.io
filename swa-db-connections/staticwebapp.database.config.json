@@ -8,6 +8,9 @@
     },
     "Orders": {
       "allowedOperations": ["read", "create"]
-    }
+    },
+  "nationFallback": {
+    "exclude": ["/api/*"]
+  }
   }
 }
