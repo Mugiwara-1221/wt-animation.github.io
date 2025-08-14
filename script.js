@@ -1,7 +1,7 @@
 
 "use strict";
 
-import { submitDrawing } from "./azure-api.js";
+import { submitDrawing } from ".js/azure-api.js";
 
 // ------- Canvas setup -------
 const bgCanvas = document.getElementById("bgCanvas");
