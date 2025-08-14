@@ -1,15 +1,34 @@
+
 {
   "routes": [
-    {
-      "route": "/",
-      "rewrite": "/session.html"
-    }
+    { "route": "/", "rewrite": "/session.html" },
+    { "route": "/session.html", "allowedRoles": [ "anonymous" ] },
+    { "route": "/index.html", "allowedRoles": [ "anonymous" ] },
+    { "route": "/canvas.html", "allowedRoles": [ "anonymous" ] },
+    { "route": "/storyboard.html", "allowedRoles": [ "anonymous" ] }
   ],
   "navigationFallback": {
     "rewrite": "/session.html",
-    "exclude": ["/images/*", "/js/*", "/css/*", "/api/*"]
+    "exclude": [
+      "/images/*",
+      "/js/*",
+      "/css/*",
+      "/**/*.png",
+      "/**/*.jpg",
+      "/**/*.jpeg",
+      "/**/*.webp",
+      "/**/*.gif",
+      "/**/*.svg",
+      "/**/*.csv"
+    ]
   },
   "mimeTypes": {
-    ".js": "text/javascript"
+    ".js": "text/javascript",
+    ".mjs": "text/javascript",
+    ".json": "application/json",
+    ".csv": "text/plain"
+  },
+  "globalHeaders": {
+    "Cache-Control": "public, max-age=3600"
   }
 }
