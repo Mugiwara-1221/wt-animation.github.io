@@ -31,6 +31,8 @@ jobs:
           app_location: "/" # App source code path
           api_location: "/api" # Api source code path - optional
           output_location: "/" # Built app content directory - optional
+          with:
+            db_connection_config_file: "swa-db-connections/staticwebapp.database.config.json" # Path to the database connection config file
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
