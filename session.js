@@ -60,3 +60,17 @@ module.exports = async function (context, req) {
     };
   }
 };
+
+const response = await fetch('/api/createSession'); // your function route
+const data = await response.json();
+const { sessionCode, memberIds } = data;
+
+localStorage.setItem("sessionCode", sessionCode);
+localStorage.setItem("memberIds", JSON.stringify(memberIds));
+
+sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+
+setTimeout(() => {
+  window.location.href = `index.html?session=${sessionCode}`;
+}, 1500);
+// This file is used to create a new session and initialize members
