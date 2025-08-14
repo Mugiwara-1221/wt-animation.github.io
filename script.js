@@ -1,7 +1,7 @@
 
 "use strict";
 
-import { submitDrawing } from ".js/azure-api.js";
+import { submitDrawing } from "./js/azure-api.js";
 
 // ------- Canvas setup -------
 const bgCanvas = document.getElementById("bgCanvas");
@@ -14,23 +14,8 @@ const spriteCtx = spriteCanvas.getContext("2d");
 // Transparent-outline sprites live here:
 const OUTLINE_DIR = "images/outline";
 
-function resizeCanvas() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  [bgCanvas, drawCanvas, spriteCanvas].forEach((c) => {
-    c.width = w;
-    c.height = h;
-  });
-  // Optional: if you want the sprite to stay centered after resize, re-draw it:
-  if (spriteImage.complete && allowedArea.width) {
-    const box = getSpriteBox();
-    allowedArea = { ...box };
-    drawWhiteBG();
-    cacheAndDrawSprite(spriteImage, box);
-  }
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+// Area you can draw in (square bounding box)
+let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 
 // ------- Selected character -------
 const urlParams = new URLSearchParams(window.location.search);
@@ -40,14 +25,13 @@ localStorage.setItem("selectedCharacter", window.selectedChar);
 
 // ------- Sprite (outline) caching -------
 const spriteImage = new Image();
+spriteImage.crossOrigin = "anonymous"; // safe if same-origin
 // IMPORTANT: load the transparent outline, not the white-filled artwork
 spriteImage.src = `${OUTLINE_DIR}/${window.selectedChar}-transparent.png`;
 
 const spriteCache = document.createElement("canvas");
 const spriteCacheCtx = spriteCache.getContext("2d");
-
-// Area you can draw in (square bounding box)
-let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
+let spriteLoaded = false;
 
 // Where the sprite sits (centered 600x600 box)
 function getSpriteBox() {
@@ -75,12 +59,38 @@ function cacheAndDrawSprite(img, box) {
   spriteCtx.drawImage(spriteCache, box.x, box.y);
 }
 
-spriteImage.onload = () => {
-  const box = getSpriteBox();
-  allowedArea = { ...box };
+function layoutAndRedraw() {
+  // Resize canvases to viewport
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  [bgCanvas, drawCanvas, spriteCanvas].forEach((c) => {
+    c.width = w;
+    c.height = h;
+  });
+
   drawWhiteBG();
-  cacheAndDrawSprite(spriteImage, box);
+
+  if (spriteLoaded) {
+    const box = getSpriteBox();
+    allowedArea = { ...box };
+    cacheAndDrawSprite(spriteImage, box);
+  }
+}
+
+spriteImage.onload = () => {
+  spriteLoaded = true;
+  allowedArea = { ...getSpriteBox() };
+  layoutAndRedraw();
 };
+
+spriteImage.onerror = () => {
+  console.error("Failed to load outline:", spriteImage.src);
+  alert(`Could not load outline for "${window.selectedChar}". Check the file:\n${spriteImage.src}`);
+};
+
+// Initial layout + resize handling
+layoutAndRedraw();
+window.addEventListener("resize", layoutAndRedraw);
 
 // ------- Drawing state & tools -------
 let drawing = false;
@@ -88,8 +98,7 @@ let currentTool = "draw";
 let brushSize = 10;
 let brushColor = "#000000";
 let opacity = 1.0;
-let prevX = null,
-  prevY = null;
+let prevX = null, prevY = null;
 let zoomLevel = 1;
 
 // UI refs
@@ -99,21 +108,11 @@ const colorInput = document.querySelector(".pick-color");
 const brushTypeSelect = document.querySelector(".brush-type-select");
 
 // Set tool handlers
-function setTool(tool) {
-  currentTool = tool;
-}
-colorInput.addEventListener("change", () => {
-  brushColor = colorInput.value;
-});
-brushSlider.addEventListener("input", () => {
-  brushSize = parseInt(brushSlider.value, 10);
-});
-opacitySlider.addEventListener("input", () => {
-  opacity = parseFloat(opacitySlider.value);
-});
-brushTypeSelect.addEventListener("change", () => {
-  // hook for custom brush behaviors later
-});
+function setTool(tool) { currentTool = tool; }
+colorInput.addEventListener("change", () => { brushColor = colorInput.value; });
+brushSlider.addEventListener("input", () => { brushSize = parseInt(brushSlider.value, 10); });
+opacitySlider.addEventListener("input", () => { opacity = parseFloat(opacitySlider.value); });
+brushTypeSelect.addEventListener("change", () => { /* hook for custom brushes later */ });
 
 // Helpers
 function getPos(e) {
@@ -167,8 +166,7 @@ function draw(e) {
   ctx.lineWidth = brushSize;
   ctx.globalAlpha = opacity;
   ctx.strokeStyle = brushColor;
-  ctx.globalCompositeOperation =
-    currentTool === "erase" ? "destination-out" : "source-over";
+  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
 
   ctx.beginPath();
   ctx.moveTo(prevX ?? x, prevY ?? y);
@@ -189,13 +187,8 @@ drawCanvas.addEventListener("mousedown", (e) => {
   }
 });
 drawCanvas.addEventListener("mousemove", draw);
-drawCanvas.addEventListener("mouseup", () => {
-  drawing = false;
-  prevX = prevY = null;
-});
-drawCanvas.addEventListener("mouseout", () => {
-  drawing = false;
-});
+drawCanvas.addEventListener("mouseup", () => { drawing = false; prevX = prevY = null; });
+drawCanvas.addEventListener("mouseout", () => { drawing = false; });
 
 drawCanvas.addEventListener("touchstart", (e) => {
   const [x, y] = getPos(e);
@@ -205,23 +198,16 @@ drawCanvas.addEventListener("touchstart", (e) => {
     [prevX, prevY] = [x, y];
   }
 });
-drawCanvas.addEventListener(
-  "touchmove",
-  (e) => {
-    e.preventDefault();
-    draw(e.touches[0]);
-  },
-  { passive: false }
-);
-drawCanvas.addEventListener("touchend", () => {
-  drawing = false;
-  prevX = prevY = null;
-});
+drawCanvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  draw(e.touches[0]);
+}, { passive: false });
+drawCanvas.addEventListener("touchend", () => { drawing = false; prevX = prevY = null; });
 
 // ------- Clear -------
 function clearCanvas() {
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-  cacheAndDrawSprite(spriteImage, allowedArea);
+  if (spriteLoaded) cacheAndDrawSprite(spriteImage, allowedArea);
 }
 
 // ------- Save / Send -------
@@ -251,7 +237,7 @@ function downloadImage() {
 }
 
 async function sendToStoryboard() {
-  // export only the sprite’s box: color layer + outline to database
+  // export only the sprite’s box: color layer + outline
   const spriteBounds = allowedArea;
   const trimmedCanvas = document.createElement("canvas");
   trimmedCanvas.width = spriteBounds.width;
@@ -261,14 +247,8 @@ async function sendToStoryboard() {
   // color, cropped to the box
   tCtx.drawImage(
     drawCanvas,
-    spriteBounds.x,
-    spriteBounds.y,
-    spriteBounds.width,
-    spriteBounds.height,
-    0,
-    0,
-    spriteBounds.width,
-    spriteBounds.height
+    spriteBounds.x, spriteBounds.y, spriteBounds.width, spriteBounds.height,
+    0, 0, spriteBounds.width, spriteBounds.height
   );
   // then draw the outline (from cache) on top
   tCtx.drawImage(spriteCache, 0, 0);
@@ -291,14 +271,8 @@ async function sendToStoryboard() {
 }
 
 // ------- Zoom -------
-function zoomIn() {
-  zoomLevel *= 1.1;
-  applyZoom();
-}
-function zoomOut() {
-  zoomLevel /= 1.1;
-  applyZoom();
-}
+function zoomIn() { zoomLevel *= 1.1; applyZoom(); }
+function zoomOut() { zoomLevel /= 1.1; applyZoom(); }
 function applyZoom() {
   drawCanvas.style.transform = `scale(${zoomLevel})`;
   spriteCanvas.style.transform = `scale(${zoomLevel})`;
@@ -324,8 +298,7 @@ toggleLeft.addEventListener("click", toggleMenu);
 
 // ------- Slider fill styling -------
 function updateSliderFill(slider) {
-  const value =
-    ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  const value = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
   slider.style.setProperty("--percent", `${value}%`);
 }
 [brushSlider, opacitySlider].forEach((slider) => {
@@ -333,7 +306,7 @@ function updateSliderFill(slider) {
   slider.addEventListener("input", () => updateSliderFill(slider));
 });
 
-// Expose handlers for inline onclicks in canvas.html (since this is a module)
+// Expose handlers for inline onclicks in canvas.html (module-safe)
 Object.assign(window, {
   setTool,
   undo,
