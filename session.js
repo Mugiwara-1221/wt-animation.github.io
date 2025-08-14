@@ -2,6 +2,11 @@
 // session.js — Azure-ready, with local fallback
 
 // import { createSession, getSession } from "./azure-api.js";
+const { TableClient } = require("@azure/data-tables");
+
+const STORAGE = process.env.STORAGE_CONNECTION_STRING;
+const TABLE_NAME = "sessions";
+const MEMBERS_TABLE = "sessionMembers";
 
 const createBtn = document.getElementById("createSessionBtn");
 const joinBtn = document.getElementById("joinSessionBtn");
