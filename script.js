@@ -10,6 +10,8 @@ const spriteCanvas = document.getElementById("spriteCanvas");
 const bgCtx = bgCanvas.getContext("2d");
 const ctx = drawCanvas.getContext("2d");
 const spriteCtx = spriteCanvas.getContext("2d");
+const OUTLINE_DIR = "images/outline"; // put the transparent-outline PNGs here
+
 
 function resizeCanvas() {
     const w = window.innerWidth;
