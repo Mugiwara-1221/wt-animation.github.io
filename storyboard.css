@@ -116,9 +116,9 @@ h2 {
 /* Reuse exact positions so they line up with the background */
 .hare     { top: 20px; left: 20px; }
 .tortoise { top: 20px; left: 40px; }
-.bear     { top: -50px; left: -200px; }
-.squirrel { top: 100px; left: -10000px; }
-.bird1    { top: 70px; left: 97px; }
+.bear     { top: -50px; left: -170px; }
+.squirrel { top: 100px; left: -100px; }
+.bird1    { top: 60px; left: 97px; }
 .bird2    { top: 70px; left: 125px; }
 
 /* Subtle idle motion for non-animated characters (optional) *
