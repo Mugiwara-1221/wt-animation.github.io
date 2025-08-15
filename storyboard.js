@@ -1,3 +1,26 @@
+// storyboard.js (presentation version using GIFs)
+// If the student just colored a character, replace that character's GIF with their PNG.
+// Everyone else stays animated via GIF for a simple, reliable demo.
+
+const coloredDataURL = localStorage.getItem("coloredCharacter");
+const selectedChar = (localStorage.getItem("selectedCharacter") || "").toLowerCase();
+
+// Swap the chosen character's image source to the student's colored PNG (if present)
+if (coloredDataURL && selectedChar) {
+  const el = document.querySelector(`.character[data-char="${selectedChar}"]`);
+  if (el) {
+    el.src = coloredDataURL;       // replace GIF with colored PNG
+    el.setAttribute("data-colored", "true");
+  }
+}
+
+// Optional: clear after applying so refresh shows only server-fed results later
+localStorage.removeItem("coloredCharacter");
+localStorage.removeItem("selectedCharacter");
+
+
+/*
+
 
 // storyboard.js
 // import { getSubmissions } from "./js/azure-api.js";
@@ -138,3 +161,5 @@ for (const char of CHAR_ORDER) {
 // Clear legacy items so refreshes don’t duplicate
 localStorage.removeItem("coloredCharacter");
 localStorage.removeItem("selectedCharacter");
+
+*/
