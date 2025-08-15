@@ -106,12 +106,12 @@ h2 {
 
 
 /* Match sizes from your selection page */
-.hare     { width: 300px; height: auto; }
-.tortoise { width: 280px; height: auto; }
-.bear     { width: 145px; height: auto; }
-.squirrel { width:  85px; height: auto; }
-.bird1    { width:  45px; height: auto; }
-.bird2    { width:  60px; height: auto; }
+.hare     { width: 1000px; height: auto; }
+.tortoise { width: 1000px; height: auto; }
+.bear     { width: 1200px; height: auto; }
+.squirrel { width:  700px; height: auto; }
+.bird1    { width:  645px; height: auto; }
+.bird2    { width:  600px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
 .hare     { top: 450px; left:  90px; }
