@@ -1,5 +1,7 @@
+/* 
 
-/* Storyboard styles – matches the sizing/feel of your character-select page */
+
+/* Storyboard styles – matches the sizing/feel of your character-select page *
 
 body, html {
   margin: 0;
@@ -32,12 +34,65 @@ h2 {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Background image sizing identical to your character-select page */
+/* Background image sizing identical to your character-select page *
 #scene {
   display: block;
   width: auto;
   height: auto;
-  max-width: 110vh;      /* same rule you used on #scene there */
+  max-width: 110vh;      /* same rule you used on #scene there *
+  border-radius: 12px;
+}
+
+/* Characters are passive on storyboard (not clickable) *
+.character {
+  position: absolute;
+  user-select: none;
+  pointer-events: none;
+}
+
+
+
+/* Storyboard styles – matches the sizing/feel of your character-select page */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: sans-serif;
+  background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h2 {
+  margin-top: 20px;
+  color: #b8c941;
+  font-size: 3.2rem;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 2px 2px #151515;
+  letter-spacing: 1px;
+}
+
+.scene-wrapper {
+  position: relative;
+  display: inline-block;
+  border: 4px solid #ffffff;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  /* NEW — keep same scaling as index.html scene */
+  max-width: 110vh;
+  max-height: 80vh;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: auto;
   border-radius: 12px;
 }
 
@@ -47,6 +102,8 @@ h2 {
   user-select: none;
   pointer-events: none;
 }
+
+
 
 /* Match sizes from your selection page */
 .hare     { width: 300px; height: auto; }
