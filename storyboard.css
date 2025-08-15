@@ -121,7 +121,7 @@ h2 {
 .bird1    { top: 142px; left: 337px; }
 .bird2    { top: 147px; left: 385px; }
 
-/* Subtle idle motion for non-animated characters (optional) */
+/* Subtle idle motion for non-animated characters (optional) *
 @keyframes floaty {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
