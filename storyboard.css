@@ -114,10 +114,10 @@ h2 {
 .bird2    { width:  600px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
-.hare     { top: 100px; left:  70px; }
-.tortoise { top: 120px; left: 110px; }
-.bear     { top: 106px; left: 105px; }
-.squirrel { top: 260px; left: 140px; }
+.hare     { top: 60px; left:  70px; }
+.tortoise { top: 50px; left: 90px; }
+.bear     { top: 46px; left: 45px; }
+.squirrel { top: 200px; left: 160px; }
 .bird1    { top: 142px; left: 37px; }
 .bird2    { top: 147px; left: 85px; }
 
