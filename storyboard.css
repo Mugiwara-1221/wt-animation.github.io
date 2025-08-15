@@ -114,12 +114,12 @@ h2 {
 .bird2    { width:  600px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
-.hare     { top: 250px; left:  70px; }
-.tortoise { top: 266px; left: 310px; }
-.bear     { top: 106px; left: 305px; }
-.squirrel { top: 260px; left: 640px; }
-.bird1    { top: 142px; left: 137px; }
-.bird2    { top: 147px; left: 185px; }
+.hare     { top: 100px; left:  70px; }
+.tortoise { top: 120px; left: 110px; }
+.bear     { top: 106px; left: 105px; }
+.squirrel { top: 260px; left: 140px; }
+.bird1    { top: 142px; left: 37px; }
+.bird2    { top: 147px; left: 85px; }
 
 /* Subtle idle motion for non-animated characters (optional) *
 @keyframes floaty {
