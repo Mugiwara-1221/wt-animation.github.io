@@ -21,32 +21,32 @@
     <img src="images/gifs/bird1.gif"     class="character bird1"     alt="Bird 1"    draggable="false">
     <img src="images/gifs/bird2.gif"     class="character bird2"     alt="Bird 2"    draggable="false">
   </div>
+  
+  <script type="module">
+  import { colorCharacterFrames } from './js/color-map-advanced.js';
+
+  (async () => {
+    const masked = localStorage.getItem('coloredCharacter'); // from canvas.js
+    const char = (localStorage.getItem('selectedCharacter') || 'tortoise').toLowerCase();
+
+    // Build 4 colorized frames from the student's masked drawing
+    const frames = await colorCharacterFrames({
+      character: char,
+      maskedBaseDataURL: masked
+    });
+
+    // Find or create the character <img> node
+    const node = document.querySelector(`.character.${char}`);
+    if (!node) return; // safety if no matching node exists
+
+    // Animate by cycling through frames
+    let i = 0;
+    setInterval(() => {
+      node.src = frames[i].dataURL;
+      i = (i + 1) % frames.length;
+    }, 250); // ~4fps
+  })();
+</script>
+
 </body>
 </html>
-
-
-
-<!--
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Storyboard</title>
-  <link rel="stylesheet" href="storyboard.css" />
-</head>
-<body>
-  <h2>Story Scene: The Hare and The Tortoise</h2>
-
-  <div class="scene-wrapper">
-    <!-- Same sizing/ratio as character-select page --
-    <img src="images/colored-background2.png" id="scene" alt="Scene">
-    <!-- Characters and the tortoise animation canvas are appended by storyboard.js --
-  </div>
-
-  <!-- JS builds all character nodes and (optionally) the tortoise animation canvas --
-  <script type="module" src="storyboard.js"></script>
-</body>
-</html>
--->
