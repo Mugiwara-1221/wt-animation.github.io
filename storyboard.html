@@ -10,57 +10,51 @@
   <h2>Story Scene: The Tortoise and The Hare</h2>
 
   <div class="scene-wrapper">
-    <!-- Background sized the same as character-select -->
     <img src="images/colored-background2.png" id="scene" alt="Scene">
-
-    <!-- Character placeholders (outline PNGs).
-         These will be replaced at runtime for the *selected* character
-         with the student-colored animated frames. -->
-    <img src="images/outline/hare-transparent.png"      class="character hare"      alt="Hare"      draggable="false">
-    <img src="images/outline/tortoise-transparent.png"  class="character tortoise"  alt="Tortoise"  draggable="false">
-    <img src="images/outline/bear-transparent.png"      class="character bear"      alt="Bear"      draggable="false">
-    <img src="images/outline/squirrel-transparent.png"  class="character squirrel"  alt="Squirrel"  draggable="false">
-    <img src="images/outline/bird1-transparent.png"     class="character bird1"     alt="Bird 1"    draggable="false">
-    <img src="images/outline/bird2-transparent.png"     class="character bird2"     alt="Bird 2"    draggable="false">
+    <!-- We’ll insert ONE character element from JS below -->
   </div>
 
-  <!-- Build the 4 animated frames for the student's chosen character
-       and swap them into the matching <img> node. -->
   <script type="module">
     import { colorCharacterFrames } from './js/color-map-advanced.js';
 
-    (async () => {
-      // These are set by canvas page
-      const masked = localStorage.getItem('coloredCharacter');         // PNG (masked to inside-the-lines)
-      const char   = (localStorage.getItem('selectedCharacter') || 'tortoise').toLowerCase();
+    const masked = localStorage.getItem('coloredCharacter');       // PNG from canvas step (masked inside-lines)
+    const char   = (localStorage.getItem('selectedCharacter') || '').toLowerCase();
 
-      // Nothing to animate? Just keep the outline placeholders.
-      if (!masked || !char) return;
+    if (!char) {
+      alert('No character selected yet.');
+    } else {
+      // Create a single node for the chosen character, positioned by CSS class
+      const node = document.createElement('img');
+      node.className = `character ${char}`;
+      node.alt = char;
+      node.draggable = false;
+      // start with outline so something is visible immediately
+      node.src = `images/outline/${char}-transparent.png`;
+      document.querySelector('.scene-wrapper').appendChild(node);
 
-      // Generate 4 colorized frames from your directory layout:
-      // images/frames/<character>/<character>1.png ... <character>4.png
-      try {
-        const frames = await colorCharacterFrames({
-          character: char,
-          maskedBaseDataURL: masked
-        });
+      // If we have a masked color layer, build the 4 frames and animate
+      if (masked) {
+        try {
+          const frames = await colorCharacterFrames({
+            character: char,
+            maskedBaseDataURL: masked
+          });
 
-        // Find the placeholder node for this character
-        const node = document.querySelector(`.character.${char}`);
-        if (!node) return;
-
-        // Animate by cycling through the generated frame data URLs
-        let i = 0;
-        node.src = frames[0].dataURL; // show first frame immediately
-        setInterval(() => {
-          node.src = frames[i].dataURL;
-          i = (i + 1) % frames.length;
-        }, 250); // ~4 fps
-      } catch (err) {
-        // If anything fails, we keep the outline placeholder so the scene still looks complete.
-        console.error('Frame colorization failed:', err);
+          let i = 0;
+          node.src = frames[0].dataURL; // first frame immediately
+          setInterval(() => {
+            node.src = frames[i].dataURL;
+            i = (i + 1) % frames.length;
+          }, 250); // ~4fps
+        } catch (err) {
+          console.error('Colorized frames failed; keeping outline:', err);
+        }
       }
-    })();
+    }
+
+    // Optional: clear local items so refresh doesn’t duplicate
+    // localStorage.removeItem('coloredCharacter');
+    // localStorage.removeItem('selectedCharacter');
   </script>
 </body>
 </html>
