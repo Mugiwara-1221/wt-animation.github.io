@@ -1,19 +1,27 @@
 
-// color_map_advanced.js
-// Port of get_color2.py — texture transfer via normalized 100x100 mapping with block bboxes.
-// Produces an RGBA PNG data URL for in-browser use.
+// color-map-advanced.js
+// Texture transfer via normalized 100x100 mapping + per‑block bounding boxes.
+// Produces RGBA PNG data URLs (works fully in-browser).
 
+/* -------------------- IO helpers -------------------- */
 export async function loadCSV(url) {
   const txt = await fetch(url).then(r => r.text());
-  return txt.trim().split('\n').map(line =>
-    line.split(',').map(n => parseInt(n.trim(), 10))
-  );
+  // Handle CRLF, skip blanks, parse safely
+  return txt
+    .trim()
+    .split(/\r?\n/)
+    .filter(line => line.length)
+    .map(line =>
+      line.split(',').map(v => Number.parseInt(v.trim(), 10))
+    );
 }
 
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // Same-origin: no need for crossOrigin. If your images are on a CDN with CORS, keep this.
+    // img.crossOrigin = "anonymous";
+    img.decoding = "async";
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = url;
@@ -21,33 +29,31 @@ export function loadImage(url) {
 }
 
 export function imageToImageData(img) {
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
   const c = document.createElement('canvas');
-  c.width = img.naturalWidth || img.width;
-  c.height = img.naturalHeight || img.height;
-  const cx = c.getContext('2d');
-  cx.drawImage(img, 0, 0);
-  return cx.getImageData(0, 0, c.width, c.height);
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(img, 0, 0, w, h);
+  return cx.getImageData(0, 0, w, h);
 }
 
 export function emptyImageDataLike(width, height) {
   const c = document.createElement('canvas');
-  c.width = width;
-  c.height = height;
-  const cx = c.getContext('2d');
+  c.width = width; c.height = height;
+  const cx = c.getContext('2d', { willReadFrequently: true });
   return cx.createImageData(width, height);
 }
 
 export function imageDataToPNGDataURL(imageData) {
   const c = document.createElement('canvas');
-  c.width = imageData.width;
-  c.height = imageData.height;
+  c.width = imageData.width; c.height = imageData.height;
   const cx = c.getContext('2d');
   cx.putImageData(imageData, 0, 0);
   return c.toDataURL('image/png');
 }
 
-/** ----- Mapping helpers (normalized 100x100 grid) ----- **/
-
+/* -------------------- Mapping helpers -------------------- */
 // Map irregular (y,x) inside bbox to 100x100 grid coords (ny,nx)
 export function irregularTo100(y, x, xmin, xmax, ymin, ymax) {
   const height = Math.max(ymax - ymin, 1);
@@ -59,7 +65,7 @@ export function irregularTo100(y, x, xmin, xmax, ymin, ymax) {
   return [ny, nx];
 }
 
-// Map (ny,nx) on 100x100 grid back into irregular bbox coords (y,x)
+// Map (ny,nx) back to irregular bbox coords (y,x)
 export function grid100ToIrregular(ny, nx, xmin, xmax, ymin, ymax) {
   const height = Math.max(ymax - ymin, 1);
   const width  = Math.max(xmax - xmin, 1);
@@ -91,22 +97,23 @@ export function getBlockBBox(mask2D, blockID) {
   return { xmin, xmax, ymin, ymax };
 }
 
+/* -------------------- Color transfer core -------------------- */
 /**
  * colorAFrameAdvanced
- * Transfers texture/colors from frame1 using map1 onto frame2 layout using map2
- * via normalized 100x100 mapping + block bounding boxes.
+ * Transfers color/texture from frame1 (pose 1, masked) onto frame2 (target pose)
+ * using map_1.csv and map_2.csv with block-wise normalized coordinates.
  *
- * - map2 == -1 → transparent
- * - map2 == 0  → keep original frame2 pixel (outline)
- * - map2  > 0  → sample color from frame1 using block-normalized coordinates
+ * Conventions in map2:
+ *  -1  => transparent
+ *   0  => keep frame2 base pixel (outline/background)
+ *  >0  => block id (sample color from frame1 block with same id)
  *
- * Returns: PNG data URL of the RGBA result.
+ * NOTE: For best results pass a *masked* frame1 (see maskColoredBase()).
  */
 export async function colorAFrameAdvanced({
-  frame1URL, map1CSVURL,     // "child" colored frame 1 + mask_1.csv
-  frame2URL, map2CSVURL,     // target template frame + mask_2.csv
+  frame1URL, map1CSVURL,
+  frame2URL, map2CSVURL,
 }) {
-  // Load assets
   const [img1, img2, map1, map2] = await Promise.all([
     loadImage(frame1URL),
     loadImage(frame2URL),
@@ -114,8 +121,8 @@ export async function colorAFrameAdvanced({
     loadCSV(map2CSVURL),
   ]);
 
-  const id1 = imageToImageData(img1); // RGB source
-  const id2 = imageToImageData(img2); // RGBA base (with outlines)
+  const id1 = imageToImageData(img1); // source colors
+  const id2 = imageToImageData(img2); // base (with outlines)
   const { width, height, data: base } = id2;
 
   if (map1.length !== height || map1[0].length !== width ||
@@ -127,7 +134,7 @@ export async function colorAFrameAdvanced({
   const o = out.data;
   const s = id1.data;
 
-  // Precompute block sets
+  // Collect block IDs used by map2
   const blockIDs = new Set();
   for (let y = 0; y < height; y++) {
     const row = map2[y];
@@ -138,33 +145,24 @@ export async function colorAFrameAdvanced({
   }
 
   // Precompute bboxes
-  const bbox1 = new Map(); // on map1
-  const bbox2 = new Map(); // on map2
-
+  const bbox1 = new Map();
+  const bbox2 = new Map();
   for (const bid of blockIDs) {
-    try {
-      bbox1.set(bid, getBlockBBox(map1, bid));
-      bbox2.set(bid, getBlockBBox(map2, bid));
-    } catch {
-      // If missing on either map, just skip this block
-    }
+    try { bbox1.set(bid, getBlockBBox(map1, bid)); } catch {}
+    try { bbox2.set(bid, getBlockBBox(map2, bid)); } catch {}
   }
 
-  // Iterate all pixels of map2; sample from id1 using normalized coords
+  // Transfer
   for (let y = 0; y < height; y++) {
     const row = map2[y];
     for (let x = 0; x < width; x++) {
       const idx = (y * width + x) * 4;
       const bid = row[x];
 
-      if (bid === -1) {
-        // transparent
-        o[idx] = 0; o[idx+1] = 0; o[idx+2] = 0; o[idx+3] = 0;
-        continue;
+      if (bid === -1) { // fully transparent
+        o[idx] = o[idx+1] = o[idx+2] = 0; o[idx+3] = 0; continue;
       }
-
-      if (bid === 0) {
-        // keep outline (from frame2 base)
+      if (bid === 0) {  // keep base (outline)
         o[idx]   = base[idx];
         o[idx+1] = base[idx+1];
         o[idx+2] = base[idx+2];
@@ -174,9 +172,7 @@ export async function colorAFrameAdvanced({
 
       const b1 = bbox1.get(bid);
       const b2 = bbox2.get(bid);
-
       if (!b1 || !b2) {
-        // fallback to base pixel if something's missing
         o[idx]   = base[idx];
         o[idx+1] = base[idx+1];
         o[idx+2] = base[idx+2];
@@ -184,23 +180,16 @@ export async function colorAFrameAdvanced({
         continue;
       }
 
-      // map target (x,y) -> (ny,nx) on 100x100 grid using target bbox
       const [ny, nx] = irregularTo100(y, x, b2.xmin, b2.xmax, b2.ymin, b2.ymax);
-      // then map (ny,nx) -> (sy,sx) in source bbox
       const [sy, sx] = grid100ToIrregular(ny, nx, b1.xmin, b1.xmax, b1.ymin, b1.ymax);
 
-      const inside =
-        sy >= 0 && sy < height &&
-        sx >= 0 && sx < width;
-
-      if (inside) {
+      if (sy >= 0 && sy < height && sx >= 0 && sx < width) {
         const sidx = (sy * width + sx) * 4;
         o[idx]   = s[sidx];
         o[idx+1] = s[sidx + 1];
         o[idx+2] = s[sidx + 2];
         o[idx+3] = 255;
       } else {
-        // safety fallback
         o[idx]   = base[idx];
         o[idx+1] = base[idx+1];
         o[idx+2] = base[idx+2];
@@ -212,11 +201,84 @@ export async function colorAFrameAdvanced({
   return imageDataToPNGDataURL(out);
 }
 
-/** Example:
- * const dataURL = await colorAFrameAdvanced({
- *   frame1URL: 'images/frames/tortoise/frame_1_child.png',
- *   map1CSVURL: 'images/frames/tortoise/mask_1.csv',
- *   frame2URL: 'images/frames/tortoise/frame_2_template.png',
- *   map2CSVURL: 'images/frames/tortoise/mask_2.csv'
- * });
- */
+/* -------------------- Trim (mask) outside-the-lines -------------------- */
+/** Keep only paint inside the character (by map). Optionally erode 1–2px. */
+export async function maskColoredBase(
+  coloredBaseDataURL,
+  mapCSVURL,
+  { keepIDs = (bid) => bid > 0, erode = 1 } = {}
+) {
+  const [img, map] = await Promise.all([ loadImage(coloredBaseDataURL), loadCSV(mapCSVURL) ]);
+  const id = imageToImageData(img);
+  const { width: W, height: H, data: px } = id;
+
+  const inside = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    const row = map[y];
+    for (let x = 0; x < W; x++) inside[y * W + x] = keepIDs(row[x]) ? 1 : 0;
+  }
+
+  if (erode > 0) {
+    const tmp = new Uint8Array(W * H);
+    const passes = Math.min(erode, 3);
+    for (let p = 0; p < passes; p++) {
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (!inside[y * W + x]) { tmp[y * W + x] = 0; continue; }
+          let ok = 1;
+          for (let yy = y - 1; yy <= y + 1 && ok; yy++) {
+            for (let xx = x - 1; xx <= x + 1; xx++) {
+              if (yy < 0 || yy >= H || xx < 0 || xx >= W) { ok = 0; break; }
+              if (!inside[yy * W + xx]) { ok = 0; break; }
+            }
+          }
+          tmp[y * W + x] = ok ? 1 : 0;
+        }
+      }
+      inside.set(tmp);
+    }
+  }
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      if (!inside[y * W + x]) {
+        px[i] = px[i+1] = px[i+2] = 0; px[i+3] = 0;
+      } else {
+        px[i+3] = 255;
+      }
+    }
+  }
+
+  return imageDataToPNGDataURL(id);
+}
+
+/* -------------------- Convenience for 4 frames -------------------- */
+export async function colorCharacterFrames({
+  character,
+  maskedBaseDataURL,                    // output of maskColoredBase()
+  dir = `images/frames/${character}`,   // where your frames & masks live
+  frames = [1, 2, 3, 4],
+}) {
+  const results = [];
+  for (const n of frames) {
+    const dataURL = await colorAFrameAdvanced({
+      frame1URL: maskedBaseDataURL,
+      map1CSVURL: `${dir}/mask_1.csv`,
+      frame2URL: `${dir}/${character}${n}.png`,
+      map2CSVURL: `${dir}/mask_${n}.csv`,
+    });
+    results.push({ n, dataURL });
+  }
+  return results;
+}
+
+/* Example:
+const masked = await maskColoredBase(childPNG, 'images/frames/tortoise/mask_1.csv', { erode: 1 });
+const out2 = await colorAFrameAdvanced({
+  frame1URL: masked,
+  map1CSVURL: 'images/frames/tortoise/mask_1.csv',
+  frame2URL: 'images/frames/tortoise/tortoise2.png',
+  map2CSVURL: 'images/frames/tortoise/mask_2.csv'
+});
+*/
