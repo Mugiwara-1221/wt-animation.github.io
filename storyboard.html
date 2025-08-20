@@ -13,40 +13,54 @@
     <!-- Background sized the same as character-select -->
     <img src="images/colored-background2.png" id="scene" alt="Scene">
 
-    <!-- Animated GIFs (must match your actual filenames/paths) -->
-    <img src="images/gifs/hare.gif"      class="character hare"      alt="Hare"      draggable="false">
-    <img src="images/gifs/tortoise.gif"  class="character tortoise"  alt="Tortoise"  draggable="false">
-    <img src="images/gifs/bear.gif"      class="character bear"      alt="Bear"      draggable="false">
-    <img src="images/gifs/squirrel.gif"  class="character squirrel"  alt="Squirrel"  draggable="false">
-    <img src="images/gifs/bird1.gif"     class="character bird1"     alt="Bird 1"    draggable="false">
-    <img src="images/gifs/bird2.gif"     class="character bird2"     alt="Bird 2"    draggable="false">
+    <!-- Character placeholders (outline PNGs).
+         These will be replaced at runtime for the *selected* character
+         with the student-colored animated frames. -->
+    <img src="images/outline/hare-transparent.png"      class="character hare"      alt="Hare"      draggable="false">
+    <img src="images/outline/tortoise-transparent.png"  class="character tortoise"  alt="Tortoise"  draggable="false">
+    <img src="images/outline/bear-transparent.png"      class="character bear"      alt="Bear"      draggable="false">
+    <img src="images/outline/squirrel-transparent.png"  class="character squirrel"  alt="Squirrel"  draggable="false">
+    <img src="images/outline/bird1-transparent.png"     class="character bird1"     alt="Bird 1"    draggable="false">
+    <img src="images/outline/bird2-transparent.png"     class="character bird2"     alt="Bird 2"    draggable="false">
   </div>
-  
+
+  <!-- Build the 4 animated frames for the student's chosen character
+       and swap them into the matching <img> node. -->
   <script type="module">
-  import { colorCharacterFrames } from './js/color-map-advanced.js';
+    import { colorCharacterFrames } from './js/color-map-advanced.js';
 
-  (async () => {
-    const masked = localStorage.getItem('coloredCharacter'); // from canvas.js
-    const char = (localStorage.getItem('selectedCharacter') || 'tortoise').toLowerCase();
+    (async () => {
+      // These are set by canvas page
+      const masked = localStorage.getItem('coloredCharacter');         // PNG (masked to inside-the-lines)
+      const char   = (localStorage.getItem('selectedCharacter') || 'tortoise').toLowerCase();
 
-    // Build 4 colorized frames from the student's masked drawing
-    const frames = await colorCharacterFrames({
-      character: char,
-      maskedBaseDataURL: masked
-    });
+      // Nothing to animate? Just keep the outline placeholders.
+      if (!masked || !char) return;
 
-    // Find or create the character <img> node
-    const node = document.querySelector(`.character.${char}`);
-    if (!node) return; // safety if no matching node exists
+      // Generate 4 colorized frames from your directory layout:
+      // images/frames/<character>/<character>1.png ... <character>4.png
+      try {
+        const frames = await colorCharacterFrames({
+          character: char,
+          maskedBaseDataURL: masked
+        });
 
-    // Animate by cycling through frames
-    let i = 0;
-    setInterval(() => {
-      node.src = frames[i].dataURL;
-      i = (i + 1) % frames.length;
-    }, 250); // ~4fps
-  })();
-</script>
+        // Find the placeholder node for this character
+        const node = document.querySelector(`.character.${char}`);
+        if (!node) return;
 
+        // Animate by cycling through the generated frame data URLs
+        let i = 0;
+        node.src = frames[0].dataURL; // show first frame immediately
+        setInterval(() => {
+          node.src = frames[i].dataURL;
+          i = (i + 1) % frames.length;
+        }, 250); // ~4 fps
+      } catch (err) {
+        // If anything fails, we keep the outline placeholder so the scene still looks complete.
+        console.error('Frame colorization failed:', err);
+      }
+    })();
+  </script>
 </body>
 </html>
