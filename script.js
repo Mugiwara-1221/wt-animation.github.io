@@ -1,9 +1,11 @@
 
 "use strict";
 
+// ✅ correct module imports
 import { submitDrawing } from "./js/azure-api.js";
+import { maskColoredBase } from "./js/color-map-advanced.js";
 
-// ------- Canvas setup -------
+/* ---------------- Canvas setup ---------------- */
 const bgCanvas = document.getElementById("bgCanvas");
 const drawCanvas = document.getElementById("drawCanvas");
 const spriteCanvas = document.getElementById("spriteCanvas");
@@ -17,23 +19,21 @@ const OUTLINE_DIR = "images/outline";
 // Area you can draw in (square bounding box)
 let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 
-// ------- Selected character -------
+/* ---------------- Character selection ---------------- */
 const urlParams = new URLSearchParams(window.location.search);
 const selectedChar = (urlParams.get("char") || "tortoise").toLowerCase();
-window.selectedChar = selectedChar; // used elsewhere
+window.selectedChar = selectedChar;
 localStorage.setItem("selectedCharacter", window.selectedChar);
 
-// ------- Sprite (outline) caching -------
+/* ---------------- Outline sprite ---------------- */
 const spriteImage = new Image();
-spriteImage.crossOrigin = "anonymous"; // safe if same-origin
-// IMPORTANT: load the transparent outline, not the white-filled artwork
+// same-origin assets – no crossOrigin needed unless you host elsewhere
 spriteImage.src = `${OUTLINE_DIR}/${window.selectedChar}-transparent.png`;
 
 const spriteCache = document.createElement("canvas");
 const spriteCacheCtx = spriteCache.getContext("2d");
 let spriteLoaded = false;
 
-// Where the sprite sits (centered 600x600 box)
 function getSpriteBox() {
   const size = 600;
   return {
@@ -60,16 +60,13 @@ function cacheAndDrawSprite(img, box) {
 }
 
 function layoutAndRedraw() {
-  // Resize canvases to viewport
   const w = window.innerWidth;
   const h = window.innerHeight;
   [bgCanvas, drawCanvas, spriteCanvas].forEach((c) => {
     c.width = w;
     c.height = h;
   });
-
   drawWhiteBG();
-
   if (spriteLoaded) {
     const box = getSpriteBox();
     allowedArea = { ...box };
@@ -82,17 +79,15 @@ spriteImage.onload = () => {
   allowedArea = { ...getSpriteBox() };
   layoutAndRedraw();
 };
-
 spriteImage.onerror = () => {
   console.error("Failed to load outline:", spriteImage.src);
   alert(`Could not load outline for "${window.selectedChar}". Check the file:\n${spriteImage.src}`);
 };
 
-// Initial layout + resize handling
 layoutAndRedraw();
 window.addEventListener("resize", layoutAndRedraw);
 
-// ------- Drawing state & tools -------
+/* ---------------- Drawing tools ---------------- */
 let drawing = false;
 let currentTool = "draw";
 let brushSize = 10;
@@ -112,9 +107,8 @@ function setTool(tool) { currentTool = tool; }
 colorInput.addEventListener("change", () => { brushColor = colorInput.value; });
 brushSlider.addEventListener("input", () => { brushSize = parseInt(brushSlider.value, 10); });
 opacitySlider.addEventListener("input", () => { opacity = parseFloat(opacitySlider.value); });
-brushTypeSelect.addEventListener("change", () => { /* hook for custom brushes later */ });
+brushTypeSelect.addEventListener("change", () => { /* hook for custom brushes */ });
 
-// Helpers
 function getPos(e) {
   const rect = drawCanvas.getBoundingClientRect();
   const clientX = e.clientX ?? e.touches?.[0]?.clientX;
@@ -135,7 +129,7 @@ function isInBounds(x, y) {
 ctx.lineJoin = "round";
 ctx.lineCap = "round";
 
-// ------- Undo / Redo -------
+/* ---------------- Undo / Redo ---------------- */
 let history = [];
 let redoStack = [];
 
@@ -157,7 +151,7 @@ function redo() {
   ctx.putImageData(next, 0, 0);
 }
 
-// ------- Drawing -------
+/* ---------------- Drawing ---------------- */
 function draw(e) {
   if (!drawing) return;
   const [x, y] = getPos(e);
@@ -177,7 +171,6 @@ function draw(e) {
   prevY = y;
 }
 
-// Listeners
 drawCanvas.addEventListener("mousedown", (e) => {
   const [x, y] = getPos(e);
   if (isInBounds(x, y)) {
@@ -204,13 +197,13 @@ drawCanvas.addEventListener("touchmove", (e) => {
 }, { passive: false });
 drawCanvas.addEventListener("touchend", () => { drawing = false; prevX = prevY = null; });
 
-// ------- Clear -------
+/* ---------------- Clear ---------------- */
 function clearCanvas() {
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   if (spriteLoaded) cacheAndDrawSprite(spriteImage, allowedArea);
 }
 
-// ------- Save / Send -------
+/* ---------------- Save / Send ---------------- */
 function toggleSaveOptions() {
   const saveDropdown = document.getElementById("saveOptions");
   saveDropdown.classList.toggle("hidden");
@@ -222,7 +215,6 @@ function downloadImage() {
   merged.height = drawCanvas.height;
   const mCtx = merged.getContext("2d");
 
-  // white background, then color layer, then outline layer
   mCtx.fillStyle = "white";
   mCtx.fillRect(0, 0, merged.width, merged.height);
   mCtx.drawImage(drawCanvas, 0, 0);
@@ -237,24 +229,37 @@ function downloadImage() {
 }
 
 async function sendToStoryboard() {
-  // export only the sprite’s box: color layer + outline
-  const spriteBounds = allowedArea;
-  const trimmedCanvas = document.createElement("canvas");
-  trimmedCanvas.width = spriteBounds.width;
-  trimmedCanvas.height = spriteBounds.height;
-  const tCtx = trimmedCanvas.getContext("2d");
+  // 1) Crop to the sprite’s box (student color + outline on top for reference)
+  const box = allowedArea;
+  const trimmed = document.createElement("canvas");
+  trimmed.width = box.width;
+  trimmed.height = box.height;
+  const tCtx = trimmed.getContext("2d");
 
-  // color, cropped to the box
+  // just the student's color (cropped)
   tCtx.drawImage(
     drawCanvas,
-    spriteBounds.x, spriteBounds.y, spriteBounds.width, spriteBounds.height,
-    0, 0, spriteBounds.width, spriteBounds.height
+    box.x, box.y, box.width, box.height,
+    0, 0, box.width, box.height
   );
-  // then draw the outline (from cache) on top
-  tCtx.drawImage(spriteCache, 0, 0);
+  // NOTE: do NOT draw the outline into the masked base — we only want color.
+  const unmaskedPNG = trimmed.toDataURL("image/png");
 
-  const dataURL = trimmedCanvas.toDataURL("image/png");
-  localStorage.setItem("coloredCharacter", dataURL);
+  // 2) Mask with map_1.csv so only inside-the-lines color remains
+  const MAP_DIR = `images/frames/${window.selectedChar}`;
+  let maskedPNG;
+  try {
+    maskedPNG = await maskColoredBase(unmaskedPNG, `${MAP_DIR}/mask_1.csv`, {
+      erode: 1, // 1px pull-back from the linework
+      // keepIDs: (bid) => bid > 0, // default
+    });
+  } catch (err) {
+    console.warn("Masking failed; falling back to unmasked:", err);
+    maskedPNG = unmaskedPNG;
+  }
+
+  // 3) Persist locally and (optionally) submit to backend
+  localStorage.setItem("coloredCharacter", maskedPNG);
 
   const sessionCode =
     new URLSearchParams(window.location.search).get("session") ||
@@ -262,15 +267,16 @@ async function sendToStoryboard() {
   const uid = localStorage.getItem("deviceToken") || crypto.randomUUID();
 
   try {
-    await submitDrawing(sessionCode, window.selectedChar, dataURL, uid);
+    await submitDrawing(sessionCode, window.selectedChar, maskedPNG, uid);
   } catch (e) {
     console.warn("Server submit failed, showing local only:", e.message);
   }
 
+  // 4) Go to the storyboard
   window.location.href = `storyboard.html?session=${sessionCode}`;
 }
 
-// ------- Zoom -------
+/* ---------------- Zoom ---------------- */
 function zoomIn() { zoomLevel *= 1.1; applyZoom(); }
 function zoomOut() { zoomLevel /= 1.1; applyZoom(); }
 function applyZoom() {
@@ -279,7 +285,7 @@ function applyZoom() {
   bgCanvas.style.transform = `scale(${zoomLevel})`;
 }
 
-// ------- Left Sidebar Toggle -------
+/* ---------------- Left Sidebar Toggle ---------------- */
 const toggleLeft = document.querySelector(".toggleNavLeft");
 const navLeft = document.querySelector("#navLeft");
 let toggleStatus = 1;
@@ -296,7 +302,7 @@ function toggleMenu() {
 }
 toggleLeft.addEventListener("click", toggleMenu);
 
-// ------- Slider fill styling -------
+/* ---------------- Slider fill styling ---------------- */
 function updateSliderFill(slider) {
   const value = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
   slider.style.setProperty("--percent", `${value}%`);
@@ -306,7 +312,7 @@ function updateSliderFill(slider) {
   slider.addEventListener("input", () => updateSliderFill(slider));
 });
 
-// Expose handlers for inline onclicks in canvas.html (module-safe)
+/* Expose handlers for inline onclicks (module-safe) */
 Object.assign(window, {
   setTool,
   undo,
