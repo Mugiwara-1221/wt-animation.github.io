@@ -84,15 +84,3 @@ h2 {
 }
 .character:not(.tortoise) { animation: floaty 2.6s ease-in-out infinite; }
 */
-
-/* The overlaid animation canvas for the selected character
-   (JS sizes/positions this to sit exactly over #scene) */
-#animCanvas,
-#tortoiseAnim {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  z-index: 2;
-  image-rendering: pixelated; /* keeps line art crisp when scaled */
-}
