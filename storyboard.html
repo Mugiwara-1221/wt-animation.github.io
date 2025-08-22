@@ -5,6 +5,88 @@
   <meta charset="utf-8" />
   <title>Storyboard</title>
   <link rel="stylesheet" href="storyboard.css" />
+  <style>
+    /* ensure the animation canvas positions the same as your .character.<char> */
+    .scene-wrapper { position: relative; display: inline-block; }
+    #animCanvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <h2>Story Scene: The Tortoise and The Hare</h2>
+
+  <div class="scene-wrapper">
+    <img src="images/colored-background2.png" id="scene" alt="Scene">
+    <!-- we’ll place a single canvas on top for the chosen character -->
+    <canvas id="animCanvas" width="600" height="600"></canvas>
+  </div>
+
+  <script type="module">
+    // read what the canvas page saved
+    const char   = (new URLSearchParams(location.search).get('char')
+                   || localStorage.getItem('selectedCharacter') || 'tortoise').toLowerCase();
+
+    const colorDataURL = localStorage.getItem('coloredCharacter') || null;
+
+    // where the 4 outline frames live
+    const frameSrcs = [1,2,3,4].map(i => `images/frames/${char}/${char}${i}.png`);
+
+    const cvs = document.getElementById('animCanvas');
+    const ctx = cvs.getContext('2d');
+
+    // match your CSS-sized placement; tweak these to match your scene CSS
+    function fitCanvasOverScene() {
+      const scene = document.getElementById('scene');
+      const rect = scene.getBoundingClientRect();
+      cvs.style.width  = rect.width  + 'px';
+      cvs.style.height = rect.height + 'px';
+
+      // HiDPI aware
+      const dpr = window.devicePixelRatio || 1;
+      cvs.width  = Math.round(rect.width  * dpr);
+      cvs.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      cvs.style.left = scene.offsetLeft + 'px';
+      cvs.style.top  = scene.offsetTop  + 'px';
+    }
+    fitCanvasOverScene();
+    addEventListener('resize', fitCanvasOverScene);
+
+    // load colored layer (student paint) + the 4 outline frames
+    function loadImage(src){
+      return new Promise((res, rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=src; });
+    }
+
+    (async function run(){
+      const colored = colorDataURL ? await loadImage(colorDataURL) : null;
+      const frames  = await Promise.all(frameSrcs.map(loadImage));
+
+      // simple loop at ~4 fps
+      let i=0, last=0;
+      function tick(ts){
+        if (ts - last > 250) { // 250ms per frame
+          last = ts;
+          ctx.clearRect(0,0,cvs.width, cvs.height);
+          if (colored) ctx.drawImage(colored, 0, 0, cvs.width, cvs.height); // student color first
+          ctx.drawImage(frames[i], 0, 0, cvs.width, cvs.height);           // outline on top
+          i = (i+1) % frames.length;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+
+    // optional: clean up once used
+    // localStorage.removeItem('coloredCharacter');
+    // localStorage.removeItem('selectedCharacter');
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Storyboard</title>
+  <link rel="stylesheet" href="storyboard.css" />
 </head>
 <body>
   <h2>Story Scene: The Tortoise and The Hare</h2>
