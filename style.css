@@ -4,6 +4,7 @@
   --panel-bg: #4d8ad5;
   --panel-border: white;
   --panel-shadow: rgba(0, 0, 0, 0.1);
+  --accent: #BADA55;
 }
 
 body {
@@ -13,9 +14,10 @@ body {
   width: 100vw;
   height: 100vh;
   font-family: Arial, sans-serif;
+  background: #fff; /* white background like storyboard */
 }
 
-/* Canvas layers */
+/* ---------------- Canvas Layers ---------------- */
 canvas {
   position: absolute;
   top: 0;
@@ -25,18 +27,18 @@ canvas {
   pointer-events: none;
 }
 
-#drawCanvas {
-  z-index: 10;
-  pointer-events: auto;
-}
 #bgCanvas {
   z-index: 1;
+}
+#drawCanvas {
+  z-index: 10;
+  pointer-events: auto; /* only this one is interactive */
 }
 #spriteCanvas {
   z-index: 20;
 }
 
-/* Left Navigation Panel */
+/* ---------------- Left Navigation Panel ---------------- */
 #navLeft {
   position: fixed;
   top: 0;
@@ -53,28 +55,26 @@ canvas {
   flex-direction: column;
 }
 
-/* Individual Sections */
 .nav-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* vertically center */
-  align-items: center;     /* horizontally center */
+  justify-content: center; 
+  align-items: center;     
   padding: 20px 0;
   border-bottom: 1px solid #ccc;
   box-sizing: border-box;
 }
 
-/* Section Labels */
-.nav-content label,
-.nav-content span {
+.nav-content span,
+.nav-content label {
   margin-bottom: 5px;
   font-size: 18px;
   color: white;
   text-align: center;
 }
 
-/* Form Inputs */
+/* Inputs */
 .nav-content input[type="color"],
 .nav-content input[type="range"],
 .nav-content select {
@@ -93,13 +93,14 @@ canvas {
   margin: 5px 0;
   font-size: 16px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .nav-content button:hover {
-  background-color: #BADA55;
+  background-color: var(--accent);
 }
 
-/* Toggle Arrow */
+/* ---------------- Toggle Arrow ---------------- */
 .toggleNavLeft {
   position: fixed;
   top: 10px;
@@ -115,7 +116,7 @@ canvas {
   transition: left 0.4s ease;
 }
 
-/* Optional: Draggable tool panel */
+/* ---------------- Tools (optional draggable panel) ---------------- */
 .tools {
   position: fixed;
   top: 10px;
@@ -140,7 +141,7 @@ canvas {
   cursor: pointer;
 }
 
-/* Save dropdown styling */
+/* ---------------- Save Dropdown ---------------- */
 .save-options {
   display: flex;
   flex-direction: column;
@@ -152,9 +153,6 @@ canvas {
   border: 1px solid #ccc;
   z-index: 200;
 }
-
-.hidden { display: none; }
-
 .save-options button {
   width: 100%;
   padding: 5px;
@@ -164,20 +162,20 @@ canvas {
   background-color: #ffffff;
   cursor: pointer;
 }
-
 .save-options button:hover {
-  background-color: #BADA55;
+  background-color: var(--accent);
 }
+.hidden { display: none; }
 
-/* Slider Styling */
+/* ---------------- Slider Styling ---------------- */
 input[type="range"] {
   -webkit-appearance: none;
   width: 80%;
   height: 8px;
   background: linear-gradient(
     to right,
-    #BADA55 0%,
-    #BADA55 var(--percent),
+    var(--accent) 0%,
+    var(--accent) var(--percent),
     white var(--percent),
     white 100%
   );
@@ -186,32 +184,32 @@ input[type="range"] {
   padding: 0;
 }
 
-/* WebKit */
+/* WebKit thumbs */
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   height: 16px;
   width: 16px;
   border-radius: 50%;
-  background: #BADA55;
+  background: var(--accent);
   cursor: pointer;
   margin-top: -4px;
   position: relative;
   z-index: 1;
 }
 
-/* Firefox */
+/* Firefox thumbs */
 input[type="range"]::-moz-range-track {
   background: white;
   height: 8px;
   border-radius: 4px;
 }
 input[type="range"]::-moz-range-progress {
-  background-color: #BADA55;
+  background-color: var(--accent);
   height: 8px;
   border-radius: 4px;
 }
 input[type="range"]::-moz-range-thumb {
-  background: #BADA55;
+  background: var(--accent);
   border: none;
   height: 16px;
   width: 16px;
