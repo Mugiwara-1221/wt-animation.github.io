@@ -17,7 +17,7 @@
     <div class="nav-content">
       <span>Brush Type</span>
       <select class="brush-type-select">
-        <option value="basic">Basic</option>
+        <option value="basic" selected>Basic</option>
         <option value="soft">Soft</option>
         <option value="marker">Marker</option>
         <option value="water">Watercolor</option>
@@ -26,7 +26,7 @@
 
     <div class="nav-content">
       <span>Brush Size</span>
-      <input type="range" class="brush-size-slider" min="1" max="100" value="10" />
+      <input type="range" class="brush-size-slider" min="1" max="100" value="18" />
     </div>
 
     <div class="nav-content">
@@ -36,7 +36,7 @@
 
     <div class="nav-content">
       <span>Color</span>
-      <input class="pick-color" type="color" value="#000000" />
+      <input class="pick-color" type="color" value="#2ad0ff" />
     </div>
 
     <div class="nav-content">
@@ -64,11 +64,10 @@
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
-  <!-- Azure client (provides submitDrawing, etc.) -->
+  <!-- Optional Azure client (submitDrawing) -->
   <script type="module" src="js/azure-api.js"></script>
 
-  <!-- Your canvas logic (module) -->
+  <!-- Your canvas logic -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
-
