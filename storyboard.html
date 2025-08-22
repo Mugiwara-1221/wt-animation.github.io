@@ -1,4 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Storyboard</title>
+  <link rel="stylesheet" href="storyboard.css" />
+  <style>
+    .scene-wrapper { position: relative; display: inline-block; }
+    #animCanvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <h2>Story Scene: The Tortoise and The Hare</h2>
 
+  <div class="scene-wrapper">
+    <img src="images/colored-background2.png" id="scene" alt="Scene">
+    <canvas id="animCanvas" width="600" height="600"></canvas>
+  </div>
+
+  <!-- External module -->
+  <script type="module" src="storyboard.js"></script>
+</body>
+</html>
+
+<!--
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +40,7 @@
 
   <div class="scene-wrapper">
     <img src="images/colored-background2.png" id="scene" alt="Scene">
-    <!-- we’ll place a single canvas on top for the chosen character -->
+    <!-- we’ll place a single canvas on top for the chosen character --
     <canvas id="animCanvas" width="600" height="600"></canvas>
   </div>
 
@@ -81,3 +105,4 @@
   </script>
 </body>
 </html>
+-->
