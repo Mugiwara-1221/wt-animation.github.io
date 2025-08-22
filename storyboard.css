@@ -48,6 +48,18 @@ h2 {
   pointer-events: none;
 }
 
+/* The overlaid animation canvas for the selected character
+   (JS sizes/positions this to sit exactly over #scene) */
+#animCanvas,
+#tortoiseAnim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+  image-rendering: pixelated; /* keeps line art crisp when scaled */
+}
+
 /* Match sizes from your selection page */
 .hare     { width: 200px; height: auto; }
 .tortoise { width: 50px; height: auto; }
