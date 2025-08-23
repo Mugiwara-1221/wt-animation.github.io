@@ -14,22 +14,15 @@ const MASK_PATHS  = [1,2,3,4].map(i => `images/frames/${selectedChar}/${selected
 
 // --- size the canvas to its OWN CSS box (so .tortoise width/pos apply) ---
 function fitCanvasToCSSBox() {
-  const rect = cvs.getBoundingClientRect();          // <— not the scene; the canvas itself
+  const rect = cvs.getBoundingClientRect();          // canvas' own CSS box
   const dpr  = window.devicePixelRatio || 1;
-
-  // intrinsic pixels follow CSS size
   cvs.width  = Math.max(1, Math.round(rect.width  * dpr));
   cvs.height = Math.max(1, Math.round(rect.height * dpr));
-
-  // draw in CSS pixels
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 fitCanvasToCSSBox();
-addEventListener("resize", () => { 
-  fitCanvasToCSSBox();
-  // if the size changed, rebuild scaled masks on the next frame
-  _needRebuildMasks = true;
-});
+let _needRebuildMasks = false;
+addEventListener("resize", () => { fitCanvasToCSSBox(); _needRebuildMasks = true; });
 
 // --- helpers ---
 function loadImage(src) {
@@ -74,22 +67,10 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
   return offTgt.transferToImageBitmap();
 }
 
-async function bitmapToDataURL(bitmap) {
-  const c = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const g = c.getContext("2d");
-  g.drawImage(bitmap, 0, 0);
-  if (c.convertToBlob) {
-    const b = await c.convertToBlob({ type: "image/png" });
-    return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
-  }
-  return await new Promise(r => c.toBlob(b => { const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(b); }, "image/png"));
-}
-
 // --- main ---
 let outlineFrames = [];
 let masks = [];
 let _srcMaskData = [];          // keep original CSV data so we can rebuild masks on resize
-let _needRebuildMasks = false;
 
 async function buildMasksToCanvasSize() {
   masks = [];
@@ -100,7 +81,7 @@ async function buildMasksToCanvasSize() {
 }
 
 (async function run() {
-  // Load outline frames (600x600 originals are fine; we draw scaled into the canvas)
+  // Load outline frames
   outlineFrames = await Promise.all(FRAME_PATHS.map(loadImage));
 
   // Load CSVs once; keep raw so we can rescale when canvas size changes
@@ -111,31 +92,42 @@ async function buildMasksToCanvasSize() {
   }
   await buildMasksToCanvasSize();
 
-  // Load colored layer
-  const colored = coloredDataURL ? await loadImage(coloredDataURL) : null;
+  // Prefer the pre‑masked 4 frames from canvas, if present
+  let coloredFrames = null;
+  try {
+    const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
+    if (Array.isArray(arr) && arr.length === 4) {
+      coloredFrames = await Promise.all(arr.map(loadImage));
+    }
+  } catch (_) {}
+
+  // Legacy single colored layer (if no per‑frame array)
+  const coloredSingle = (!coloredFrames && coloredDataURL) ? await loadImage(coloredDataURL) : null;
 
   // Animation loop (~4 fps)
   let i = 0, last = 0;
-  function tick(ts) {
-    if (_needRebuildMasks) {          // if CSS size changed, rebuild scaled masks
+  async function tick(ts) {
+    if (_needRebuildMasks) {
       _needRebuildMasks = false;
-      buildMasksToCanvasSize();
+      await buildMasksToCanvasSize();
     }
 
     if (ts - last > 250) {
       last = ts;
-
       ctx.clearRect(0, 0, cvs.width, cvs.height);
 
-      // 1) student's color, scaled to the canvas box controlled by CSS (.tortoise)
-      if (colored) ctx.drawImage(colored, 0, 0, cvs.width, cvs.height);
+      if (coloredFrames) {
+        // Use pre‑masked frame-specific color
+        ctx.drawImage(coloredFrames[i], 0, 0, cvs.width, cvs.height);
+      } else if (coloredSingle) {
+        // Fallback: single color layer masked per-frame
+        ctx.drawImage(coloredSingle, 0, 0, cvs.width, cvs.height);
+        ctx.globalCompositeOperation = "destination-in";
+        if (masks[i]) ctx.drawImage(masks[i], 0, 0);
+        ctx.globalCompositeOperation = "source-over";
+      }
 
-      // 2) clip color to current frame's mask
-      ctx.globalCompositeOperation = "destination-in";
-      if (masks[i]) ctx.drawImage(masks[i], 0, 0);
-      ctx.globalCompositeOperation = "source-over";
-
-      // 3) outline frame on top (scaled into the same box)
+      // Outline on top
       const frame = outlineFrames[i];
       ctx.drawImage(frame, 0, 0, cvs.width, cvs.height);
 
