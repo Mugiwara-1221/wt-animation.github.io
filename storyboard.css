@@ -69,12 +69,12 @@ h2 {
 .bird2    { width: 200px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
-.hare     { top: -10px; left:  20px; }
-.tortoise { top:   1000px; left:  1000px; }
+.hare     { top: -10px; left: 20px; }
+.tortoise { top: 1000px; left: 1000px; }
 .bear     { top: -50px; left: -170px; }
-.squirrel { top:  80px; left: -20px; }
-.bird1    { top:  60px; left:  97px; }
-.bird2    { top:  70px; left: 125px; }
+.squirrel { top: 80px; left: -20px; }
+.bird1    { top: 60px; left: 97px; }
+.bird2    { top: 70px; left: 125px; }
 
 /* Optional idle motion for non-animated characters */
 /*
