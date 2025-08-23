@@ -62,7 +62,7 @@ h2 {
 
 /* Match sizes from your selection page */
 .hare     { width: 200px; height: auto; }
-.tortoise { width: 100px; height: auto; }
+.tortoise { width: 350px; height: auto; }
 .bear     { width: 300px; height: auto; }
 .squirrel { width: 200px; height: auto; }
 .bird1    { width: 245px; height: auto; }
@@ -70,7 +70,7 @@ h2 {
 
 /* Reuse exact positions so they line up with the background */
 .hare     { top: -10px; left:  20px; }
-.tortoise { top:   0px; left:  -80px; }
+.tortoise { top:   350px; left:  350px; }
 .bear     { top: -50px; left: -170px; }
 .squirrel { top:  80px; left: -20px; }
 .bird1    { top:  60px; left:  97px; }
