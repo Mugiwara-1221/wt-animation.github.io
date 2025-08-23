@@ -1,3 +1,4 @@
+
 // storyboard.js (module)
 const params = new URLSearchParams(location.search);
 const selectedChar =
@@ -11,21 +12,24 @@ const ctx   = cvs.getContext("2d");
 const FRAME_PATHS = [1,2,3,4].map(i => `images/frames/${selectedChar}/${selectedChar}${i}.png`);
 const MASK_PATHS  = [1,2,3,4].map(i => `images/frames/${selectedChar}/${selectedChar}_mask_${i}.csv`);
 
-// --- sizing to sit exactly over #scene (HiDPI-aware) ---
-function fitCanvasOverScene() {
-  const rect = scene.getBoundingClientRect();
+// --- size the canvas to its OWN CSS box (so .tortoise width/pos apply) ---
+function fitCanvasToCSSBox() {
+  const rect = cvs.getBoundingClientRect();          // <— not the scene; the canvas itself
   const dpr  = window.devicePixelRatio || 1;
-  cvs.style.width  = rect.width  + "px";
-  cvs.style.height = rect.height + "px";
-  cvs.width  = Math.round(rect.width  * dpr);
-  cvs.height = Math.round(rect.height * dpr);
+
+  // intrinsic pixels follow CSS size
+  cvs.width  = Math.max(1, Math.round(rect.width  * dpr));
+  cvs.height = Math.max(1, Math.round(rect.height * dpr));
+
+  // draw in CSS pixels
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const wrapperRect = scene.parentElement.getBoundingClientRect();
-  cvs.style.left = (scene.offsetLeft) + "px";
-  cvs.style.top  = (scene.offsetTop)  + "px";
 }
-fitCanvasOverScene();
-addEventListener("resize", fitCanvasOverScene);
+fitCanvasToCSSBox();
+addEventListener("resize", () => { 
+  fitCanvasToCSSBox();
+  // if the size changed, rebuild scaled masks on the next frame
+  _needRebuildMasks = true;
+});
 
 // --- helpers ---
 function loadImage(src) {
@@ -45,14 +49,10 @@ async function loadCSVMatrix(url) {
   return { mat, W, H };
 }
 
-/**
- * Build an ImageBitmap alpha mask from a matrix of IDs (mat[H][W]),
- * then SCALE it to (targetW x targetH) so it matches our canvas size.
- */
+/** Build ImageBitmap alpha mask from ID matrix, scaled to (targetW x targetH). */
 async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
-  // 1) build at source size
   const offSrc = new OffscreenCanvas(srcW, srcH);
-  const cSrc   = offSrc.getContext("2d", { willReadFrequently: false });
+  const cSrc   = offSrc.getContext("2d");
   const imgData = cSrc.createImageData(srcW, srcH);
   let k = 0;
   for (let y = 0; y < srcH; y++) {
@@ -62,12 +62,11 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
       imgData.data[k++] = 255;
       imgData.data[k++] = 255;
       imgData.data[k++] = 255;
-      imgData.data[k++] = id > 0 ? 255 : 0; // alpha
+      imgData.data[k++] = id > 0 ? 255 : 0;
     }
   }
   cSrc.putImageData(imgData, 0, 0);
 
-  // 2) scale to target size
   const offTgt = new OffscreenCanvas(targetW, targetH);
   const cTgt   = offTgt.getContext("2d");
   cTgt.imageSmoothingEnabled = false;
@@ -80,48 +79,66 @@ async function bitmapToDataURL(bitmap) {
   const g = c.getContext("2d");
   g.drawImage(bitmap, 0, 0);
   if (c.convertToBlob) {
-    const blob = await c.convertToBlob({ type: "image/png" });
-    return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+    const b = await c.convertToBlob({ type: "image/png" });
+    return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
   }
   return await new Promise(r => c.toBlob(b => { const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(b); }, "image/png"));
 }
 
 // --- main ---
-(async function run() {
-  // Load outline frames
-  const outlineFrames = await Promise.all(FRAME_PATHS.map(loadImage));
+let outlineFrames = [];
+let masks = [];
+let _srcMaskData = [];          // keep original CSV data so we can rebuild masks on resize
+let _needRebuildMasks = false;
 
-  // Load masks (and scale each to canvas size)
-  const masks = [];
-  for (const mpath of MASK_PATHS) {
-    const { mat, W, H } = await loadCSVMatrix(mpath);        // W=cols, H=rows from CSV
-    const maskBmp = await matrixToMaskBitmapScaled(mat, W, H, cvs.width, cvs.height);
-    masks.push(maskBmp);
+async function buildMasksToCanvasSize() {
+  masks = [];
+  for (const { mat, W, H } of _srcMaskData) {
+    const bmp = await matrixToMaskBitmapScaled(mat, W, H, cvs.width, cvs.height);
+    masks.push(bmp);
   }
+}
 
-  // Load colored layer (student paint)
+(async function run() {
+  // Load outline frames (600x600 originals are fine; we draw scaled into the canvas)
+  outlineFrames = await Promise.all(FRAME_PATHS.map(loadImage));
+
+  // Load CSVs once; keep raw so we can rescale when canvas size changes
+  _srcMaskData = [];
+  for (const mpath of MASK_PATHS) {
+    const data = await loadCSVMatrix(mpath);
+    _srcMaskData.push(data);
+  }
+  await buildMasksToCanvasSize();
+
+  // Load colored layer
   const colored = coloredDataURL ? await loadImage(coloredDataURL) : null;
 
   // Animation loop (~4 fps)
   let i = 0, last = 0;
   function tick(ts) {
+    if (_needRebuildMasks) {          // if CSS size changed, rebuild scaled masks
+      _needRebuildMasks = false;
+      buildMasksToCanvasSize();
+    }
+
     if (ts - last > 250) {
       last = ts;
 
-      // 1) start with student's color
       ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+      // 1) student's color, scaled to the canvas box controlled by CSS (.tortoise)
       if (colored) ctx.drawImage(colored, 0, 0, cvs.width, cvs.height);
 
       // 2) clip color to current frame's mask
       ctx.globalCompositeOperation = "destination-in";
-      ctx.drawImage(masks[i], 0, 0);
+      if (masks[i]) ctx.drawImage(masks[i], 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      // 3) draw current outline frame on top
+      // 3) outline frame on top (scaled into the same box)
       const frame = outlineFrames[i];
       ctx.drawImage(frame, 0, 0, cvs.width, cvs.height);
 
-      // next frame
       i = (i + 1) % outlineFrames.length;
     }
     requestAnimationFrame(tick);
