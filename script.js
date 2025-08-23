@@ -21,8 +21,8 @@ const OUTLINE_DIR = "images/outline";
 
 // 4-frame outlines + mask CSVs for animation (per character)
 const FRAMES_DIR = (ch) => `images/frames/${ch}`;
-// We use mask_1.csv only for trimming paint; storyboard uses all 4
-const MASK_CSV   = (ch) => `${FRAMES_DIR(ch)}/${ch}_mask_1.csv`;
+// We used to trim with only mask_1; now we’ll build all 4.
+const MASK_CSV   = (ch, i=1) => `${FRAMES_DIR(ch)}/${ch}_mask_${i}.csv`;
 
 // Full-window canvases; sprite sits in a centered box
 const SPRITE_BOX_SIZE = 600;
@@ -252,38 +252,47 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   return scaled; // canvas usable in drawImage
 }
 
-// ---------- Send to storyboard (trim with CSV mask, then store) ----------
+// ------- Send to storyboard (build FOUR masked frames) -------
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
 
-    // 1) crop paint layer to sprite box
+    // 1) crop paint layer to sprite box once
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // 2) build mask from <char>_mask_1.csv and scale to our sprite box
-    const csvPath = MASK_CSV(selectedChar);
-    const { mat, W, H } = await loadCSVMatrix(csvPath);
-    const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
+    // helper: canvas -> dataURL
+    const canvasToDataURL = async (c) =>
+      c.toDataURL ? c.toDataURL("image/png")
+                  : await new Promise(r => c.toBlob(b => { const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(b); }, "image/png"));
 
-    // 3) apply mask: paint ∧ mask
-    const masked = document.createElement("canvas");
-    masked.width = width; masked.height = height;
-    const mctx = masked.getContext("2d");
-    mctx.drawImage(crop, 0, 0);
-    mctx.globalCompositeOperation = "destination-in";
-    mctx.drawImage(maskCanvas, 0, 0);
-    mctx.globalCompositeOperation = "source-over";
+    // 2) build 4 masked frames using mask_1..mask_4.csv
+    const frameDataURLs = [];
+    for (let i = 1; i <= 4; i++) {
+      const { mat, W, H } = await loadCSVMatrix(MASK_CSV(selectedChar, i));
+      const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
 
-    // 4) store for storyboard & optionally submit
-    const dataURL = masked.toDataURL("image/png");
-    localStorage.setItem("coloredCharacter", dataURL);
+      const masked = document.createElement("canvas");
+      masked.width = width; masked.height = height;
+      const mctx   = masked.getContext("2d");
+      mctx.drawImage(crop, 0, 0);
+      mctx.globalCompositeOperation = "destination-in";
+      mctx.drawImage(maskCanvas, 0, 0);
+      mctx.globalCompositeOperation = "source-over";
+
+      frameDataURLs.push(await canvasToDataURL(masked));
+    }
+
+    // 3) store array for storyboard (keep frame0 also for legacy path)
+    localStorage.setItem("coloredCharacterFrames", JSON.stringify(frameDataURLs));
+    localStorage.setItem("coloredCharacter", frameDataURLs[0]);
     localStorage.setItem("selectedCharacter", selectedChar);
 
+    // 4) (optional) submit just the first frame to your backend
     const sessionCode = urlParams.get("session") || localStorage.getItem("sessionCode");
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    try { await submitDrawing(sessionCode, selectedChar, dataURL, uid); } catch (err) {
+    try { await submitDrawing(sessionCode, selectedChar, frameDataURLs[0], uid); } catch (err) {
       console.warn("[submitDrawing] non-blocking error:", err);
     }
 
