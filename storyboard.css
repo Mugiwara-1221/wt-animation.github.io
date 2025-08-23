@@ -62,7 +62,7 @@ h2 {
 
 /* Match sizes from your selection page */
 .hare     { width: 200px; height: auto; }
-.tortoise { width: 10px; height: auto; }
+.tortoise { width: 100px; height: auto; }
 .bear     { width: 300px; height: auto; }
 .squirrel { width: 200px; height: auto; }
 .bird1    { width: 245px; height: auto; }
