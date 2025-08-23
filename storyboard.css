@@ -70,7 +70,7 @@ h2 {
 
 /* Reuse exact positions so they line up with the background */
 .hare     { top: -10px; left:  20px; }
-.tortoise { top:   350px; left:  350px; }
+.tortoise { top:   1000px; left:  1000px; }
 .bear     { top: -50px; left: -170px; }
 .squirrel { top:  80px; left: -20px; }
 .bird1    { top:  60px; left:  97px; }
