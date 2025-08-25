@@ -3,11 +3,11 @@ name: Azure Static Web Apps CI/CD (OIDC with Cosmos DB)
 on:
   push:
     branches:
-      - collaboration-backend
+      - demo
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - collaboration-backend
+      - demo
 
 permissions:
   id-token: write       # Required for OIDC login
@@ -67,6 +67,7 @@ jobs:
             --name "pntanimation" \
             --resource-group "Animation" \
             --environment-name "pull/${{ github.event.pull_request.number }}"
+
 
 
 
