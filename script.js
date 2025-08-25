@@ -313,3 +313,9 @@ function updateSliderFill(slider) {
     updateSliderFill(slider);
     slider.addEventListener("input", () => updateSliderFill(slider));
   });
+
+async function getUserInfo() {
+  const response = await fetch('/.auth/me');
+  const { clientPrincipal } = await response.json();
+  return clientPrincipal; // null if not authenticated
+}
