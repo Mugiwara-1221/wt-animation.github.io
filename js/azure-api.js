@@ -1,6 +1,11 @@
 // js/azure-api.js
 
 // In Azure Static Web Apps, API routes live under /api by default
+
+const res = await fetch('/data-api/rest/Products');
+const products = await res.json();
+console.log(products);
+
 const API_BASE = "/api";
 
 /** -------- Sessions -------- **/
