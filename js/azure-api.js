@@ -59,3 +59,24 @@ export async function getSubmissions(code) {
   if (!r.ok) throw new Error("getSubmissions failed");
   return r.json(); // e.g. { items:[...] }
 }
+
+async function loadProducts() {
+  try {
+    const res = await fetch('/data-api/rest/Products');
+    const data = await res.json();
+    console.log(data);
+
+    const list = document.getElementById('productsList');
+    list.innerHTML = '';
+    (data.value || data).forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item.id}: ${item.name} — $${item.price}`;
+      list.appendChild(li);
+    });
+  } catch (err) {
+    console.error('Error loading products:', err);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadProducts);
+
