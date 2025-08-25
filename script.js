@@ -3,7 +3,7 @@
 
 // ---------- Optional Azure submit (safe if not present) ----------
 
-window.history.pushState({}, '', '/session=${sessionCode}`');
+window.location.href = `index.html?session=${sessionCode}`;
 
 let submitDrawing = async () => {};
 try {
