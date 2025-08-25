@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Select Grade</title>
+  <style>
+    body{margin:0;font-family:system-ui,Arial;background:#f9fbff;display:grid;place-items:center;height:100vh}
+    .wrap{background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:28px 32px;min-width:320px}
+    h2{margin:0 0 14px;text-align:center}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    button{padding:12px;border-radius:10px;border:1px solid #ccd3ea;background:#fff;cursor:pointer;font-weight:600}
+    button:hover{background:#BADA55;border-color:#BADA55}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Choose Grade Level</h2>
+    <div class="grid">
+      <button data-grade="k-2">K–2</button>
+      <button data-grade="3-5">3–5</button>
+      <button data-grade="6-8">6–8</button>
+    </div>
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const session = params.get('session') || localStorage.getItem('sessionCode') || '';
+    const story   = params.get('story')   || localStorage.getItem('selectedStory') || 'tortoise-hare';
+    if (session) localStorage.setItem('sessionCode', session);
+    localStorage.setItem('selectedStory', story);
+
+    document.querySelectorAll('button[data-grade]').forEach(btn=>{
+      btn.onclick = () => {
+        const grade = btn.dataset.grade;
+        localStorage.setItem('selectedGrade', grade);
+        // next: character selection of the chosen story
+        const url = new URL('character-select.html', location.href);
+        if (session) url.searchParams.set('session', session);
+        url.searchParams.set('story', story);
+        url.searchParams.set('grade', grade);
+        location.href = url.toString();
+      };
+    });
+  </script>
+</body>
+</html>
