@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Select a Story</title>
+  <style>
+    body{margin:0;font-family:system-ui,Arial;background:#eff4ff}
+    header{padding:20px;text-align:center}
+    h1{margin:0 0 8px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px,1fr));gap:16px;padding:20px;max-width:1100px;margin:0 auto}
+    .card{background:white;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.06);overflow:hidden;cursor:pointer;border:2px solid transparent}
+    .card:hover{border-color:#BADA55}
+    .thumb{aspect-ratio:4/3;background:#dfe7ff;display:flex;align-items:center;justify-content:center;font-size:18px;color:#445}
+    .title{padding:12px 14px;font-weight:600}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pick Your Story</h1>
+    <div id="sessionInfo"></div>
+  </header>
+
+  <div class="grid" id="storyGrid"></div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const session = params.get('session') || localStorage.getItem('sessionCode') || '';
+    if (session) { localStorage.setItem('sessionCode', session); }
+    document.getElementById('sessionInfo').textContent = session ? `Session: ${session}` : '';
+
+    // You can add up to 12 here
+    const STORIES = [
+      { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story_thumbs/tortoise-hare.jpg' },
+      { id:'story-2', name:'Story 2', thumb:'' },
+      { id:'story-3', name:'Story 3', thumb:'' },
+      // ... add up to 12
+    ];
+
+    const grid = document.getElementById('storyGrid');
+    STORIES.forEach(s=>{
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.onclick = () => {
+        localStorage.setItem('selectedStory', s.id);
+        const url = new URL('grade-select.html', location.href);
+        if (session) url.searchParams.set('session', session);
+        url.searchParams.set('story', s.id);
+        location.href = url.toString();
+      };
+      el.innerHTML = `
+        <div class="thumb">${s.thumb ? `<img src="${s.thumb}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover">` : s.name}</div>
+        <div class="title">${s.name}</div>
+      `;
+      grid.appendChild(el);
+    });
+  </script>
+</body>
+</html>
