@@ -2,6 +2,9 @@
 "use strict";
 
 // ---------- Optional Azure submit (safe if not present) ----------
+
+window.history.pushState({}, '', '/session');
+
 let submitDrawing = async () => {};
 try {
   const m = await import("./js/azure-api.js");
