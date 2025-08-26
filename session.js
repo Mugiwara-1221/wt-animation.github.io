@@ -2,8 +2,6 @@ const { TableClient } = require("@azure/data-tables");
 
 const res = await fetch('/data-api/rest/Products');
 const products = await res.json();
-console.log(products, "hello");
-
 
 const STORAGE = process.env.STORAGE_CONNECTION_STRING;
 const SESSIONS_TABLE = "sessions";
@@ -99,6 +97,7 @@ createBtn?.addEventListener("click", async () => {
 });
 console.log("hello")
     // This file is used to create a new session and initialize members
+
 
 
 
