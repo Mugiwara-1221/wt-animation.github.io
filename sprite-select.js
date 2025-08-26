@@ -2,6 +2,26 @@
 // sprite-select.js
 import * as Azure from "./js/azure-api.js"; 
 
+/************ Session validation ************/
+async function validateSession() {
+  if (!sessionId) return; // standalone mode; no session to validate
+
+  try {
+    const sess = await Azure.getSession(sessionId);
+    if (!sess) {
+      // Session does not exist in Cosmos DB → redirect
+      window.location.href = "sessions.html";
+    }
+  } catch (err) {
+    console.error("Error checking session:", err);
+    // Optional: redirect on error if you consider it invalid
+    window.location.href = "sessions.html";
+  }
+}
+
+// Run validation immediately
+validateSession();
+
 /************ Session detection (non-blocking) ************/
 const qs = new URLSearchParams(window.location.search);
 const sessionId = qs.get("session") || localStorage.getItem("sessionCode") || null;
@@ -102,22 +122,3 @@ const ro = new ResizeObserver(entries => {
   }
 });
 sprites.forEach(img => ro.observe(img));
-
-/************ Refresh locks (non-blocking) ************/
-async function refreshLocks() {
-  if (!sessionId) return; // standalone mode
-  try {
-    const sess = await Azure.getSession(sessionId);
-    const taken = (sess && sess.locks) || {};
-    sprites.forEach(el => {
-      const key = el.dataset.char;
-      if (taken[key]) el.classList.add("locked");
-      else el.classList.remove("locked");
-    });
-  } catch (e) {
-    // don’t spam; log once in a while
-    // console.debug("refreshLocks error:", e?.message || e);
-  }
-}
-refreshLocks();
-setInterval(refreshLocks, 1000);
