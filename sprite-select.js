@@ -4,6 +4,24 @@ import * as Azure from "./js/azure-api.js";
 
 /************ Session validation ************/
 async function validateSession() {
+  if (!sessionId) return; // standalone mode, skip validation
+
+  try {
+    const sess = await Azure.getSession(sessionId);
+    if (!sess) {
+      // Not in Cosmos → redirect
+      window.location.href = "sessions.html";
+    }
+  } catch (err) {
+    console.error("Session check failed:", err);
+    window.location.href = "sessions.html"; // fail safe
+  }
+}
+validateSession();
+
+
+/************ Session validation ************/
+/*async function validateSession() {
   if (!sessionId) return; // standalone mode; no session to validate
 
   try {
@@ -20,7 +38,7 @@ async function validateSession() {
 }
 
 // Run validation immediately
-validateSession();
+validateSession();*/
 
 /************ Session detection (non-blocking) ************/
 const qs = new URLSearchParams(window.location.search);
