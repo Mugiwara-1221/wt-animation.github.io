@@ -23,7 +23,33 @@ module.exports = async function (context, req) {
 
 
 // In Azure Static Web Apps, API routes live under /api by default
-const API_BASE = "/api";
+
+const API_BASE = "https://nice-sea-023d6ff1e.1.azurewebsites.net"; 
+// replace with your actual Function App endpoint
+
+export async function getSession(sessionId) {
+  const res = await fetch(`${API_BASE}/sessions/${sessionId}`);
+  if (res.status === 404) {
+    return null; // session not found
+  }
+  if (!res.ok) {
+    throw new Error(`Failed to fetch session: ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function lockCharacter(sessionId, charKey, deviceToken) {
+  const res = await fetch(`${API_BASE}/sessions/${sessionId}/lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ charKey, deviceToken }),
+  });
+  if (!res.ok) throw new Error("Lock request failed");
+  return await res.json();
+}
+
+
+//const API_BASE = "/api";
 
 /** -------- Sessions -------- **/
 export async function createSession(maxSeats = 6) {
