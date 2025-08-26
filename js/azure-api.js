@@ -1,5 +1,27 @@
 // js/azure-api.js
 
+// Azure Function (Node.js example)
+const { CosmosClient } = require("@azure/cosmos");
+
+const client = new CosmosClient(process.env.COSMOS_CONNECTION_STRING);
+const database = client.database("animationapp");
+const container = database.container("sessions");
+
+module.exports = async function (context, req) {
+  const sessionId = req.params.sessionId;
+  try {
+    const { resource } = await container.item(sessionId, sessionId).read();
+    if (!resource) {
+      context.res = { status: 404, body: { error: "Session not found" } };
+      return;
+    }
+    context.res = { status: 200, body: resource };
+  } catch (err) {
+    context.res = { status: 500, body: { error: err.message } };
+  }
+};
+
+
 // In Azure Static Web Apps, API routes live under /api by default
 const API_BASE = "/api";
 
