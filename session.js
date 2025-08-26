@@ -29,53 +29,52 @@ function genCode() {
 }
 
 createBtn?.addEventListener("click", async () => {
-    module.exports = async function (context, req) {
   try {
-    const res = await fetch("/api/createSession", { method: "POST" });
-    if (!res.ok) throw new Error("Failed to create session");
-    const session = await res.json();
-
-    // Save locally
-    localStorage.setItem("sessionCode", session.id);
-
-    // Redirect to session page
-    window.location.href = `/sessions.html?session=${session.id}`;
-  } catch (err) {
-    console.error("Error creating session:", err);
-    alert("Could not create session, try again.");
-  }
-});
-
-        // Create up to 6 member IDs for the session in the same table (or use separate one)
-        const memberEntries = [];
-        for (let memberId = 1; memberId <= 6; memberId++) {
-        memberEntries.push({
-            partitionKey: sessionCode,
-            rowKey: memberId.toString(),
-            createdAt: Date.now(),
-        });
-        }
-
-        // Insert members sequentially (or batch if needed)
-        for (const entity of memberEntries) {
-        await client.createEntity(entity);
-        }
-
-        context.res = {
-        status: 200,
-        jsonBody: {
-            sessionCode,
-            memberIds: memberEntries.map(e => e.rowKey),
-        },
-        };
-    } catch (err) {
-        context.log.error(err);
-        context.res = {
-        status: 500,
-        jsonBody: { error: "create_failed" },
-        };
-    }
-    };
+        const res = await fetch("/api/createSession", { method: "POST" });
+        if (!res.ok) throw new Error("Failed to create session");
+        const session = await res.json();
+  
+        // Save locally
+        localStorage.setItem("sessionCode", session.id);
+  
+        // Redirect to session page
+        window.location.href = `/sessions.html?session=${session.id}`;
+      } catch (err) {
+        console.error("Error creating session:", err);
+        alert("Could not create session, try again.");
+      };
+      /*
+  
+          // Create up to 6 member IDs for the session in the same table (or use separate one)
+          const memberEntries = [];
+          for (let memberId = 1; memberId <= 6; memberId++) {
+          memberEntries.push({
+              partitionKey: sessionCode,
+              rowKey: memberId.toString(),
+              createdAt: Date.now(),
+          });
+          }
+  
+          // Insert members sequentially (or batch if needed)
+          for (const entity of memberEntries) {
+          await client.createEntity(entity);
+          }
+  
+          context.res = {
+          status: 200,
+          jsonBody: {
+              sessionCode,
+              memberIds: memberEntries.map(e => e.rowKey),
+          },
+          }
+      } catch (err) {
+          context.log.error(err);
+          context.res = {
+          status: 500,
+          jsonBody: { error: "create_failed" },
+          };
+      }
+      };*/
 
     const response = await fetch('/api/createSession'); // your function route
     const data = await response.json();
@@ -91,6 +90,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
