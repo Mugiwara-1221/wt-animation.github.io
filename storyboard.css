@@ -53,8 +53,8 @@ h2 {
 #animCanvas,
 #tortoiseAnim {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 300;
+  top: 300;
   pointer-events: none;
   z-index: 2;
   image-rendering: pixelated; /* keeps line art crisp when scaled */
