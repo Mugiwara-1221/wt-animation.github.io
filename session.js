@@ -1,7 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
-
-const res = await fetch('/data-api/rest/Products');
-const products = await res.json();
+const crypto = require("crypto");
 
 const STORAGE = process.env.STORAGE_CONNECTION_STRING;
 const SESSIONS_TABLE = "sessions";
@@ -90,6 +88,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
