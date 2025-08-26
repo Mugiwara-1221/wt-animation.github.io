@@ -1,8 +1,8 @@
 {
   "routes": [
     {
-      "route": "/sessions.html",
-      "serve": "/sessions.html"
+      "route": "/session.html",
+      "serve": "/session.html"
     }
   ]
 }
