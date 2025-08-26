@@ -1,0 +1,16 @@
+{
+  "navigationFallback": {
+    "rewrite": "index.html",
+    "exclude": ["/session.html", "/css/*", "/js/*", "/images/*"]
+  },
+  "routes": [
+    {
+      "route": "/session.html",
+      "serve": "/session.html"
+    },
+    {
+      "route": "/",
+      "serve": "/index.html"
+    }
+  ]
+}
