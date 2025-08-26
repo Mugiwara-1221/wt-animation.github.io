@@ -1,5 +1,4 @@
 
-const STORAGE = process.env.STORAGE_CONNECTION_STRING;
 const SESSIONS_TABLE = "sessions";
 const MEMBERS_TABLE = "sessionMembers"; // separate table for members, or reuse same with different partition
 
@@ -86,6 +85,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
