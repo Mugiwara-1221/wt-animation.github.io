@@ -22,45 +22,6 @@
   </div>
 
   <!-- Firebase and Logic Scripts -->
-    <script type="module">
-    const API_BASE = "https://<your-function-app>.azurewebsites.net/api"; // change this
-    
-    // Get sessionId from URL (?session=abc123) or localStorage
-    const qs = new URLSearchParams(window.location.search);
-    const sessionId = qs.get("session") || localStorage.getItem("sessionCode") || null;
-    
-    async function validateSession() {
-    if (!sessionId) {
-      // No session at all → redirect immediately
-      window.location.href = "sessions.html";
-      return;
-    }
-    
-    try {
-      const res = await fetch(`${API_BASE}/sessions/${sessionId}`);
-      if (res.status === 404) {
-        // Not found in Cosmos → redirect
-        window.location.href = "sessions.html";
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
-      }
-    
-      // If found, continue loading index page normally
-      console.log("Session found:", await res.json());
-    
-    } catch (err) {
-      console.error("Session check failed:", err);
-      // Fail-safe → redirect
-      window.location.href = "sessions.html";
-    }
-    }
-    
-    // Run the check right away
-    validateSession();
-    </script>
-
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="sprite-select.js"></script>
 </body>
