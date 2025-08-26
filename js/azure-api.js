@@ -69,7 +69,7 @@ export async function createSession(maxSeats = 6) {
 }*/
 
 /** -------- Locks -------- **/
-export async function lockCharacter(code, character, token) {
+/*export async function lockCharacter(code, character, token) {
   const r = await fetch(`${API_BASE}/session/${code}/lock`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -77,7 +77,7 @@ export async function lockCharacter(code, character, token) {
   });
   if (!r.ok) throw new Error("lockCharacter failed");
   return r.json(); // e.g. { ok:true, locks:{...} } or { ok:false, reason:"taken" }
-}
+}*/
 
 export async function unlockCharacter(code, character) {
   const r = await fetch(`${API_BASE}/session/${code}/lock/${character}`, {
