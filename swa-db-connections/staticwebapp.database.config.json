@@ -27,12 +27,3 @@
     }
   }
 }
-{
-  "routes": [
-    {
-      "route": "/sessions.html",
-      "serve": "/sessions.html"
-    }
-  ]
-}
-
