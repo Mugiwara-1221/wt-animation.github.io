@@ -1,4 +1,4 @@
-const { TableClient } = require("@azure/data-tables");
+const { CosmosClient } = require("@azure/cosmos");
 
 const res = await fetch('/data-api/rest/Products');
 const products = await res.json();
@@ -30,26 +30,21 @@ function genCode() {
 
 createBtn?.addEventListener("click", async () => {
     module.exports = async function (context, req) {
-    try {
-        const client = TableClient.fromConnectionString(STORAGE, SESSIONS_TABLE);
-        await client.createTable(); // no-op if exists
+  try {
+    const res = await fetch("/api/createSession", { method: "POST" });
+    if (!res.ok) throw new Error("Failed to create session");
+    const session = await res.json();
 
-        // Generate unique session code
-        let sessionCode;
-        while (true) {
-        const code = genCode();
-        try {
-            await client.createEntity({
-            partitionKey: "session",
-            rowKey: code,
-            createdAt: Date.now(),
-            });
-            sessionCode = code;
-            break;
-        } catch (e) {
-            // If there's a conflict, retry
-        }
-        }
+    // Save locally
+    localStorage.setItem("sessionCode", session.id);
+
+    // Redirect to session page
+    window.location.href = `/sessions.html?session=${session.id}`;
+  } catch (err) {
+    console.error("Error creating session:", err);
+    alert("Could not create session, try again.");
+  }
+});
 
         // Create up to 6 member IDs for the session in the same table (or use separate one)
         const memberEntries = [];
@@ -95,8 +90,8 @@ createBtn?.addEventListener("click", async () => {
     window.location.href = `index.html?session=${sessionCode}`;
     }, 1500);
 });
-console.log("hello")
     // This file is used to create a new session and initialize members
+
 
 
 
