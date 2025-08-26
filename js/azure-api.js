@@ -52,7 +52,7 @@ export async function lockCharacter(sessionId, charKey, deviceToken) {
 //const API_BASE = "/api";
 
 /** -------- Sessions -------- **/
-export async function createSession(maxSeats = 6) {
+/*export async function createSession(maxSeats = 6) {
   const r = await fetch(`${API_BASE}/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ export async function createSession(maxSeats = 6) {
   });
   if (!r.ok) throw new Error("createSession failed");
   return r.json(); // e.g. { code: "123456" }
-}
+}*/
 
 export async function getSession(code) {
   const r = await fetch(`${API_BASE}/session/${code}`);
