@@ -23,7 +23,7 @@
 
   <!-- Firebase and Logic Scripts -->
   <script type="module">
-    const API_BASE = "https://<your-function-app>.azurewebsites.net/api"; // change this
+    const API_BASE = "https://nice-sea-023d6ff1e.1.azurestaticapps.net"; // change this
     
     // Get sessionId from URL (?session=abc123) or localStorage
     const qs = new URLSearchParams(window.location.search);
@@ -32,7 +32,7 @@
     async function validateSession() {
     if (!sessionId) {
       // No session at all → redirect immediately
-      window.location.href = "sessions.html";
+      window.location.href = "session.html";
       return;
     }
     
@@ -40,7 +40,7 @@
       const res = await fetch(`${API_BASE}/sessions/${sessionId}`);
       if (res.status === 404) {
         // Not found in Cosmos → redirect
-        window.location.href = "sessions.html";
+        window.location.href = "session.html";
         return;
       }
       if (!res.ok) {
@@ -53,7 +53,7 @@
     } catch (err) {
       console.error("Session check failed:", err);
       // Fail-safe → redirect
-      window.location.href = "sessions.html";
+      window.location.href = "session.html";
     }
     }
     
