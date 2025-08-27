@@ -1,4 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
+const crypto = require("crypto"); // ✅ import crypto
 
 const client = new CosmosClient(process.env.COSMOS_CONNECTION_STRING);
 const database = client.database("animationapp");
