@@ -13,34 +13,27 @@ module.exports = async function (context, req) {
       id: sessionId,
       locks: {},
       createdAt: new Date().toISOString(),
-      sessions: "default"  // ✅ required for partition key
+      sessions: "default" // ✅ required for partition key
     };
 
+    // Save into Cosmos
     await container.items.create(newSession);
 
     context.res = {
       status: 201,
       body: newSession
     };
-} catch (err) {
-  context.log("Error creating session:", err);
+  } catch (err) {
+    context.log("Error creating session:", err);
 
-  context.res = {
-    status: 500,
-    body: {
-      message: "Error creating session",
-      error: err.message,
-      code: err.code,
-      details: err.body || err.stack
-    }
-  };
-}
-
-
-module.exports = async function (context, req) {
-  context.res = {
-    status: 200,
-    body: { message: "Hello from createSession" }
-  };
+    context.res = {
+      status: 500,
+      body: {
+        message: "Error creating session",
+        error: err.message,
+        code: err.code,
+        details: err.body || err.stack
+      }
+    };
+  }
 };
-
