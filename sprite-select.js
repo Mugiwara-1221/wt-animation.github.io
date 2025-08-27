@@ -1,6 +1,6 @@
 
 // sprite-select.js
-import * as Azure from "./js/azure-api.js"; 
+//import * as Azure from "./js/azure-api.js"; 
 
 /************ Session detection (non-blocking) ************/
 const qs = new URLSearchParams(window.location.search);
