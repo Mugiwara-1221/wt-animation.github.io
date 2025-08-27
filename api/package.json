@@ -2,6 +2,6 @@
   "name": "api",
   "version": "1.0.0",
   "dependencies": {
-    "@azure/cosmos": "^4.12.0"
+    "@azure/cosmos": "^4.5.0"
   }
 }
