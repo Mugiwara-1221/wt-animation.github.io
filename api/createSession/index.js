@@ -1,5 +1,5 @@
 const { CosmosClient } = require("@azure/cosmos");
-const crypto = require("crypto"); // ✅ import crypto
+const crypto = require("crypto");
 
 const client = new CosmosClient(process.env.COSMOS_CONNECTION_STRING);
 const database = client.database("animationapp");
@@ -7,14 +7,15 @@ const container = database.container("sessions");
 
 module.exports = async function (context, req) {
   try {
-    const sessionId = crypto.randomUUID(); // generate unique session code
+    const sessionId = crypto.randomUUID();
+
     const newSession = {
-      id: sessionId,      // Cosmos DB needs `id` property
-      locks: {},          // empty at first
-      createdAt: new Date().toISOString()
+      id: sessionId,
+      locks: {},
+      createdAt: new Date().toISOString(),
+      sessions: "default"  // ✅ required for partition key
     };
 
-    // Save into Cosmos
     await container.items.create(newSession);
 
     context.res = {
@@ -22,6 +23,7 @@ module.exports = async function (context, req) {
       body: newSession
     };
   } catch (err) {
+    context.log("Error creating session:", err.message);
     context.res = {
       status: 500,
       body: { error: err.message }
