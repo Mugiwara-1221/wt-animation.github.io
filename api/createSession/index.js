@@ -22,11 +22,11 @@ module.exports = async function (context, req) {
       status: 201,
       body: newSession
     };
-  } catch (err) {
-    context.log("Error creating session:", err.message);
-    context.res = {
-      status: 500,
-      body: { error: err.message }
-    };
+} catch (err) {
+  context.log("Error creating session:", err);
+  context.res = {
+    status: 500,
+    body: { error: err.message, details: err }
+  };
   }
 };
