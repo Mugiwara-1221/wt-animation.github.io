@@ -47,7 +47,7 @@ jobs:
           action: "upload"
           app_location: "."
           api_location: "api"
-          output_location: "."
+          output_location: ""
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -67,6 +67,7 @@ jobs:
             --name "pntanimation" \
             --resource-group "Animation" \
             --environment-name "pull/${{ github.event.pull_request.number }}"
+
 
 
 
