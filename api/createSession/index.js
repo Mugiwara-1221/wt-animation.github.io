@@ -24,12 +24,18 @@ module.exports = async function (context, req) {
     };
 } catch (err) {
   context.log("Error creating session:", err);
+
   context.res = {
     status: 500,
-    body: { error: err.message, details: err }
+    body: {
+      message: "Error creating session",
+      error: err.message,
+      code: err.code,
+      details: err.body || err.stack
+    }
   };
-  }
-};
+}
+
 
 module.exports = async function (context, req) {
   context.res = {
