@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,23 +23,20 @@
     </div>
   </div>
 
-  <script>
-    const params  = new URLSearchParams(location.search);
-    const session = params.get('session') || localStorage.getItem('sessionCode') || '';
-    const story   = params.get('story')   || localStorage.getItem('selectedStory') || 'tortoise-hare';
-    if (session) localStorage.setItem('sessionCode', session);
-    localStorage.setItem('selectedStory', story);
+  <script type="module">
+    import { readCtx, nextURL } from './js/flow.js';
+
+    // --- Route guard: must have session and story ---
+    const ctx = readCtx();
+    if (!ctx.session) location.replace('session1.html');
+    if (!ctx.story)   location.replace(nextURL('story-select.html', ctx));
 
     document.querySelectorAll('button[data-grade]').forEach(btn=>{
       btn.onclick = () => {
         const grade = btn.dataset.grade;
         localStorage.setItem('selectedGrade', grade);
-        // next: character selection of the chosen story
-        const url = new URL('character-select.html', location.href);
-        if (session) url.searchParams.set('session', session);
-        url.searchParams.set('story', story);
-        url.searchParams.set('grade', grade);
-        location.href = url.toString();
+        const newCtx = { ...ctx, grade };
+        location.href = nextURL('character-select.html', newCtx);
       };
     });
   </script>
