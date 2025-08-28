@@ -5,7 +5,7 @@
 // - Persists session to localStorage
 // - Navigates to story-select.html via flow.js
 
-import { nextURL } from './flow.js';
+import { nextURL } from './js/flow.js';
 
 const createBtn          = document.getElementById('createSessionBtn');
 const joinBtn            = document.getElementById('joinSessionBtn');
