@@ -1,14 +1,15 @@
 
 <!--character-select-->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8" />
   <title>Character Selection</title>
   <link rel="stylesheet" href="css/sprite-style.css">
 </head>
 <body>
   <h2>Select your Character!</h2>
-  <div class="scene-wrapper">
+  <div class="scene-wrapper" id="characters">
     <!-- Background Scene -->
     <img src="images/colored-background2.png" id="scene" alt="Scene">
 
@@ -21,7 +22,16 @@
     <img src="images/bird2.png" class="character bird2" alt="Bird 2" data-char="bird2">
   </div>
 
-  <!-- Firebase and Logic Scripts -->
+  <!-- Pass-through guard -->
+  <script type="module">
+    import { readCtx, nextURL } from './js/flow.js';
+    const ctx = readCtx();
+    // --- Route guard: must have story & grade chosen ---
+    if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
+    if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
+  </script>
+
+  <!-- Azure and selection logic -->
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="js/sprite-select.js"></script>
 </body>
