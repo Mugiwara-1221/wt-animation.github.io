@@ -22,13 +22,20 @@
 
   <div class="grid" id="storyGrid"></div>
 
-  <script>
-    const params  = new URLSearchParams(location.search);
-    const session = params.get('session') || localStorage.getItem('sessionCode') || '';
-    if (session) { localStorage.setItem('sessionCode', session); }
-    document.getElementById('sessionInfo').textContent = session ? `Session: ${session}` : '';
+  <script type="module">
+    import { readCtx, nextURL } from './js/flow.js';
 
-    // You can add up to 12 here
+    // --- Route guard: must have session ---
+    const ctx = readCtx();
+    if (!ctx.session) {
+      location.replace('session.html');
+    }
+
+    // Show session
+    const sessionInfo = document.getElementById('sessionInfo');
+    sessionInfo.textContent = ctx.session ? `Session: ${ctx.session}` : '';
+
+    // Up to 12 stories
     const STORIES = [
       { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story_thumbs/tortoise-hare.jpg' },
       { id:'story-2', name:'Story 2', thumb:'' },
@@ -42,10 +49,7 @@
       el.className = 'card';
       el.onclick = () => {
         localStorage.setItem('selectedStory', s.id);
-        const url = new URL('grade-select.html', location.href);
-        if (session) url.searchParams.set('session', session);
-        url.searchParams.set('story', s.id);
-        location.href = url.toString();
+        location.href = nextURL('grade-select.html', ctx, /* extra */ {});
       };
       el.innerHTML = `
         <div class="thumb">${s.thumb ? `<img src="${s.thumb}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover">` : s.name}</div>
