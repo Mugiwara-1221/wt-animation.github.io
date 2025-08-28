@@ -1,1 +1,53 @@
 
+{
+  "grades": {
+    "k-2": {
+      "label": "K–2",
+      "tools": {
+        "brush": true,
+        "eraser": false,
+        "fill": true,
+        "colorPicker": true,
+        "layers": false,
+        "zoom": true
+      },
+      "brush": { "min": 8, "max": 24, "default": 14, "hardEdges": true },
+      "palette": ["#ff6961","#77dd77","#fdfd96","#84b6f4","#fdcae1","#cfcfc4","#000000","#ffffff"],
+      "snapInsideLines": true,
+      "allowFreeDrawCharacter": false,
+      "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
+    },
+    "3-5": {
+      "label": "3–5",
+      "tools": {
+        "brush": true,
+        "eraser": true,
+        "fill": true,
+        "colorPicker": true,
+        "layers": false,
+        "zoom": true
+      },
+      "brush": { "min": 4, "max": 40, "default": 16, "hardEdges": false },
+      "palette": "full",
+      "snapInsideLines": true,
+      "allowFreeDrawCharacter": false,
+      "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
+    },
+    "6-8": {
+      "label": "6–8",
+      "tools": {
+        "brush": true,
+        "eraser": true,
+        "fill": true,
+        "colorPicker": true,
+        "layers": true,
+        "zoom": true
+      },
+      "brush": { "min": 1, "max": 80, "default": 18, "hardEdges": false },
+      "palette": "full",
+      "snapInsideLines": false,
+      "allowFreeDrawCharacter": true,
+      "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2","free-draw"]
+    }
+  }
+}
