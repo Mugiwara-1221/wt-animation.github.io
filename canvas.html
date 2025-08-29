@@ -9,10 +9,8 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <!-- Left navigation toggle button -->
   <div class="toggleNavLeft"></div>
 
-  <!-- Sidebar Tools Panel -->
   <nav id="navLeft">
     <div class="nav-content">
       <span>Brush Type</span>
@@ -59,24 +57,20 @@
     </div>
   </nav>
 
-  <!-- Canvas Layers -->
   <canvas id="bgCanvas"></canvas>
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
-  <!-- Guard & pass-through context early -->
+  <!-- Guard: must have char (and usually story/grade) -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-    // --- Route guard: must have character selected ---
-    // (story & grade are recommended too)
-    if (!ctx.char) location.replace(nextURL('character-select.html', ctx));
+    if (!ctx.char)  { location.replace(nextURL('index.html', ctx)); throw 0; }
+    // Keep context flowing to storyboard
+    window.__flowCtx = ctx;
   </script>
 
-  <!-- Optional Azure client (submitDrawing) -->
   <script type="module" src="js/azure-api.js"></script>
-
-  <!-- Your canvas logic -->
   <script type="module" src="js/script.js"></script>
 </body>
 </html>
