@@ -35,22 +35,33 @@
     <div id="sessionInfo"></div>
   </header>
 
-  <div class="grid" id="storyGrid"></div>
+  <div class="grid" id="storyGrid" aria-live="polite"></div>
 
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
-    const SESSION_PAGE = 'session1.html';   // change to 'session1.html' if that's your filename
+
+    // Where to send users if they somehow land here without a session
+    const SESSION_PAGE = 'session1.html';
 
     // --- Guard: must have a session first ---
     const ctx = readCtx();
     if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
     document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
 
-    // --- 12 slots (only first is ready today) ---
+    // --- Stories (ids must match /stories/<id>/slides.json) ---
     const STORIES = [
-      { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story-thumbnails/tortoise-and-hare.png', ready:true },
-
-      { id:'story-2',  name:'Lion and the Mouse',  thumb:'images/story-thumbnails/lion-and-mouse.png', ready:false },
+      {
+        id: 'tortoise-hare',
+        name: 'The Tortoise and the Hare',
+        thumb: 'images/story-thumbnails/tortoise-and-hare.png',
+        ready: true
+      },
+      {
+        id: 'lion-and-mouse',
+        name: 'The Lion and the Mouse',
+        thumb: 'images/story-thumbnails/lion-and-mouse.png',
+        ready: true
+      },
       { id:'story-3',  name:'Story 3',  thumb:'', ready:false },
       { id:'story-4',  name:'Story 4',  thumb:'', ready:false },
       { id:'story-5',  name:'Story 5',  thumb:'', ready:false },
@@ -60,20 +71,26 @@
       { id:'story-9',  name:'Story 9',  thumb:'', ready:false },
       { id:'story-10', name:'Story 10', thumb:'', ready:false },
       { id:'story-11', name:'Story 11', thumb:'', ready:false },
-      { id:'story-12', name:'Story 12', thumb:'', ready:false },
+      { id:'story-12', name:'Story 12', thumb:'', ready:false }
     ];
 
     const grid = document.getElementById('storyGrid');
 
     function thumbHTML(s){
       if (!s.thumb) return `<div class="ph">${s.name}</div>`;
+      // fallback to title block if thumbnail is missing/broken
       return `<img src="${s.thumb}" alt="${s.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
     }
 
     STORIES.forEach(s => {
       const card = document.createElement('div');
       card.className = 'card' + (s.ready ? '' : ' disabled');
-      card.innerHTML = `<div class="thumb">${thumbHTML(s)}</div><div class="title">${s.name}</div>`;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label', s.name + (s.ready ? '' : ' (coming soon)'));
+      card.innerHTML = `
+        <div class="thumb">${thumbHTML(s)}</div>
+        <div class="title">${s.name}</div>
+      `;
       if (s.ready) {
         card.addEventListener('click', () => {
           localStorage.setItem('selectedStory', s.id);
