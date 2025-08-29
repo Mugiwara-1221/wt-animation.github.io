@@ -10,28 +10,25 @@
 <body>
   <h2>Select your Character!</h2>
   <div class="scene-wrapper" id="characters">
-    <!-- Background Scene -->
     <img src="images/colored-background2.png" id="scene" alt="Scene">
 
-    <!-- Overlay Character Images -->
-    <img src="images/hare.png" class="character hare" alt="Hare" data-char="hare">
+    <img src="images/hare.png"     class="character hare"     alt="Hare"     data-char="hare">
     <img src="images/tortoise.png" class="character tortoise" alt="Tortoise" data-char="tortoise">
-    <img src="images/bear.png" class="character bear" alt="Bear" data-char="bear">
+    <img src="images/bear.png"     class="character bear"     alt="Bear"     data-char="bear">
     <img src="images/squirrel.png" class="character squirrel" alt="Squirrel" data-char="squirrel">
-    <img src="images/bird1.png" class="character bird1" alt="Bird 1" data-char="bird1">
-    <img src="images/bird2.png" class="character bird2" alt="Bird 2" data-char="bird2">
+    <img src="images/bird1.png"    class="character bird1"    alt="Bird 1"   data-char="bird1">
+    <img src="images/bird2.png"    class="character bird2"    alt="Bird 2"   data-char="bird2">
   </div>
 
-  <!-- Pass-through guard -->
+  <!-- Guard: need story & grade -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-    // --- Route guard: must have story & grade chosen ---
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
     if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
   </script>
 
-  <!-- Azure and selection logic -->
+  <!-- Selection logic -->
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="js/sprite-select.js"></script>
 </body>
