@@ -7,7 +7,15 @@
   <link rel="stylesheet" href="css/storyboard.css" />
   <style>
     .scene-wrapper { position: relative; display: inline-block; }
-    /* character canvases are created by JS inside this wrapper */
+    .nav {
+      margin: 10px 0 0;
+      display: flex; gap: 10px; justify-content: center;
+    }
+    .nav button {
+      padding: 6px 14px; border-radius: 8px; border:1px solid #333;
+      background:#fff; cursor:pointer; font-weight:600;
+    }
+    .nav button:disabled { opacity:.5; cursor:default; }
   </style>
 </head>
 <body>
@@ -18,13 +26,40 @@
     <img id="scene" alt="Scene" />
   </div>
 
-  <!-- Guard -->
+  <div class="nav">
+    <button id="prevBtn">◀ Back</button>
+    <button id="nextBtn">Next ▶</button>
+  </div>
+
+  <!-- route guard -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
   </script>
 
+  <!-- storyboard runtime -->
   <script type="module" src="js/storyboard.js"></script>
+
+  <!-- wire buttons after runtime exposes globals -->
+  <script>
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateBtns() {
+      if (!window.__slides) return;
+      prevBtn.disabled = window.__slides.index <= 0;
+      nextBtn.disabled = window.__slides.index >= window.__slides.count - 1;
+    }
+
+    prevBtn.addEventListener('click', () => { window.prevSlide?.(); updateBtns(); });
+    nextBtn.addEventListener('click', () => { window.nextSlide?.(); updateBtns(); });
+
+    // storyboard.js will fire this when a slide is shown
+    window.addEventListener('slidechange', updateBtns);
+
+    // slight delay so storyboard.js can set __slides first time
+    setTimeout(updateBtns, 50);
+  </script>
 </body>
 </html>
