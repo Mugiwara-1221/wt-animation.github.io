@@ -1,5 +1,53 @@
 
 {
+  "id": "hare",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/trimmed_Hare/trimmed_Hare",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/trimmed_Hare/trimmed_Hare_mask_"
+}
+
+{
+  "id": "tortoise",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/trimmed_Hare/trimmed_Hare",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/trimmed_Hare/trimmed_Hare_mask_"
+}
+
+{
+  "id": "bear",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/trimmed_Hare/trimmed_Hare",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/trimmed_Hare/trimmed_Hare_mask_"
+}
+
+{
+  "id": "squirrel",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/trimmed_Hare/trimmed_Hare",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/trimmed_Hare/trimmed_Hare_mask_"
+}
+
+{
+  "id": "bird1",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/trimmed_Hare/trimmed_Hare",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/trimmed_Hare/trimmed_Hare_mask_"
+}
+
+{
+  "id": "bird2",
+  "x": 40, "y": 60, "w": 18,
+  "framesPath": "images/frames/tortoise_and_the_hare/frame1/tortoise",
+  "frameCount": 4,
+  "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/tortoise_mask_"
+}
+
+{
   "storyId": "tortoise-hare",
   "storyTitle": "The Tortoise and The Hare",
   "slides": [
