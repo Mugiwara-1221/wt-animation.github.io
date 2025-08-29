@@ -8,7 +8,7 @@
       "characters": [
         {
           "id": "tortoise",
-          "x": 40, "y": 60, "w": 18,
+          "x": 20, "y": 40, "w": 25,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_"
