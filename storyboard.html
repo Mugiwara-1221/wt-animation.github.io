@@ -18,16 +18,14 @@
     <canvas id="animCanvas" class="character tortoise"></canvas>
   </div>
 
-  <!-- Guard early -->
+  <!-- Guard -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-    // --- Route guard: should have story chosen (and usually grade) ---
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
-    if (!ctx.grade) console.warn('Storyboard: grade missing; continuing without grade overrides.');
+    // grade optional; char is used by animation code
   </script>
 
-  <!-- External module -->
   <script type="module" src="js/storyboard.js"></script>
 </body>
 </html>
