@@ -1,20 +1,81 @@
 
 // storyboard.js (module)
-const params = new URLSearchParams(location.search);
+
+// -----------------------------
+// 1) SLIDESHOW (background)
+// -----------------------------
+const qs = new URLSearchParams(location.search);
+const selectedStory =
+  (qs.get('story') || localStorage.getItem('selectedStory') || 'tortoise-hare').toLowerCase();
+
+// Tell us how many slides each story has:
+const STORY_SLIDE_COUNTS = {
+  'tortoise-hare': 6,
+  'lion-and-mouse': 5,
+  // add more later, e.g. 'story-3': 4
+};
+
+// Build the slide list dynamically based on count
+function buildSlidePaths(storyId) {
+  const count = STORY_SLIDE_COUNTS[storyId] || 1; // fallback: 1 slide
+  return Array.from({ length: count }, (_, i) =>
+    `images/stories/${storyId}/slide${i + 1}.png`
+  );
+}
+
+const slides = buildSlidePaths(selectedStory);
+
+// Scene image is your “background”
+const scene = document.getElementById('scene');
+
+// Add Next/Back controls if not in HTML already
+(function ensureControls() {
+  if (document.getElementById('sb-controls')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'sb-controls';
+  wrap.style.cssText =
+    'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:5';
+  wrap.innerHTML = `
+    <button id="sb-prev" style="padding:8px 14px;border-radius:10px;border:1px solid #ccd3ea;cursor:pointer">◀ Back</button>
+    <button id="sb-next" style="padding:8px 14px;border-radius:10px;border:1px solid #ccd3ea;cursor:pointer">Next ▶</button>
+  `;
+  document.body.appendChild(wrap);
+})();
+const prevBtn = document.getElementById('sb-prev');
+const nextBtn = document.getElementById('sb-next');
+
+let slideIndex = 0;
+function preload(src) { const img = new Image(); img.src = src; }
+slides.forEach(preload);
+
+function showSlide(i) {
+  slideIndex = ((i % slides.length) + slides.length) % slides.length;
+  scene.src = slides[slideIndex];
+}
+showSlide(0);
+
+prevBtn?.addEventListener('click', () => showSlide(slideIndex - 1));
+nextBtn?.addEventListener('click', () => showSlide(slideIndex + 1));
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') showSlide(slideIndex + 1);
+  if (e.key === 'ArrowLeft')  showSlide(slideIndex - 1);
+});
+
+// -----------------------------
+// 2) CHARACTER ANIMATION LAYER
+// -----------------------------
 const selectedChar =
-  (params.get("char") || localStorage.getItem("selectedCharacter") || "tortoise").toLowerCase();
+  (qs.get("char") || localStorage.getItem("selectedCharacter") || "tortoise").toLowerCase();
 const coloredDataURL = localStorage.getItem("coloredCharacter") || null;
 
-const scene = document.getElementById("scene");
-const cvs   = document.getElementById("animCanvas");
-const ctx   = cvs.getContext("2d");
+const cvs = document.getElementById("animCanvas");
+const ctx = cvs.getContext("2d");
 
 const FRAME_PATHS = [1,2,3,4].map(i => `images/frames/${selectedChar}/${selectedChar}${i}.png`);
 const MASK_PATHS  = [1,2,3,4].map(i => `images/frames/${selectedChar}/${selectedChar}_mask_${i}.csv`);
 
-// --- size the canvas to its OWN CSS box (so .tortoise width/pos apply) ---
 function fitCanvasToCSSBox() {
-  const rect = cvs.getBoundingClientRect();          // canvas' own CSS box
+  const rect = cvs.getBoundingClientRect();
   const dpr  = window.devicePixelRatio || 1;
   cvs.width  = Math.max(1, Math.round(rect.width  * dpr));
   cvs.height = Math.max(1, Math.round(rect.height * dpr));
@@ -24,7 +85,6 @@ fitCanvasToCSSBox();
 let _needRebuildMasks = false;
 addEventListener("resize", () => { fitCanvasToCSSBox(); _needRebuildMasks = true; });
 
-// --- helpers ---
 function loadImage(src) {
   return new Promise((res, rej) => {
     const im = new Image();
@@ -33,7 +93,6 @@ function loadImage(src) {
     im.src = src;
   });
 }
-
 async function loadCSVMatrix(url) {
   const text = await (await fetch(url)).text();
   const rows = text.trim().split(/\r?\n/);
@@ -41,8 +100,6 @@ async function loadCSVMatrix(url) {
   const H = mat.length, W = mat[0]?.length || 0;
   return { mat, W, H };
 }
-
-/** Build ImageBitmap alpha mask from ID matrix, scaled to (targetW x targetH). */
 async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
   const offSrc = new OffscreenCanvas(srcW, srcH);
   const cSrc   = offSrc.getContext("2d");
@@ -67,10 +124,9 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
   return offTgt.transferToImageBitmap();
 }
 
-// --- main ---
 let outlineFrames = [];
 let masks = [];
-let _srcMaskData = [];          // keep original CSV data so we can rebuild masks on resize
+let _srcMaskData = [];
 
 async function buildMasksToCanvasSize() {
   masks = [];
@@ -81,10 +137,8 @@ async function buildMasksToCanvasSize() {
 }
 
 (async function run() {
-  // Load outline frames
   outlineFrames = await Promise.all(FRAME_PATHS.map(loadImage));
 
-  // Load CSVs once; keep raw so we can rescale when canvas size changes
   _srcMaskData = [];
   for (const mpath of MASK_PATHS) {
     const data = await loadCSVMatrix(mpath);
@@ -92,7 +146,6 @@ async function buildMasksToCanvasSize() {
   }
   await buildMasksToCanvasSize();
 
-  // Prefer the pre‑masked 4 frames from canvas, if present
   let coloredFrames = null;
   try {
     const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
@@ -100,36 +153,28 @@ async function buildMasksToCanvasSize() {
       coloredFrames = await Promise.all(arr.map(loadImage));
     }
   } catch (_) {}
-
-  // Legacy single colored layer (if no per‑frame array)
   const coloredSingle = (!coloredFrames && coloredDataURL) ? await loadImage(coloredDataURL) : null;
 
-  // Animation loop (~4 fps)
   let i = 0, last = 0;
   async function tick(ts) {
     if (_needRebuildMasks) {
       _needRebuildMasks = false;
       await buildMasksToCanvasSize();
     }
-
     if (ts - last > 250) {
       last = ts;
       ctx.clearRect(0, 0, cvs.width, cvs.height);
 
       if (coloredFrames) {
-        // Use pre‑masked frame-specific color
         ctx.drawImage(coloredFrames[i], 0, 0, cvs.width, cvs.height);
       } else if (coloredSingle) {
-        // Fallback: single color layer masked per-frame
         ctx.drawImage(coloredSingle, 0, 0, cvs.width, cvs.height);
         ctx.globalCompositeOperation = "destination-in";
         if (masks[i]) ctx.drawImage(masks[i], 0, 0);
         ctx.globalCompositeOperation = "source-over";
       }
 
-      // Outline on top
-      const frame = outlineFrames[i];
-      ctx.drawImage(frame, 0, 0, cvs.width, cvs.height);
+      ctx.drawImage(outlineFrames[i], 0, 0, cvs.width, cvs.height);
 
       i = (i + 1) % outlineFrames.length;
     }
@@ -137,174 +182,3 @@ async function buildMasksToCanvasSize() {
   }
   requestAnimationFrame(tick);
 })();
-
-// Optional cleanup so refreshes don’t duplicate prior color
-// localStorage.removeItem("coloredCharacter");
-// localStorage.removeItem("selectedCharacter");
-
-
-// storyboard.js (presentation version using GIFs)
-// If the student just colored a character, replace that character's GIF with their PNG.
-// Everyone else stays animated via GIF for a simple, reliable demo.
-/*
-const coloredDataURL = localStorage.getItem("coloredCharacter");
-const selectedChar = (localStorage.getItem("selectedCharacter") || "").toLowerCase();
-
-// Swap the chosen character's image source to the student's colored PNG (if present)
-if (coloredDataURL && selectedChar) {
-  const el = document.querySelector(`.character[data-char="${selectedChar}"]`);
-  if (el) {
-    el.src = coloredDataURL;       // replace GIF with colored PNG
-    el.setAttribute("data-colored", "true");
-  }
-}
-
-// Optional: clear after applying so refresh shows only server-fed results later
-localStorage.removeItem("coloredCharacter");
-localStorage.removeItem("selectedCharacter");
-
-
-/*
-
-
-// storyboard.js
-// import { getSubmissions } from "./js/azure-api.js";
-
-// ----- config -----
-const CHAR_ORDER = ["hare", "tortoise", "bear", "squirrel", "bird1", "bird2"];
-
-// Base art to show when there’s no colored sprite yet (static fallback).
-// Use whatever assets you prefer here (white-filled or outline).
-const FALLBACK_SRC = {
-  hare:     "images/hare.png",
-  tortoise: "images/frames/tortoise/tortoise1.png", // first outline frame as static
-  bear:     "images/bear.png",
-  squirrel: "images/squirrel.png",
-  bird1:    "images/bird1.png",
-  bird2:    "images/bird2.png",
-};
-
-// Tortoise animation frames (outline)
-const TORTOISE_FRAMES = [
-  "images/frames/tortoise/tortoise1.png",
-  "images/frames/tortoise/tortoise2.png",
-  "images/frames/tortoise/tortoise3.png",
-  "images/frames/tortoise/tortoise4.png",
-];
-const TORTOISE_FPS = 4; // 4 frames/sec
-
-// ----- dom refs -----
-const container = document.querySelector(".scene-wrapper");
-
-// localStorage fallback from canvas page
-const coloredDataURL = localStorage.getItem("coloredCharacter") || null;
-const selectedChar = (localStorage.getItem("selectedCharacter") || "").toLowerCase() || null;
-
-// helper: create a static character image and place using CSS class
-function placeStaticCharacter(char, src) {
-  const img = document.createElement("img");
-  img.className = `character ${char}`;
-  img.alt = char;
-  img.draggable = false;
-  img.src = src;
-  container.appendChild(img);
-  return img;
-}
-
-// helper: animate tortoise by drawing student’s colored layer + outline frames
-function placeAnimatedTortoise(coloredSrc) {
-  // base node (invisible) so CSS positions/size are correct
-  const shadow = document.createElement("img");
-  shadow.className = "character tortoise";
-  shadow.style.opacity = "0"; // we’ll cover it with a canvas
-  shadow.alt = "tortoise-shadow";
-  shadow.src = TORTOISE_FRAMES[0];
-  container.appendChild(shadow);
-
-  // overlay canvas that exactly matches the .tortoise size/position
-  const cvs = document.createElement("canvas");
-  cvs.id = "tortoiseAnim";
-  cvs.className = "tortoise";              // reuse your .tortoise position/size rules
-  cvs.style.display = "block";
-  container.appendChild(cvs);
-
-  const ctx = cvs.getContext("2d");
-
-  // ensure canvas pixel size follows CSS size (and HiDPI)
-  function syncCanvasSize() {
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = shadow.clientWidth || 600;
-    const cssH = shadow.clientHeight || 600;
-    cvs.style.width = cssW + "px";
-    cvs.style.height = cssH + "px";
-    cvs.width = Math.round(cssW * dpr);
-    cvs.height = Math.round(cssH * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing to CSS pixels
-  }
-  syncCanvasSize();
-  window.addEventListener("resize", syncCanvasSize);
-
-  // load colored layer and outline frames
-  const colorImg = new Image();
-  colorImg.src = coloredSrc;
-
-  Promise.all(
-    TORTOISE_FRAMES.map(
-      src =>
-        new Promise((res, rej) => {
-          const im = new Image();
-          im.onload = () => res(im);
-          im.onerror = rej;
-          im.src = src;
-        })
-    )
-  ).then(frames => {
-    let idx = 0;
-    const frameMs = 1000 / TORTOISE_FPS;
-
-    let last = performance.now();
-    function tick(now) {
-      if (now - last >= frameMs) {
-        last = now;
-        const w = cvs.clientWidth || 600;
-        const h = cvs.clientHeight || 600;
-        ctx.clearRect(0, 0, w, h);
-        if (colorImg.complete) ctx.drawImage(colorImg, 0, 0, w, h); // student color
-        ctx.drawImage(frames[idx], 0, 0, w, h);                     // outline frame
-        idx = (idx + 1) % frames.length;
-      }
-      requestAnimationFrame(tick);
-    }
-
-    if (colorImg.complete) requestAnimationFrame(tick);
-    else colorImg.onload = () => requestAnimationFrame(tick);
-  }).catch(() => {
-    // fallback: static tortoise if frames fail
-    placeStaticCharacter("tortoise", coloredSrc || FALLBACK_SRC.tortoise);
-  });
-}
-
-// ----- main flow -----
-// For now (no backend), we place:
-//  • the student’s colored character if we have it (and animate if tortoise)
-//  • fallbacks for all the others so the scene is complete
-
-// Place everyone once
-for (const char of CHAR_ORDER) {
-  if (char === "tortoise" && selectedChar === "tortoise" && coloredDataURL) {
-    // student colored the tortoise → animate it
-    placeAnimatedTortoise(coloredDataURL);
-  } else if (selectedChar === char && coloredDataURL) {
-    // student colored this non-tortoise → show colored static
-    placeStaticCharacter(char, coloredDataURL);
-  } else {
-    // others → show base art
-    placeStaticCharacter(char, FALLBACK_SRC[char]);
-  }
-}
-
-// Clear legacy items so refreshes don’t duplicate
-localStorage.removeItem("coloredCharacter");
-localStorage.removeItem("selectedCharacter");
-
-*/
