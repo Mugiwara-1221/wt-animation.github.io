@@ -1,94 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Select a Story</title>
   <style>
-    :root{
-      --card-r: 12px;
-      --accent: #BADA55;
-    }
+    :root{ --card-r:12px; --accent:#BADA55; }
     body{margin:0;font-family:system-ui,Arial;background:#eff4ff}
     header{padding:20px;text-align:center}
     h1{margin:0 0 6px}
     #sessionInfo{opacity:.7}
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4, minmax(220px,1fr)); /* 12 items = 3 rows of 4 */
-      gap:16px;
-      padding:20px;
-      max-width:1100px;
-      margin:0 auto 40px;
-    }
-    .card{
-      position:relative;
-      background:white;
-      border-radius:var(--card-r);
-      box-shadow:0 4px 10px rgba(0,0,0,.06);
-      overflow:hidden;
-      border:2px solid transparent;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      min-height:220px;
-    }
-    .card:hover{ border-color:var(--accent); }
-    .thumb{
-      position:relative;
-      aspect-ratio:4/3;
-      background:#dfe7ff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#445;
-      font-size:18px;
-    }
-    .thumb img{
-      width:100%; height:100%; object-fit:cover; display:block;
-    }
-    .title{
-      padding:12px 14px;
-      font-weight:600;
-      background:#fff;
-    }
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:16px;padding:20px;max-width:1100px;margin:0 auto 40px}
+    .card{position:relative;background:#fff;border-radius:var(--card-r);box-shadow:0 4px 10px rgba(0,0,0,.06);overflow:hidden;border:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;min-height:220px}
+    .card:hover{border-color:var(--accent)}
+    .thumb{position:relative;aspect-ratio:4/3;background:#dfe7ff;display:flex;align-items:center;justify-content:center;color:#445;font-size:18px}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .title{padding:12px 14px;font-weight:600;background:#fff}
 
-    /* Coming soon / disabled state */
-    .card.disabled{
-      cursor:default;
-      filter: grayscale(100%) opacity(.65);
-      border-color: #e5e8f4;
-    }
-    .card.disabled:hover{ border-color:#e5e8f4; }
-    .card.disabled .thumb::after{
-      content:"COMING SOON";
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.35);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      letter-spacing:.06em;
-    }
+    .card.disabled{cursor:default;filter:grayscale(100%) opacity(.65);border-color:#e5e8f4}
+    .card.disabled:hover{border-color:#e5e8f4}
+    .card.disabled .thumb::after{content:"COMING SOON";position:absolute;inset:0;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.06em}
 
-    /* Fallback if a thumbnail path is wrong */
-    .ph{
-      width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center;
-      color:#667; font-size:16px; padding:10px; text-align:center;
-    }
+    .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#667;font-size:16px;padding:10px;text-align:center}
 
-    @media (max-width: 980px){
-      .grid{ grid-template-columns:repeat(3, minmax(220px,1fr)); }
-    }
-    @media (max-width: 720px){
-      .grid{ grid-template-columns:repeat(2, minmax(220px,1fr)); }
-    }
-    @media (max-width: 480px){
-      .grid{ grid-template-columns:1fr; }
-    }
+    @media (max-width:980px){ .grid{grid-template-columns:repeat(3,minmax(220px,1fr))} }
+    @media (max-width:720px){ .grid{grid-template-columns:repeat(2,minmax(220px,1fr))} }
+    @media (max-width:480px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -100,14 +38,15 @@
   <div class="grid" id="storyGrid"></div>
 
   <script type="module">
-    // --- pass-through/session memory ---
-    const params  = new URLSearchParams(location.search);
-    const session = params.get('session') || localStorage.getItem('sessionCode') || '';
-    if (session) localStorage.setItem('sessionCode', session);
-    document.getElementById('sessionInfo').textContent = session ? `Session: ${session}` : '';
+    import { readCtx, nextURL } from './js/flow.js';
+    const SESSION_PAGE = 'session.html';   // change to 'session1.html' if that's your filename
 
-    // ---- 12 slots; mark ready vs coming soon ----
-    // Make sure the thumb path exists. If your file is png, change the extension.
+    // --- Guard: must have a session first ---
+    const ctx = readCtx();
+    if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
+    document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
+
+    // --- 12 slots (only first is ready today) ---
     const STORIES = [
       { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story-thumbnails/tortoise-and-hare.png', ready:true },
 
@@ -126,34 +65,22 @@
 
     const grid = document.getElementById('storyGrid');
 
-    function cardThumbHTML(s){
-      if (s.thumb) {
-        // render an <img>; on error fall back to placeholder text
-        return `<img src="${s.thumb}" alt="${s.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
-      }
-      return `<div class="ph">${s.name}</div>`;
+    function thumbHTML(s){
+      if (!s.thumb) return `<div class="ph">${s.name}</div>`;
+      return `<img src="${s.thumb}" alt="${s.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
     }
 
     STORIES.forEach(s => {
-      const el = document.createElement('div');
-      el.className = 'card' + (s.ready ? '' : ' disabled');
-
-      el.innerHTML = `
-        <div class="thumb">${cardThumbHTML(s)}</div>
-        <div class="title">${s.name}</div>
-      `;
-
+      const card = document.createElement('div');
+      card.className = 'card' + (s.ready ? '' : ' disabled');
+      card.innerHTML = `<div class="thumb">${thumbHTML(s)}</div><div class="title">${s.name}</div>`;
       if (s.ready) {
-        el.addEventListener('click', () => {
+        card.addEventListener('click', () => {
           localStorage.setItem('selectedStory', s.id);
-          // Route to grade-select with session + story
-          const url = new URL('grade-select.html', location.href);
-          if (session) url.searchParams.set('session', session);
-          url.searchParams.set('story', s.id);
-          location.href = url.toString();
+          location.href = nextURL('grade-select.html', { ...ctx, story:s.id });
         });
       }
-      grid.appendChild(el);
+      grid.appendChild(card);
     });
   </script>
 </body>
