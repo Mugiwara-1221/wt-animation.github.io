@@ -6,7 +6,7 @@
   <title>Select Grade</title>
   <style>
     body{margin:0;font-family:system-ui,Arial;background:#f9fbff;display:grid;place-items:center;height:100vh}
-    .wrap{background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:28px 32px;min-width:320px}
+    .wrap{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:28px 32px;min-width:320px}
     h2{margin:0 0 14px;text-align:center}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     button{padding:12px;border-radius:10px;border:1px solid #ccd3ea;background:#fff;cursor:pointer;font-weight:600}
@@ -25,18 +25,17 @@
 
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
+    const SESSION_PAGE = 'session.html'; // change if needed
 
-    // --- Route guard: must have session and story ---
     const ctx = readCtx();
-    if (!ctx.session) location.replace('session1.html');
-    if (!ctx.story)   location.replace(nextURL('story-select.html', ctx));
+    if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
+    if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
 
-    document.querySelectorAll('button[data-grade]').forEach(btn=>{
+    document.querySelectorAll('button[data-grade]').forEach(btn => {
       btn.onclick = () => {
         const grade = btn.dataset.grade;
         localStorage.setItem('selectedGrade', grade);
-        const newCtx = { ...ctx, grade };
-        location.href = nextURL('character-select.html', newCtx);
+        location.href = nextURL('index.html', { ...ctx, grade });
       };
     });
   </script>
