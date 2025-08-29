@@ -7,22 +7,15 @@
   <link rel="stylesheet" href="css/storyboard.css" />
   <style>
     .scene-wrapper { position: relative; display: inline-block; }
-    /* The character canvases are injected into a host div that overlays #scene */
-    #charHost { position:absolute; inset:0; pointer-events:none; }
+    /* character canvases are created by JS inside this wrapper */
   </style>
 </head>
 <body>
-  <h2>Story Scene: The Tortoise and The Hare</h2>
+  <h2>Story Scene</h2>
 
   <div class="scene-wrapper">
-    <img src="images/colored-background2.png" id="scene" alt="Scene">
-    <div id="charHost"></div>
-  </div>
-
-  <!-- On-screen navigation; keyboard ←/→ also works -->
-  <div style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:12px;z-index:999;">
-    <button onclick="prevSlide()">◄ Back</button>
-    <button onclick="nextSlide()">Next ►</button>
+    <!-- background image; JS swaps src per slide -->
+    <img id="scene" alt="Scene" />
   </div>
 
   <!-- Guard -->
@@ -30,7 +23,6 @@
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
-    // grade optional; char is used by animation code
   </script>
 
   <script type="module" src="js/storyboard.js"></script>
