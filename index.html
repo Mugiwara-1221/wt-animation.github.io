@@ -1,5 +1,5 @@
 
-<!--character-select-->
+<!-- character-select (story-aware) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,18 +9,14 @@
 </head>
 <body>
   <h2>Select your Character!</h2>
-  <div class="scene-wrapper" id="characters">
-    <img src="images/colored-background2.png" id="scene" alt="Scene">
 
-    <img src="images/hare.png"     class="character hare"     alt="Hare"     data-char="hare">
-    <img src="images/tortoise.png" class="character tortoise" alt="Tortoise" data-char="tortoise">
-    <img src="images/bear.png"     class="character bear"     alt="Bear"     data-char="bear">
-    <img src="images/squirrel.png" class="character squirrel" alt="Squirrel" data-char="squirrel">
-    <img src="images/bird1.png"    class="character bird1"    alt="Bird 1"   data-char="bird1">
-    <img src="images/bird2.png"    class="character bird2"    alt="Bird 2"   data-char="bird2">
+  <div class="scene-wrapper" id="characters">
+    <!-- Background swaps per story -->
+    <img id="scene" alt="Scene">
+    <!-- Story characters will be injected here -->
   </div>
 
-  <!-- Guard: need story & grade -->
+  <!-- Route guard: need story & grade -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
@@ -28,8 +24,77 @@
     if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
   </script>
 
-  <!-- Selection logic -->
-  <script type="module" src="js/azure-api.js"></script>
-  <script type="module" src="js/sprite-select.js"></script>
+  <!-- Load story manifest, render characters, then attach selection logic -->
+  <script type="module">
+    import { readCtx } from './js/flow.js';
+    import { getGradeCaps } from './js/grade-config.js';
+
+    const ctx = readCtx();
+    const container = document.getElementById('characters');
+    const sceneImg  = document.getElementById('scene');
+
+    // 1) Load this story’s character-select manifest
+    //    Expected at: stories/<story-id>/characters.json
+    //    {
+    //      "background": "path/to/bg.png",
+    //      "characters": [
+    //        { "id":"tortoise","name":"Tortoise","sprite":"images/tortoise.png",
+    //          // optional overrides if you don’t want to rely on CSS classes:
+    //          "x":40,"y":60,"w":18,"z":1
+    //        },
+    //        ...
+    //      ]
+    //    }
+    //
+    const manifestURL = `stories/${ctx.story}/characters.json`;
+    let manifest;
+    try {
+      manifest = await (await fetch(manifestURL)).json();
+    } catch (e) {
+      console.error('Failed to load story characters manifest:', manifestURL, e);
+      // Fallback to your old background if manifest missing
+      manifest = { background: 'images/colored-background2.png', characters: [] };
+    }
+
+    // 2) Put the story background in place
+    sceneImg.src = manifest.background || 'images/colored-background2.png';
+
+    // 3) Grade filtering (optional caps file)
+    const caps = await getGradeCaps(ctx.grade || 'k-2');
+    const allowed = new Set(caps?.allowedCharacters || []); // empty set means “no filter”
+
+    // 4) Insert story’s characters (keeping your layout & CSS classes)
+    //    We preserve your `.character` + per-id classes so your `sprite-style.css`
+    //    continues to drive default positions/sizes for the Tortoise/Hare page.
+    //    If a story needs different placements, add x/y/w(%) in characters.json; we’ll inline them.
+    const layer = document.createDocumentFragment();
+
+    (manifest.characters || [])
+      .filter(c => allowed.size === 0 || allowed.has(c.id))
+      .forEach(c => {
+        const img = document.createElement('img');
+        img.src = c.sprite;
+        img.alt = c.name || c.id;
+        img.draggable = false;
+        img.className = `character ${c.id}`; // <-- keeps your CSS-based layout for that id
+        img.dataset.char = c.id;
+
+        // Optional per-story overrides (percent-based)
+        if (typeof c.x === 'number') img.style.left  = `${c.x}%`;
+        if (typeof c.y === 'number') img.style.top   = `${c.y}%`;
+        if (typeof c.w === 'number') img.style.width = `${c.w}%`;
+        if (typeof c.z === 'number') img.style.zIndex = String(c.z);
+
+        layer.appendChild(img);
+      });
+
+    container.appendChild(layer);
+
+    // 5) After characters exist in the DOM, attach your existing selection logic
+    //    (locks, pixel-perfect hover/click, navigation to canvas)
+    //    Important: import AFTER we render, so it can query .character nodes.
+    await import('./js/azure-api.js');     // safe if it no-ops locally
+    await import('./js/sprite-select.js'); // your existing click/lock code
+  </script>
 </body>
 </html>
