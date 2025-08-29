@@ -1,0 +1,61 @@
+
+{
+  "base": "images/frames/tortoise_and_the_hare",
+  "characters": {
+    "tortoise": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/tortoise/tortoise",
+      "maskTemplate":   "{base}/{slide}/tortoise/tortoise_mask_"
+    },
+    "hare": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/hare/hare",
+      "maskTemplate":   "{base}/{slide}/hare/hare_mask_"
+    },
+    "bear": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/bear/bear",
+      "maskTemplate":   "{base}/{slide}/bear/bear_mask_"
+    },
+    "squirrel": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/squirrel/squirrel",
+      "maskTemplate":   "{base}/{slide}/squirrel/squirrel_mask_"
+    },
+    "bird1": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/bird1/bird1",
+      "maskTemplate":   "{base}/{slide}/bird1/bird1_mask_"
+    },
+    "bird2": {
+      "frameCount": 4,
+      "framesTemplate": "{base}/{slide}/bird2/bird2",
+      "maskTemplate":   "{base}/{slide}/bird2/bird2_mask_"
+    }
+  },
+
+  "slides": {
+    "1": [
+      { "id": "tortoise", "x": 40, "y": 60, "w": 18 },
+      { "id": "hare",     "x": 62, "y": 58, "w": 18 }
+    ],
+    "2": [
+      { "id": "tortoise", "x": 35, "y": 62, "w": 18 }
+    ],
+    "3": [
+      { "id": "hare",     "x": 60, "y": 55, "w": 18 },
+      { "id": "bird1",    "x": 72, "y": 20, "w": 14 }
+    ],
+    "4": [
+      { "id": "bear",     "x": 30, "y": 50, "w": 22 }
+    ],
+    "5": [
+      { "id": "squirrel", "x": 20, "y": 55, "w": 16 },
+      { "id": "bird2",    "x": 78, "y": 24, "w": 14 }
+    ],
+    "6": [
+      { "id": "tortoise", "x": 44, "y": 58, "w": 18 },
+      { "id": "hare",     "x": 58, "y": 58, "w": 18 }
+    ]
+  }
+}
