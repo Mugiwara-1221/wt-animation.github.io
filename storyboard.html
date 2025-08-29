@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="css/storyboard.css" />
   <style>
     .scene-wrapper { position: relative; display: inline-block; }
-    #animCanvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+    /* The character canvases are injected into a host div that overlays #scene */
+    #charHost { position:absolute; inset:0; pointer-events:none; }
   </style>
 </head>
 <body>
@@ -15,7 +16,13 @@
 
   <div class="scene-wrapper">
     <img src="images/colored-background2.png" id="scene" alt="Scene">
-    <canvas id="animCanvas" class="character tortoise"></canvas>
+    <div id="charHost"></div>
+  </div>
+
+  <!-- On-screen navigation; keyboard ←/→ also works -->
+  <div style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:12px;z-index:999;">
+    <button onclick="prevSlide()">◄ Back</button>
+    <button onclick="nextSlide()">Next ►</button>
   </div>
 
   <!-- Guard -->
