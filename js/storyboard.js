@@ -4,8 +4,9 @@
 // ───────── context & params ─────────
 const qs      = new URLSearchParams(location.search);
 const storyId = (qs.get('story') || localStorage.getItem('selectedStory') || 'tortoise-hare');
-const slideIx = Math.max(0, Math.min(+qs.get('slide') || 0, 999)); // clamped later to length
+const slideIx = Math.max(0, Math.min(+qs.get('slide') || 0, 999)); // clamped after load
 const selectedChar = (qs.get('char') || localStorage.getItem('selectedCharacter') || '').toLowerCase();
+
 const coloredSingle = localStorage.getItem('coloredCharacter') || null;
 let coloredFrames = null;
 try {
@@ -14,20 +15,7 @@ try {
 } catch(_) {}
 
 const scene = document.getElementById('scene');
-
-// container for all character canvases
-let layerHost = document.getElementById('charHost');
-if (!layerHost) {
-  layerHost = document.createElement('div');
-  layerHost.id = 'charHost';
-  layerHost.style.position = 'absolute';
-  layerHost.style.left = '0';
-  layerHost.style.top = '0';
-  layerHost.style.width = '100%';
-  layerHost.style.height = '100%';
-  layerHost.style.pointerEvents = 'none';
-  scene.parentElement.appendChild(layerHost);
-}
+const layerHost = document.getElementById('charHost');
 
 // ───────── utilities ─────────
 function loadImage(src) {
@@ -44,6 +32,8 @@ async function loadCSVMatrix(url) {
   const rows = text.trim().split(/\r?\n/);
   return rows.map(r => r.split(',').map(v => +v));
 }
+
+/** Build a mask bitmap; targetW/H are device-pixel canvas size. */
 async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
   const offSrc = new OffscreenCanvas(srcW, srcH);
   const cSrc   = offSrc.getContext('2d', { willReadFrequently:true });
@@ -68,24 +58,22 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, targetW, targetH) {
   return offTgt.transferToImageBitmap();
 }
 
-// % helpers (positions are stored as % of the slide)
-function pct(n){ return `${n}%`; }
-function cssPx(n){ return `${n}px`; }
+const pct = n => `${n}%`;
 
-// Fit a canvas to its CSS size (HiDPI aware)
+// Fit a canvas to its CSS size (HiDPI aware, draw using CSS pixels)
 function fitCanvasToCSS(cvs){
   const r = cvs.getBoundingClientRect();
   const dpr = devicePixelRatio || 1;
   cvs.width  = Math.max(1, Math.round(r.width * dpr));
   cvs.height = Math.max(1, Math.round(r.height * dpr));
   const ctx = cvs.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // all subsequent draw sizes are CSS pixels
   return ctx;
 }
 
 // ───────── caches ─────────
-const frameCache = new Map(); // key: `${char}:${framesPath}`, value: {images:Image[], w,h}
-const maskCache  = new Map(); // key: `${char}:${maskCsvPrefix}`, per-frame raw CSV mats
+const frameCache = new Map(); // key: `${char}:${framesPath}:${count}`
+const maskCache  = new Map(); // key: `${char}:${maskPrefix}:${count}`
 
 async function getFrames(charId, framesPath, frameCount) {
   const key = `${charId}:${framesPath}:${frameCount}`;
@@ -97,13 +85,13 @@ async function getFrames(charId, framesPath, frameCount) {
   frameCache.set(key, out);
   return out;
 }
+
 async function getMasks(charId, maskPrefix, frameCount) {
   const key = `${charId}:${maskPrefix}:${frameCount}`;
   if (maskCache.has(key)) return maskCache.get(key);
   const mats = await Promise.all(
     Array.from({length: frameCount}, (_,i)=>loadCSVMatrix(`${maskPrefix}${i+1}.csv`))
   );
-  // store src dimensions from first mat
   const H = mats[0].length, W = mats[0][0].length;
   const out = { mats, srcW: W, srcH: H };
   maskCache.set(key, out);
@@ -135,20 +123,19 @@ function clearCharacters() {
 
 // Create one character layer (canvas) and start its animation
 async function placeAnimatedCharacter(slide, charCfg) {
-  // charCfg fields (from manifest):
   // { id, x, y, w, z, fps, framesPath, frameCount, maskCsvPrefix? }
   const { id, x, y, w, z=1, fps=4, framesPath, frameCount, maskCsvPrefix } = charCfg;
 
   // Build canvas
   const cvs = document.createElement('canvas');
   cvs.className = `char-layer ${id}`;
-  cvs.style.position = 'absolute';
-  cvs.style.left = pct(x);
-  cvs.style.top  = pct(y);
-  cvs.style.width = pct(w);
-  cvs.style.height = 'auto';
-  cvs.style.zIndex = String(z);
-  cvs.style.pointerEvents = 'none';
+  Object.assign(cvs.style, {
+    position: 'absolute',
+    left: pct(x), top: pct(y),
+    width: pct(w), height: 'auto',
+    zIndex: String(z),
+    pointerEvents: 'none'
+  });
   layerHost.appendChild(cvs);
 
   // Size it now, and whenever the scene resizes
@@ -162,8 +149,9 @@ async function placeAnimatedCharacter(slide, charCfg) {
   // Student color use cases
   const isStudentChar = selectedChar === id;
   const hasPerFrameColor = isStudentChar && Array.isArray(coloredFrames) && coloredFrames.length >= frameCount;
-  const coloredImgs = hasPerFrameColor ? await Promise.all(coloredFrames.slice(0,frameCount).map(loadImage))
-                                       : (isStudentChar && coloredSingle ? [await loadImage(coloredSingle)] : null);
+  const coloredImgs = hasPerFrameColor
+    ? await Promise.all(coloredFrames.slice(0,frameCount).map(loadImage))
+    : (isStudentChar && coloredSingle ? [await loadImage(coloredSingle)] : null);
 
   // Mask data if we must trim a single colored layer per frame
   let maskData = null;
@@ -171,35 +159,39 @@ async function placeAnimatedCharacter(slide, charCfg) {
     maskData = await getMasks(id, maskCsvPrefix, frameCount);
   }
 
-  // Animation loop
+  // Animation loop (DPR-safe drawing: always use CSS sizes)
   let idx = 0;
   const frameMs = 1000 / Math.max(1, fps);
   let last = 0, rafId = 0, cancelled=false;
 
-  async function tick(ts){
+  function tick(ts){
     if (cancelled) return;
     if (ts - last >= frameMs) {
       last = ts;
-      const r = cvs.getBoundingClientRect();
-      ctx.clearRect(0,0,r.width,r.height);
+
+      const cssW = cvs.clientWidth  || layerHost.clientWidth;
+      const cssH = cvs.clientHeight || layerHost.clientHeight;
+
+      ctx.clearRect(0,0,cssW,cssH);
 
       if (hasPerFrameColor) {
-        // draw pre-masked colored frame
-        ctx.drawImage(coloredImgs[idx], 0, 0, r.width, r.height);
+        ctx.drawImage(coloredImgs[idx], 0, 0, cssW, cssH);
       } else if (coloredImgs) {
-        // draw single colored layer, then mask per-frame if masks available
-        ctx.drawImage(coloredImgs[0], 0, 0, r.width, r.height);
+        ctx.drawImage(coloredImgs[0], 0, 0, cssW, cssH);
         if (maskData) {
-          const bmp = await matrixToMaskBitmapScaled(
+          // build mask in device pixels, but DRAW at CSS size
+          matrixToMaskBitmapScaled(
             maskData.mats[idx], maskData.srcW, maskData.srcH, cvs.width, cvs.height
-          );
-          ctx.globalCompositeOperation = 'destination-in';
-          ctx.drawImage(bmp, 0, 0);
-          ctx.globalCompositeOperation = 'source-over';
+          ).then(bmp => {
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.drawImage(bmp, 0, 0, cssW, cssH);
+            ctx.globalCompositeOperation = 'source-over';
+          });
         }
       }
+
       // outline on top
-      ctx.drawImage(frames[idx], 0, 0, r.width, r.height);
+      ctx.drawImage(frames[idx], 0, 0, cssW, cssH);
 
       idx = (idx + 1) % frames.length;
     }
@@ -225,7 +217,6 @@ async function showSlide(ix) {
   // characters
   clearCharacters();
   for (const c of (s.characters || [])) {
-    // Ensure required fields (framesPath can be absolute or relative to images/frames/<char>/)
     const charId = c.id;
     const basePath = c.framesPath || `images/frames/${charId}/${charId}`;
     const masksPrefix = c.maskCsvPrefix || `images/frames/${charId}/${charId}_mask_`;
@@ -246,13 +237,12 @@ async function showSlide(ix) {
   history.replaceState({}, '', url);
 }
 
-// Navigation helpers (wire these to your UI buttons if you like)
+// Navigation helpers (also used by the buttons in HTML)
 function nextSlide(){ if (manifest) showSlide(Math.min(currentSlide+1, manifest.slides.length-1)); }
 function prevSlide(){ if (manifest) showSlide(Math.max(currentSlide-1, 0)); }
 Object.assign(window, { nextSlide, prevSlide, showSlide });
 
 // ───────── dev: quick position tweak (drag with Alt key) ─────────
-// drag a character canvas to adjust x/y (percent). logs JSON to console.
 (function enableDevDrag(){
   let drag = null;
   layerHost.addEventListener('pointerdown', e=>{
@@ -277,7 +267,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
     drag.el.style.left = pct(Math.max(0, Math.min(100, nx)));
     drag.el.style.top  = pct(Math.max(0, Math.min(100, ny)));
   });
-  layerHost.addEventListener('pointerup', e=>{
+  layerHost.addEventListener('pointerup', ()=>{
     if (!drag) return;
     const rect = drag.el.getBoundingClientRect();
     const nx = ((rect.left - drag.hostRect.left) / drag.hostRect.width) * 100;
@@ -295,7 +285,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
   setTitle();
   await showSlide(Math.min(slideIx, manifest.slides.length-1));
 
-  // optional: wire simple keyboard nav
+  // keyboard nav
   addEventListener('keydown', (e)=>{
     if (e.key === 'ArrowRight') nextSlide();
     if (e.key === 'ArrowLeft')  prevSlide();
