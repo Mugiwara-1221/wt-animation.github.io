@@ -71,7 +71,7 @@ img.character {
 
 /* Match sizes from your selection page */
 img.character.hare     { width: 200px; height: auto; }
-img.character.tortoise { width: 300px; height: auto; }
+img.character.tortoise { width: 200px; height: auto; }
 img.character.bear     { width: 300px; height: auto; }
 img.character.squirrel { width: 200px; height: auto; }
 img.character.bird1    { width: 245px; height: auto; }
