@@ -1,3 +1,4 @@
+
 /* Storyboard styles – matches the sizing/feel of your character-select page */
 
 html, body {
@@ -29,9 +30,11 @@ h2 {
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
   /* keep same overall scaling as your selection page */
   max-width: 110vh;
   max-height: 80vh;
+  overflow: hidden; /* ensure slide + canvas stay clipped to the rounded box */
 }
 
 #scene {
@@ -41,40 +44,46 @@ h2 {
   border-radius: 12px;
 }
 
-/* Characters are passive on storyboard (not clickable) */
-.character {
+/* The overlaid animation canvas must sit exactly over the slide */
+#animCanvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;      /* follow the slide size */
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 12px;      /* match wrapper rounding */
+  image-rendering: pixelated; /* keeps line art crisp when scaled */
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Character image rules (ONLY apply to <img class="character">).
+   Your animCanvas also has class="character", so we scope these
+   to IMG elements to avoid fighting with the canvas sizing.
+   ────────────────────────────────────────────────────────────── */
+
+img.character {
   position: absolute;
   user-select: none;
   pointer-events: none;
 }
 
-/* The overlaid animation canvas for the selected character
-   (JS sizes/positions this to sit exactly over #scene) */
-#animCanvas,
-#tortoiseAnim {
-  position: absolute;
-  left: 300;
-  top: 300;
-  pointer-events: none;
-  z-index: 2;
-  image-rendering: pixelated; /* keeps line art crisp when scaled */
-}
-
 /* Match sizes from your selection page */
-.hare     { width: 200px; height: auto; }
-.tortoise { width: 350px; height: auto; }
-.bear     { width: 300px; height: auto; }
-.squirrel { width: 200px; height: auto; }
-.bird1    { width: 245px; height: auto; }
-.bird2    { width: 200px; height: auto; }
+img.character.hare     { width: 200px; height: auto; }
+img.character.tortoise { width: 200px; height: auto; }
+img.character.bear     { width: 300px; height: auto; }
+img.character.squirrel { width: 200px; height: auto; }
+img.character.bird1    { width: 245px; height: auto; }
+img.character.bird2    { width: 200px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
-.hare     { top: -10px; left: 20px; }
-.tortoise { top: 1000px; left: 1000px; }
-.bear     { top: -50px; left: -170px; }
-.squirrel { top: 80px; left: -20px; }
-.bird1    { top: 60px; left: 97px; }
-.bird2    { top: 70px; left: 125px; }
+img.character.hare     { top: -10px; left: 20px; }
+img.character.tortoise { top: 0px;   left: 20px; }
+img.character.bear     { top: -50px; left: -170px; }
+img.character.squirrel { top: 80px;  left: -20px; }
+img.character.bird1    { top: 60px;  left: 97px; }
+img.character.bird2    { top: 70px;  left: 125px; }
 
 /* Optional idle motion for non-animated characters */
 /*
@@ -82,5 +91,5 @@ h2 {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
 }
-.character:not(.tortoise) { animation: floaty 2.6s ease-in-out infinite; }
+img.character:not(.tortoise) { animation: floaty 2.6s ease-in-out infinite; }
 */
