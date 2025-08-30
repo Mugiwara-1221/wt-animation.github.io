@@ -48,7 +48,7 @@
         },
         {
           "id": "hare",
-          "x": 5, "y": 23, "w": 90,
+          "x": 5, "y": 23, "w": 95,
           "framesPath": "images/frames/tortoise_and_the_hare/frame2/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame2/hare/hare_mask_"
@@ -60,7 +60,7 @@
       "characters": [
         {
           "id": "squirrel",
-          "x": 20, "y": 55, "w": 16,
+          "x": 40, "y": 55, "w": 30,
           "framesPath": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel_mask_"
