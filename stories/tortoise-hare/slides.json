@@ -60,7 +60,7 @@
       "characters": [
         {
           "id": "squirrel",
-          "x": 40, "y": 55, "w": 30,
+          "x": 45, "y": 65, "w": 40,
           "framesPath": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel_mask_"
