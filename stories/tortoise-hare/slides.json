@@ -41,14 +41,14 @@
       "characters": [
         {
           "id": "tortoise",
-          "x": 20, "y": 60, "w": 70,
+          "x": 15, "y": 60, "w": 65,
           "framesPath": "images/frames/tortoise_and_the_hare/frame2/tortoise/tortoise",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame2/tortoise/tortoise_mask_"
         },
         {
           "id": "hare",
-          "x": 10, "y": 30, "w": 90,
+          "x": 10, "y": 25, "w": 90,
           "framesPath": "images/frames/tortoise_and_the_hare/frame2/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame2/hare/hare_mask_"
