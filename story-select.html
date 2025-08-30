@@ -7,26 +7,60 @@
   <style>
     :root{ --card-r:12px; --accent:#BADA55; }
     body{margin:0;font-family:system-ui,Arial;background:#eff4ff}
-    header{padding:20px;text-align:center}
-    h1{margin:0 0 6px}
+    header{padding:20px 16px;text-align:center}
+    h1{margin:0 0 6px;font-size:clamp(22px,4vw,36px)}
     #sessionInfo{opacity:.7}
 
-    .grid{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:16px;padding:20px;max-width:1100px;margin:0 auto 40px}
-    .card{position:relative;background:#fff;border-radius:var(--card-r);box-shadow:0 4px 10px rgba(0,0,0,.06);overflow:hidden;border:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;min-height:220px}
-    .card:hover{border-color:var(--accent)}
-    .thumb{position:relative;aspect-ratio:4/3;background:#dfe7ff;display:flex;align-items:center;justify-content:center;color:#445;font-size:18px}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .title{padding:12px 14px;font-weight:600;background:#fff}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(220px,1fr));
+      gap:16px;
+      padding:20px;
+      max-width:1100px;
+      margin:0 auto 40px;
+    }
+    .card{
+      position:relative;
+      background:#fff;
+      border-radius:var(--card-r);
+      box-shadow:0 4px 10px rgba(0,0,0,.06);
+      overflow:hidden;
+      border:2px solid transparent;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      min-height:220px;
+      transition:border-color .15s ease, transform .15s ease;
+    }
+    .card:hover{ border-color:var(--accent); transform:translateY(-1px); }
+    .thumb{
+      position:relative;
+      aspect-ratio:4/3;
+      background:#dfe7ff;
+      display:flex; align-items:center; justify-content:center;
+      color:#445; font-size:18px;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block }
+    .title{ padding:12px 14px; font-weight:600; background:#fff }
 
-    .card.disabled{cursor:default;filter:grayscale(100%) opacity(.65);border-color:#e5e8f4}
-    .card.disabled:hover{border-color:#e5e8f4}
-    .card.disabled .thumb::after{content:"COMING SOON";position:absolute;inset:0;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.06em}
+    /* Coming soon / disabled */
+    .card.disabled{ cursor:default; filter:grayscale(100%) opacity(.65); border-color:#e5e8f4 }
+    .card.disabled:hover{ border-color:#e5e8f4; transform:none }
+    .card.disabled .thumb::after{
+      content:"COMING SOON";
+      position:absolute; inset:0;
+      background:rgba(0,0,0,.35);
+      color:#fff; display:flex; align-items:center; justify-content:center;
+      font-weight:800; letter-spacing:.06em;
+      text-shadow:0 1px 2px rgba(0,0,0,.35);
+    }
 
-    .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#667;font-size:16px;padding:10px;text-align:center}
+    .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+         color:#667; font-size:16px; padding:10px; text-align:center }
 
-    @media (max-width:980px){ .grid{grid-template-columns:repeat(3,minmax(220px,1fr))} }
-    @media (max-width:720px){ .grid{grid-template-columns:repeat(2,minmax(220px,1fr))} }
-    @media (max-width:480px){ .grid{grid-template-columns:1fr} }
+    @media (max-width:980px){ .grid{ grid-template-columns:repeat(3,minmax(220px,1fr)) } }
+    @media (max-width:720px){ .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) } }
+    @media (max-width:480px){ .grid{ grid-template-columns:1fr } }
   </style>
 </head>
 <body>
@@ -40,28 +74,16 @@
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
 
-    // Where to send users if they somehow land here without a session
-    const SESSION_PAGE = 'session1.html';
-
-    // --- Guard: must have a session first ---
+    // Route guard: require a session before picking stories
     const ctx = readCtx();
-    if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
+    if (!ctx.session) { location.replace('session1.html'); throw 0; }
     document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
 
-    // --- Stories (ids must match /stories/<id>/slides.json) ---
+    // Stories (ids match /stories/<id>/slides.json and /stories/<id>/characters.json)
     const STORIES = [
-      {
-        id: 'tortoise-hare',
-        name: 'The Tortoise and the Hare',
-        thumb: 'images/story-thumbnails/tortoise-hare-thumb.png',
-        ready: true
-      },
-      {
-        id: 'lion-mouse',
-        name: 'The Lion and the Mouse',
-        thumb: 'images/story-thumbnails/lion-mouse-thumb.png',
-        ready: true
-      },
+      { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story-thumbnails/tortoise-hare-thumb.png', ready:true },
+      { id:'lion-mouse',    name:'The Lion and the Mouse',    thumb:'images/story-thumbnails/lion-mouse-thumb.png',   ready:true },
+
       { id:'story-3',  name:'Story 3',  thumb:'', ready:false },
       { id:'story-4',  name:'Story 4',  thumb:'', ready:false },
       { id:'story-5',  name:'Story 5',  thumb:'', ready:false },
@@ -78,11 +100,12 @@
 
     function thumbHTML(s){
       if (!s.thumb) return `<div class="ph">${s.name}</div>`;
-      // fallback to title block if thumbnail is missing/broken
-      return `<img src="${s.thumb}" alt="${s.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
+      // Fallback to title block if thumbnail is missing/broken
+      return `<img src="${s.thumb}" alt="${s.name}"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
     }
 
-    STORIES.forEach(s => {
+    for (const s of STORIES) {
       const card = document.createElement('div');
       card.className = 'card' + (s.ready ? '' : ' disabled');
       card.setAttribute('role','button');
@@ -98,7 +121,7 @@
         });
       }
       grid.appendChild(card);
-    });
+    }
   </script>
 </body>
 </html>
