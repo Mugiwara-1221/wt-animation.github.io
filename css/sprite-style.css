@@ -1,11 +1,18 @@
+
 /* Sprite Selection Page Styles */
 
-body, html {
+:root{
+  /* caps to prevent the scene from getting too large */
+  --scene-max-w: 92vw;     /* width clamp against viewport */
+  --scene-max-h: 78vh;     /* height clamp against viewport */
+}
+
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
   display: flex;
   flex-direction: column;
@@ -13,10 +20,10 @@ body, html {
 }
 
 h2 {
-  margin-top: 20px;
+  margin: 20px 12px 8px;
   color: #b8c941;
-  font-size: 3.2rem;
-  font-weight: 600;
+  font-size: clamp(24px, 4vw, 52px);
+  font-weight: 700;
   text-align: center;
   text-shadow: 2px 2px #151515;
   letter-spacing: 1px;
@@ -27,77 +34,71 @@ h2 {
   display: inline-block;
   border: 4px solid #ffffff;
   border-radius: 12px;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  /* Let the image decide its own aspect while staying within viewport */
+  max-width: var(--scene-max-w);
+  max-height: var(--scene-max-h);
 }
 
+/* Background image for the selection scene (story-specific) */
 #scene {
   display: block;
-  width: auto;
-  height: auto;
-  max-width: 110vh;
+  width: 100%;         /* fill wrapper width */
+  height: auto;        /* keep image aspect */
   border-radius: 12px;
 }
 
-/* Characters */
+/* Characters (injected by index.html) */
 .character {
   position: absolute;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+  image-rendering: auto;         /* crisp art without pixelation */
+  transform-origin: center;
 }
 
-/* JS-added pixel-accurate hover */
-.character.hovered:not(.locked) {
-  transform: scale(1.15);
-  filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
-}
-
-/* CSS fallback hover (works even if JS fails) */
+/* Pixel-accurate hover supplied by JS; CSS fallback below still helps */
+.character.hovered:not(.locked),
 .character:not(.locked):hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
   filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
 }
 
 .character.locked {
-  opacity: 0.4;
+  opacity: 0.45;
   pointer-events: none;
   filter: grayscale(100%);
 }
 
-.hare {
-  width: 300px;
-  height: auto;
-}
+/* Default sizes per id (kept so your existing placements work).
+   These are only used if the story’s characters.json does NOT set w/x/y. */
+.hare     { width: 300px; height: auto; }
+.tortoise { width: 280px; height: auto; }
+.bear     { width: 145px; height: auto; }
+.squirrel { width:  85px; height: auto; }
+.bird1    { width:  45px; height: auto; }
+.bird2    { width:  60px; height: auto; }
 
-.tortoise {
-  width: 280px;
-  height: auto;
-}
-
-.bear {
-  width: 145px;
-  height: auto;
-}
-
-.squirrel {
-  width: 85px;
-  height: auto;
-}
-
-.bird1 {
-  width: 45px;
-  height: auto;
-}
-
-.bird2 {
-  width: 60px;
-  height: auto;
-}
-
-/* Positioning characters over background y,x bird1 = little bird*/
-.hare     { top: 450px; left: 90px; }
+/* Default positions for the Tortoise & Hare selection scene.
+   If a story needs different placement, provide x/y/w in its characters.json
+   (percent-based) and those inline styles will override these. */
+.hare     { top: 450px; left:  90px; }
 .tortoise { top: 466px; left: 510px; }
 .bear     { top: 156px; left: 505px; }
 .squirrel { top: 260px; left: 640px; }
-.bird1    { top: 142px; left: 337px; } 
-.bird2    { top: 147px;  left: 385px; }
+.bird1    { top: 142px; left: 337px; }
+.bird2    { top: 147px; left: 385px; }
+
+/* Tighter view on small screens */
+@media (max-width: 960px) {
+  :root{ --scene-max-w: 96vw; --scene-max-h: 72vh; }
+}
+
+/* Accessibility: make keyboard focus visible if/when we add tabindex later */
+.character:focus-visible {
+  outline: 3px solid #BADA55;
+  outline-offset: 3px;
+}
