@@ -48,7 +48,7 @@
         },
         {
           "id": "hare",
-          "x": 20, "y": 30, "w": 70,
+          "x": 10, "y": 30, "w": 90,
           "framesPath": "images/frames/tortoise_and_the_hare/frame2/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame2/hare/hare_mask_"
