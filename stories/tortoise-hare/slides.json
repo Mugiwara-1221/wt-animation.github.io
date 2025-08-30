@@ -29,7 +29,7 @@
         },
         {
           "id": "bird2",
-          "x": 40, "y": 60, "w": 30,
+          "x": 40, "y": 40, "w": 30,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird2/bird",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird2/bird_mask_"
