@@ -15,21 +15,21 @@
         },
         {
           "id": "hare",
-          "x": 38, "y": 30, "w": 70,
+          "x": 30, "y": 30, "w": 70,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/hare/hare_mask_"
         },
         {
           "id": "bird1",
-          "x": 65, "y": 10, "w": 30,
+          "x": 55, "y": 5, "w": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird1/bird",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird1/bird_mask_"
         },
         {
           "id": "bird2",
-          "x": 15, "y": 30, "w": 30,
+          "x": 8, "y": 40, "w": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird2/bird",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird2/bird_mask_"
