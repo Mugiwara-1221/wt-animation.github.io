@@ -1,121 +1,104 @@
 
-<!-- character-select (story-aware) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Character Selection</title>
-  <link rel="stylesheet" href="css/sprite-style.css">
+  <title>Select a Story</title>
+  <style>
+    :root{ --card-r:12px; --accent:#BADA55; }
+    body{margin:0;font-family:system-ui,Arial;background:#eff4ff}
+    header{padding:20px;text-align:center}
+    h1{margin:0 0 6px}
+    #sessionInfo{opacity:.7}
+
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:16px;padding:20px;max-width:1100px;margin:0 auto 40px}
+    .card{position:relative;background:#fff;border-radius:var(--card-r);box-shadow:0 4px 10px rgba(0,0,0,.06);overflow:hidden;border:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;min-height:220px}
+    .card:hover{border-color:var(--accent)}
+    .thumb{position:relative;aspect-ratio:4/3;background:#dfe7ff;display:flex;align-items:center;justify-content:center;color:#445;font-size:18px}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .title{padding:12px 14px;font-weight:600;background:#fff}
+
+    .card.disabled{cursor:default;filter:grayscale(100%) opacity(.65);border-color:#e5e8f4}
+    .card.disabled:hover{border-color:#e5e8f4}
+    .card.disabled .thumb::after{content:"COMING SOON";position:absolute;inset:0;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:.06em}
+
+    .ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#667;font-size:16px;padding:10px;text-align:center}
+
+    @media (max-width:980px){ .grid{grid-template-columns:repeat(3,minmax(220px,1fr))} }
+    @media (max-width:720px){ .grid{grid-template-columns:repeat(2,minmax(220px,1fr))} }
+    @media (max-width:480px){ .grid{grid-template-columns:1fr} }
+  </style>
 </head>
 <body>
-  <h2>Select your Character!</h2>
+  <header>
+    <h1>Pick Your Story</h1>
+    <div id="sessionInfo"></div>
+  </header>
 
-  <div class="scene-wrapper" id="characters">
-    <!-- Story background -->
-    <img id="scene" alt="Scene">
-    <!-- Characters will be injected here -->
-  </div>
+  <div class="grid" id="storyGrid" aria-live="polite"></div>
 
-  <!-- Route guard: need story & grade -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
+
+    // Where to send users if they somehow land here without a session
+    const SESSION_PAGE = 'session1.html';
+
+    // --- Guard: must have a session first ---
     const ctx = readCtx();
-    if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
-    if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
-  </script>
+    if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
+    document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
 
-  <!-- Load manifest, render characters, then attach selection logic -->
-  <script type="module">
-    import { readCtx } from './js/flow.js';
-    import { getGradeCaps } from './js/grade-config.js';
+    // --- Stories (ids must match /stories/<id>/slides.json) ---
+    const STORIES = [
+      {
+        id: 'tortoise-hare',
+        name: 'The Tortoise and the Hare',
+        thumb: 'images/story-thumbnails/tortoise-hare-thumb.png',
+        ready: true
+      },
+      {
+        id: 'lion-mouse',
+        name: 'The Lion and the Mouse',
+        thumb: 'images/story-thumbnails/lion-mouse-thumb.png',
+        ready: true
+      },
+      { id:'story-3',  name:'Story 3',  thumb:'', ready:false },
+      { id:'story-4',  name:'Story 4',  thumb:'', ready:false },
+      { id:'story-5',  name:'Story 5',  thumb:'', ready:false },
+      { id:'story-6',  name:'Story 6',  thumb:'', ready:false },
+      { id:'story-7',  name:'Story 7',  thumb:'', ready:false },
+      { id:'story-8',  name:'Story 8',  thumb:'', ready:false },
+      { id:'story-9',  name:'Story 9',  thumb:'', ready:false },
+      { id:'story-10', name:'Story 10', thumb:'', ready:false },
+      { id:'story-11', name:'Story 11', thumb:'', ready:false },
+      { id:'story-12', name:'Story 12', thumb:'', ready:false }
+    ];
 
-    const ctx = readCtx();
-    const container = document.getElementById('characters');
-    const sceneImg  = document.getElementById('scene');
+    const grid = document.getElementById('storyGrid');
 
-    // Normalize story id → use hyphens for folders (so "tortoise_and_the_hare" also works)
-    const storyId = (ctx.story || '').replace(/_/g, '-'); // e.g. "tortoise-hare"
-
-    // Try to fetch a JSON from /stories/<storyId>/characters.json
-    async function fetchManifest() {
-      const url = `stories/${storyId}/characters.json`;
-      try {
-        const r = await fetch(url, { cache: 'no-store' });
-        if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-        return await r.json();
-      } catch (e) {
-        console.warn('characters.json not found at', url, e);
-        return null;
-      }
+    function thumbHTML(s){
+      if (!s.thumb) return `<div class="ph">${s.name}</div>`;
+      // fallback to title block if thumbnail is missing/broken
+      return `<img src="${s.thumb}" alt="${s.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
     }
 
-    // Background helper: try a few options
-    function setBackground(paths) {
-      const next = paths.shift();
-      if (!next) return;
-      sceneImg.src = next;
-      sceneImg.onerror = () => {
-        console.warn('BG 404:', next);
-        setBackground(paths);
-      };
-    }
-
-    // Main
-    (async () => {
-      const manifest = await fetchManifest() || { background: '', characters: [] };
-
-      // Background fallbacks: manifest → conventional → hard fallback
-      setBackground([
-        manifest.background,
-        `images/backgrounds/${storyId}/select-scene.png`,
-        `images/backgrounds/${storyId}/frame5.png`,
-        'images/backgrounds/tortoise-hare/frame5.png'
-      ].filter(Boolean));
-
-      // Grade filter (empty set = no filter)
-      let allow = new Set();
-      try {
-        const caps = await getGradeCaps(ctx.grade || 'k-2');
-        if (caps?.allowedCharacters?.length) allow = new Set(caps.allowedCharacters);
-      } catch {}
-
-      // Inject characters
-      const frag = document.createDocumentFragment();
-      let rendered = 0;
-
-      for (const c of Array.isArray(manifest.characters) ? manifest.characters : []) {
-        if (allow.size && !allow.has(c.id)) continue;
-
-        const img = document.createElement('img');
-        img.className    = `character ${c.id}`; // keep your CSS positions by id
-        img.dataset.char = c.id;
-        img.alt          = c.name || c.id;
-        img.draggable    = false;
-
-        // Use provided sprite, fall back to images/<id>.png if missing
-        img.src = c.sprite || `images/${c.id}.png`;
-        img.onerror = () => {
-          console.warn('Sprite 404:', img.src, '→ fallback to images/<id>.png');
-          if (!/images\/[^/]+\.png$/.test(img.src)) img.src = `images/${c.id}.png`;
-        };
-
-        // Optional per-story overrides (in percent)
-        if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
-        if (typeof c.y === 'number') img.style.top    = `${c.y}%`;
-        if (typeof c.w === 'number') img.style.width  = `${c.w}%`;
-        if (typeof c.z === 'number') img.style.zIndex = String(c.z);
-
-        frag.appendChild(img);
-        rendered++;
+    STORIES.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'card' + (s.ready ? '' : ' disabled');
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label', s.name + (s.ready ? '' : ' (coming soon)'));
+      card.innerHTML = `
+        <div class="thumb">${thumbHTML(s)}</div>
+        <div class="title">${s.name}</div>
+      `;
+      if (s.ready) {
+        card.addEventListener('click', () => {
+          localStorage.setItem('selectedStory', s.id);
+          location.href = nextURL('grade-select.html', { ...ctx, story:s.id });
+        });
       }
-
-      container.appendChild(frag);
-      if (!rendered) console.warn('No characters rendered — check characters.json & grade caps.');
-
-      // Attach selection logic *after* characters are in the DOM
-      try { await import('./js/azure-api.js'); } catch {}
-      await import('./js/sprite-select.js');
-    })();
+      grid.appendChild(card);
+    });
   </script>
 </body>
 </html>
