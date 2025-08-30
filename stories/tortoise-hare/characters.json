@@ -2,7 +2,7 @@
 {
   "background": "images/backgrounds/tortoise-hare/frame5.png",
   "characters": [
-    { "id": "hare",     "name": "Hare",     "sprite": "images/hare.png" },
+    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/hare.png" },
     { "id": "tortoise", "name": "Tortoise", "sprite": "images/tortoise.png" },
     { "id": "bear",     "name": "Bear",     "sprite": "images/bear.png" },
     { "id": "squirrel", "name": "Squirrel", "sprite": "images/squirrel.png" },
