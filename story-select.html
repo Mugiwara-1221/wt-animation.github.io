@@ -4,14 +4,15 @@
 <head>
   <meta charset="utf-8" />
   <title>Select a Story</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{ --card-r:12px; --accent:#BADA55; }
-    body{margin:0;font-family:system-ui,Arial;background:#eff4ff}
-    header{padding:20px 16px;text-align:center}
-    h1{margin:0 0 6px;font-size:clamp(22px,4vw,36px)}
-    #sessionInfo{opacity:.7}
+    :root { --card-r:12px; --accent:#BADA55; }
+    body { margin:0; font-family:system-ui,Arial; background:#eff4ff }
+    header { padding:20px 16px; text-align:center }
+    h1 { margin:0 0 6px; font-size:clamp(22px,4vw,36px) }
+    #sessionInfo { opacity:.7 }
 
-    .grid{
+    .grid {
       display:grid;
       grid-template-columns:repeat(4,minmax(220px,1fr));
       gap:16px;
@@ -19,7 +20,7 @@
       max-width:1100px;
       margin:0 auto 40px;
     }
-    .card{
+    .card {
       position:relative;
       background:#fff;
       border-radius:var(--card-r);
@@ -32,21 +33,22 @@
       min-height:220px;
       transition:border-color .15s ease, transform .15s ease;
     }
-    .card:hover{ border-color:var(--accent); transform:translateY(-1px); }
-    .thumb{
+    .card:hover { border-color:var(--accent); transform:translateY(-1px); }
+    .thumb {
       position:relative;
       aspect-ratio:4/3;
       background:#dfe7ff;
       display:flex; align-items:center; justify-content:center;
       color:#445; font-size:18px;
     }
-    .thumb img{ width:100%; height:100%; object-fit:cover; display:block }
-    .title{ padding:12px 14px; font-weight:600; background:#fff }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    .title { padding:12px 14px; font-weight:600; background:#fff }
 
-    /* Coming soon / disabled */
-    .card.disabled{ cursor:default; filter:grayscale(100%) opacity(.65); border-color:#e5e8f4 }
-    .card.disabled:hover{ border-color:#e5e8f4; transform:none }
-    .card.disabled .thumb::after{
+    .card.disabled {
+      cursor:default; filter:grayscale(100%) opacity(.65); border-color:#e5e8f4;
+    }
+    .card.disabled:hover { border-color:#e5e8f4; transform:none; }
+    .card.disabled .thumb::after {
       content:"COMING SOON";
       position:absolute; inset:0;
       background:rgba(0,0,0,.35);
@@ -55,8 +57,11 @@
       text-shadow:0 1px 2px rgba(0,0,0,.35);
     }
 
-    .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-         color:#667; font-size:16px; padding:10px; text-align:center }
+    .ph {
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      color:#667; font-size:16px; padding:10px; text-align:center;
+    }
 
     @media (max-width:980px){ .grid{ grid-template-columns:repeat(3,minmax(220px,1fr)) } }
     @media (max-width:720px){ .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) } }
@@ -74,12 +79,12 @@
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
 
-    // Route guard: require a session before picking stories
+    // Require a session
     const ctx = readCtx();
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
 
-    // Stories (ids match /stories/<id>/slides.json and /stories/<id>/characters.json)
+    // Stories list
     const STORIES = [
       { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story-thumbnails/tortoise-hare-thumb.png', ready:true },
       { id:'lion-mouse',    name:'The Lion and the Mouse',    thumb:'images/story-thumbnails/lion-mouse-thumb.png',   ready:true },
@@ -100,9 +105,8 @@
 
     function thumbHTML(s){
       if (!s.thumb) return `<div class="ph">${s.name}</div>`;
-      // Fallback to title block if thumbnail is missing/broken
       return `<img src="${s.thumb}" alt="${s.name}"
-                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
+                   onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
     }
 
     for (const s of STORIES) {
