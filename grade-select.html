@@ -4,38 +4,82 @@
 <head>
   <meta charset="utf-8" />
   <title>Select Grade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body{margin:0;font-family:system-ui,Arial;background:#f9fbff;display:grid;place-items:center;height:100vh}
-    .wrap{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:28px 32px;min-width:320px}
-    h2{margin:0 0 14px;text-align:center}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    button{padding:12px;border-radius:10px;border:1px solid #ccd3ea;background:#fff;cursor:pointer;font-weight:600}
-    button:hover{background:#BADA55;border-color:#BADA55}
+    body{
+      margin:0;
+      font-family:system-ui,Arial;
+      background:#f9fbff;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+    }
+    .wrap{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 8px 30px rgba(0,0,0,.08);
+      padding:28px 32px;
+      width:min(92vw,480px);
+    }
+    h2{ margin:0 0 6px; text-align:center }
+    #storyHint{ margin:0 0 18px; text-align:center; opacity:.7; font-size:14px }
+    .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
+    button{
+      padding:12px;
+      border-radius:10px;
+      border:1px solid #ccd3ea;
+      background:#fff;
+      cursor:pointer;
+      font-weight:600;
+      transition: background .15s ease, border-color .15s ease, transform .05s ease;
+    }
+    button:hover{ background:#BADA55; border-color:#BADA55 }
+    button:active{ transform: translateY(1px) }
+    .back{
+      display:block; text-align:center; margin-top:14px; color:#335; text-decoration:none;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h2>Choose Grade Level</h2>
+    <p id="storyHint"></p>
     <div class="grid">
       <button data-grade="k-2">K–2</button>
       <button data-grade="3-5">3–5</button>
       <button data-grade="6-8">6–8</button>
     </div>
+    <a class="back" id="backLink" href="#">← Pick a different story</a>
   </div>
 
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
-    const SESSION_PAGE = 'index.html'; // change if needed
 
+    // Guards: need a session and a story
     const ctx = readCtx();
-    if (!ctx.session) { location.replace(SESSION_PAGE); throw 0; }
+    if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
 
+    // Nice hint showing which story we’re selecting for
+    const STORY_NAMES = {
+      'tortoise-hare': 'The Tortoise and the Hare',
+      'lion-mouse': 'The Lion and the Mouse'
+    };
+    const hint = document.getElementById('storyHint');
+    hint.textContent = `Story: ${STORY_NAMES[ctx.story] || ctx.story}`;
+
+    // Route back to story-select preserving session
+    const back = document.getElementById('backLink');
+    back.href = nextURL('story-select.html', ctx);
+
+    // On grade click → go to the story-aware character select page
     document.querySelectorAll('button[data-grade]').forEach(btn => {
       btn.onclick = () => {
         const grade = btn.dataset.grade;
         localStorage.setItem('selectedGrade', grade);
-        location.href = nextURL('story-select.html', { ...ctx, grade });
+        const newCtx = { ...ctx, grade };
+        // IMPORTANT: go to sprite-select.html (story-aware character select)
+        location.href = nextURL('sprite-select.html', newCtx);
       };
     });
   </script>
