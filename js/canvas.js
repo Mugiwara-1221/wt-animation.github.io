@@ -20,7 +20,7 @@ const sctx  = spriteCanvas.getContext("2d");
 const OUTLINE_DIR = "images/outline";
 
 // 4-frame outlines + mask CSVs for animation (per character)
-const FRAMES_DIR = (ch) => `images/frames/tortoise_and_the_hare/${ch}`;
+const FRAMES_DIR = (ch) => `images/frames/tortoise_and_the_hare/frame1/${ch}`;
 // We used to trim with only mask_1; now we’ll build all 4.
 const MASK_CSV   = (ch, i=1) => `${FRAMES_DIR(ch)}/${ch}_mask_${i}.csv`;
 
