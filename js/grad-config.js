@@ -7,7 +7,7 @@
 }*/
 
 export async function getGradeCaps(gradeId) {
-  const url = 'stories/config/grades.json';
+  const url = 'https://mugiwara-1221.github.io/wt-animation.github.io/stories/config/grades.json';
   const response = await fetch(url);
 
   if (!response.ok) {
