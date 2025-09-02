@@ -35,7 +35,7 @@
       btn.onclick = () => {
         const grade = btn.dataset.grade;
         localStorage.setItem('selectedGrade', grade);
-        location.href = nextURL('index.html', { ...ctx, grade });
+        location.href = nextURL('story-select.html', { ...ctx, grade });
       };
     });
   </script>
