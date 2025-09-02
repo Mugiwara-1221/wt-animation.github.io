@@ -203,7 +203,6 @@ function downloadImage() {
 }
 
 // ---------- CSV → alpha mask helpers (robust & cross‑browser) ----------
-console.log(url);
 async function loadCSVMatrix(url) {
   try {
     const resp = await fetch(url, { cache: "no-cache" });
