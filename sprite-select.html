@@ -1,5 +1,5 @@
 
-<!-- character-select (story-aware) -->
+<!-- sprite-select (character selection, story-aware) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,10 +13,10 @@
   <div class="scene-wrapper" id="characters">
     <!-- Story background -->
     <img id="scene" alt="Scene">
-    <!-- Characters will be injected here -->
+    <!-- Characters injected by JS -->
   </div>
 
-  <!-- Route guard: need story & grade -->
+  <!-- Guard: must have story & grade -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
@@ -24,95 +24,85 @@
     if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
   </script>
 
-  <!-- Load manifest, render characters, then attach selection logic -->
+  <!-- Runtime: load manifest & characters -->
   <script type="module">
     import { readCtx } from './js/flow.js';
-    import { getGradeCaps } from './js/grad-config.js';
+    import { getGradeCaps } from './js/grade-config.js';
 
     const ctx = readCtx();
     const container = document.getElementById('characters');
     const sceneImg  = document.getElementById('scene');
+    const storyId   = ctx.story; // e.g. "tortoise-hare"
 
-    // Normalize story id → use hyphens for folders (so "tortoise_and_the_hare" also works)
-    const storyId = (ctx.story || '').replace(/_/g, '-'); // e.g. "tortoise-hare"
-
-    // Try to fetch a JSON from /stories/<storyId>/characters.json
-    async function fetchManifest() {
+    // Fetch characters.json for this story
+    async function loadManifest() {
       const url = `stories/${storyId}/characters.json`;
       try {
-        const r = await fetch(url, { cache: 'no-store' });
-        if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-        return await r.json();
-      } catch (e) {
-        console.warn('characters.json not found at', url, e);
-        return null;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.json();
+      } catch (err) {
+        console.warn('No characters.json for', storyId, err);
+        return { background:'', characters:[] };
       }
     }
 
-    // Background helper: try a few options
+    // Background helper (try manifest → fallback)
     function setBackground(paths) {
-      const next = paths.shift();
-      if (!next) return;
-      sceneImg.src = next;
-      sceneImg.onerror = () => {
-        console.warn('BG 404:', next);
-        setBackground(paths);
-      };
+      const [first, ...rest] = paths;
+      if (!first) return;
+      sceneImg.src = first;
+      sceneImg.onerror = () => setBackground(rest);
     }
 
-    // Main
     (async () => {
-      const manifest = await fetchManifest() || { background: '', characters: [] };
+      const manifest = await loadManifest();
 
-      // Background fallbacks: manifest → conventional → hard fallback
+      // Put background in place
       setBackground([
         manifest.background,
         `images/backgrounds/${storyId}/select-scene.png`,
-        `images/backgrounds/${storyId}/frame5.png`,
         'images/backgrounds/tortoise-hare/frame5.png'
       ].filter(Boolean));
 
-      // Grade filter (empty set = no filter)
-      let allow = new Set();
+      // Grade filter
+      let allowed = new Set();
       try {
         const caps = await getGradeCaps(ctx.grade || 'k-2');
-        if (caps?.allowedCharacters?.length) allow = new Set(caps.allowedCharacters);
+        if (caps?.allowedCharacters?.length) {
+          allowed = new Set(caps.allowedCharacters);
+        }
       } catch {}
 
       // Inject characters
       const frag = document.createDocumentFragment();
-      let rendered = 0;
+      let count = 0;
 
-      for (const c of Array.isArray(manifest.characters) ? manifest.characters : []) {
-        if (allow.size && !allow.has(c.id)) continue;
+      for (const c of manifest.characters || []) {
+        if (allowed.size && !allowed.has(c.id)) continue;
 
         const img = document.createElement('img');
-        img.className    = `character ${c.id}`; // keep your CSS positions by id
+        img.className    = `character ${c.id}`;
         img.dataset.char = c.id;
         img.alt          = c.name || c.id;
         img.draggable    = false;
+        img.src          = c.sprite || `images/${c.id}.png`;
 
-        // Use provided sprite, fall back to images/<id>.png if missing
-        img.src = c.sprite || `images/${c.id}.png`;
-        img.onerror = () => {
-          console.warn('Sprite 404:', img.src, '→ fallback to images/<id>.png');
-          if (!/images\/[^/]+\.png$/.test(img.src)) img.src = `images/${c.id}.png`;
-        };
-
-        // Optional per-story overrides (in percent)
+        // Position overrides (optional, percent-based)
         if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
         if (typeof c.y === 'number') img.style.top    = `${c.y}%`;
         if (typeof c.w === 'number') img.style.width  = `${c.w}%`;
         if (typeof c.z === 'number') img.style.zIndex = String(c.z);
 
         frag.appendChild(img);
-        rendered++;
+        count++;
       }
 
       container.appendChild(frag);
-      if (!rendered) console.warn('No characters rendered — check characters.json & grade caps.');
 
-      // Attach selection logic *after* characters are in the DOM
+      if (!count) console.warn('No characters rendered — check manifest or grade caps.');
+
+      // Attach selection logic *after* characters exist
       try { await import('./js/azure-api.js'); } catch {}
       await import('./js/sprite-select.js');
     })();
