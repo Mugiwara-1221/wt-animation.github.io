@@ -9,12 +9,14 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div class="toggleNavLeft"></div>
+  <!-- Left navigation toggle button -->
+  <button class="toggleNavLeft" aria-label="Toggle tools panel"></button>
 
-  <nav id="navLeft">
+  <!-- Sidebar Tools Panel -->
+  <nav id="navLeft" aria-label="Drawing tools">
     <div class="nav-content">
       <span>Brush Type</span>
-      <select class="brush-type-select">
+      <select class="brush-type-select" aria-label="Brush type">
         <option value="basic" selected>Basic</option>
         <option value="soft">Soft</option>
         <option value="marker">Marker</option>
@@ -24,17 +26,17 @@
 
     <div class="nav-content">
       <span>Brush Size</span>
-      <input type="range" class="brush-size-slider" min="1" max="100" value="18" />
+      <input type="range" class="brush-size-slider" min="1" max="100" value="18" aria-label="Brush size" />
     </div>
 
     <div class="nav-content">
       <span>Opacity</span>
-      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" />
+      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity" />
     </div>
 
     <div class="nav-content">
       <span>Color</span>
-      <input class="pick-color" type="color" value="#2ad0ff" />
+      <input class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
     </div>
 
     <div class="nav-content">
@@ -43,10 +45,10 @@
       <button onclick="undo()">Undo</button>
       <button onclick="redo()">Redo</button>
       <button onclick="clearCanvas()">Clear</button>
-      <button onclick="toggleSaveOptions()">Save ▼</button>
-      <div id="saveOptions" class="save-options hidden">
-        <button onclick="downloadImage()">Download Image</button>
-        <button onclick="sendToStoryboard()">Send to Storyboard</button>
+      <button onclick="toggleSaveOptions()" aria-expanded="false" aria-controls="saveOptions">Save ▼</button>
+      <div id="saveOptions" class="save-options hidden" role="menu">
+        <button onclick="downloadImage()" role="menuitem">Download Image</button>
+        <button onclick="sendToStoryboard()" role="menuitem">Send to Storyboard</button>
       </div>
     </div>
 
@@ -57,20 +59,30 @@
     </div>
   </nav>
 
+  <!-- Canvas Layers -->
   <canvas id="bgCanvas"></canvas>
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
-  <!-- Guard: must have char (and usually story/grade) -->
+  <!-- Route guard & pass-through context -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-    if (!ctx.char)  { location.replace(nextURL('index.html', ctx)); throw 0; }
-    // Keep context flowing to storyboard
+
+    // Must have story, grade, and a character chosen
+    if (!ctx.session) { location.replace('index.html'); throw 0; }
+    if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
+    if (!ctx.grade)   { location.replace(nextURL('grade-select.html', ctx)); throw 0; }
+    if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
+
+    // Keep context available to storyboard.js if needed
     window.__flowCtx = ctx;
   </script>
 
+  <!-- Optional Azure client (safe no-op locally) -->
   <script type="module" src="js/azure-api.js"></script>
+
+  <!-- Drawing runtime (we’ll make the brush perfectly round in the next JS step) -->
   <script type="module" src="js/script.js"></script>
 </body>
 </html>
