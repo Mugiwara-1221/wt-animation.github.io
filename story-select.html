@@ -76,7 +76,7 @@
 
     // Route guard: require a session before picking stories
     const ctx = readCtx();
-    if (!ctx.session) { location.replace('session1.html'); throw 0; }
+    if (!ctx.session) { location.replace('index.html'); throw 0; }
     document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
 
     // Stories (ids match /stories/<id>/slides.json and /stories/<id>/characters.json)
