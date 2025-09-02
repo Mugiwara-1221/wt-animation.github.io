@@ -1,33 +1,36 @@
 
-<!--session creation-->
+<!-- session (start here) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Join or Create a Session</title>
-  <link rel="stylesheet" href="css/index.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- renamed assets -->
+  <link rel="stylesheet" href="css/index.css" />
 </head>
 <body>
   <div class="session-container">
     <h1>Welcome to Windtree Animation</h1>
 
-    <!-- Create Session Section -->
+    <!-- Create Session -->
     <div class="session-box">
       <h2>Create a Session</h2>
       <button id="createSessionBtn">Generate Session</button>
       <p id="sessionCodeDisplay">ID</p>
     </div>
 
-    <!-- Join Session Section -->
+    <!-- Join Session -->
     <div class="session-box">
       <h2>Join a Session</h2>
-      <input type="text" id="joinCodeInput" placeholder="Enter Session Code" maxlength="6">
-      <input type="text" id="joinCodeId" placeholder="Member ID (1-6)">
+      <input type="text" id="joinCodeInput" placeholder="Enter Session Code" maxlength="6" />
+      <input type="text" id="joinCodeId" placeholder="Member ID (1-6)" />
       <button id="joinSessionBtn">Join</button>
       <p id="joinError" class="error"></p>
     </div>
   </div>
 
+  <!-- renamed script -->
   <script type="module" src="js/index.js"></script>
 </body>
 </html>
