@@ -8,11 +8,11 @@
   <style>
     .scene-wrapper { position: relative; display: inline-block; }
     .nav {
-      margin: 10px 0 0;
+      margin: 12px 0 0;
       display: flex; gap: 10px; justify-content: center;
     }
     .nav button {
-      padding: 6px 14px; border-radius: 8px; border:1px solid #333;
+      padding: 8px 14px; border-radius: 10px; border:1px solid #333;
       background:#fff; cursor:pointer; font-weight:600;
     }
     .nav button:disabled { opacity:.5; cursor:default; }
@@ -22,45 +22,49 @@
   <h2>Story Scene</h2>
 
   <div class="scene-wrapper">
-    <!-- background image; JS swaps src per slide -->
+    <!-- Background image; js/storyboard.js swaps src per slide -->
     <img id="scene" alt="Scene" />
+    <!-- Character canvases are injected into a host div by storyboard.js -->
   </div>
 
-  <div class="nav">
-    <button id="prevBtn">◀ Back</button>
-    <button id="nextBtn">Next ▶</button>
+  <div class="nav" aria-label="Slide navigation">
+    <button id="prevBtn" aria-label="Previous slide">◀ Back</button>
+    <button id="nextBtn" aria-label="Next slide">Next ▶</button>
   </div>
 
-  <!-- route guard -->
+  <!-- Route guard: require session + story; grade optional but recommended -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-    if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
+    if (!ctx.session) location.replace('index.html');
+    if (!ctx.story)   location.replace(nextURL('story-select.html', ctx));
+    // expose for runtime if needed
+    window.__flowCtx = ctx;
   </script>
 
-  <!-- storyboard runtime -->
+  <!-- Storyboard runtime (loads stories/<id>/slides.json and animates per slide) -->
   <script type="module" src="js/storyboard.js"></script>
-  <script type = "module" src ="js/functions.js"></script>
 
-  <!-- wire buttons after runtime exposes globals -->
+  <!-- Wire buttons after runtime exposes next/prev & slide state -->
   <script>
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
 
     function updateBtns() {
-      if (!window.__slides) return;
-      prevBtn.disabled = window.__slides.index <= 0;
-      nextBtn.disabled = window.__slides.index >= window.__slides.count - 1;
+      const s = window.__slides;
+      if (!s) return;
+      prevBtn.disabled = s.index <= 0;
+      nextBtn.disabled = s.index >= s.count - 1;
     }
 
-    prevBtn.addEventListener('click', () => { window.prevSlide?.(); updateBtns(); });
-    nextBtn.addEventListener('click', () => { window.nextSlide?.(); updateBtns(); });
+    prevBtn.addEventListener('click', () => { window.prevSlide?.(); });
+    nextBtn.addEventListener('click', () => { window.nextSlide?.(); });
 
-    // storyboard.js will fire this when a slide is shown
+    // storyboard.js should dispatch this custom event after showSlide()
     window.addEventListener('slidechange', updateBtns);
 
-    // slight delay so storyboard.js can set __slides first time
-    setTimeout(updateBtns, 50);
+    // first pass after runtime initializes
+    setTimeout(updateBtns, 80);
   </script>
 </body>
 </html>
