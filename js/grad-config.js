@@ -1,26 +1,23 @@
 
-/*export async function getGradeCaps(gradeId) {
-  //const url = 'stories/config/grades.json';
-  const url = 'https://mugiwara-1221.github.io/wt-animation.github.io/stories/config/grades.json';
-  const data = await (await fetch(url)).json();
-  return data.grades[gradeId] || data.grades['k-2']; fd
-}*/
-
+// js/grade-config.js
 export async function getGradeCaps(gradeId) {
   const url = 'stories/config/grades.json';
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    console.warn(`Failed to fetch grade config: ${response.status}`);
+  let data;
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) {
+      console.warn(`Failed to fetch grade config: ${response.status}`);
+      return null;
+    }
+    data = await response.json();
+  } catch (e) {
+    console.warn('Grade config fetch error:', e);
     return null;
   }
 
-  const data = await response.json();
-  const validGrades = Object.keys(data.grades);
-
-  // Validate gradeId
+  const validGrades = Object.keys(data.grades || {});
   const safeGradeId = validGrades.includes(gradeId) ? gradeId : 'k-2';
-  const config = data.grades[safeGradeId];
+  const config = data.grades[safeGradeId] || {};
 
   // Normalize palette
   const fullPalette = [
@@ -39,4 +36,3 @@ export async function getGradeCaps(gradeId) {
     gradeId: safeGradeId
   };
 }
-
