@@ -6,6 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["post"]
+      "route": "createSession"
     },
     {
       "type": "http",
