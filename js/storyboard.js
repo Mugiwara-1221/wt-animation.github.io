@@ -1,5 +1,5 @@
 
-// storyboard.js — robust slide loader with auto-discovery fallback
+// js/storyboard.js — per-slide remasking so colors line up with each animation
 
 const qs            = new URLSearchParams(location.search);
 const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g,"-");
@@ -8,11 +8,13 @@ const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter
 
 const scene = document.getElementById("scene");
 let manifest = null;
-let idx = 0;
-const animLoops = new Set();
+let cur = 0;
 
-/* ---------- utils ---------- */
 const pct = n => `${n}%`;
+function slideNoFromPath(p){
+  const m = /slide(\d+)\.png/i.exec(p||"");
+  return m ? parseInt(m[1],10) : null;
+}
 
 function loadImage(src){
   return new Promise((res, rej) => {
@@ -22,14 +24,9 @@ function loadImage(src){
     im.src = src;
   });
 }
-
 async function urlExists(url){
-  try{
-    const r = await fetch(url, { cache: "no-store" });
-    return r.ok;
-  }catch{ return false; }
+  try{ const r = await fetch(url,{cache:"no-store"}); return r.ok; }catch{ return false; }
 }
-
 function fitCanvasToCSS(cvs){
   const r = cvs.getBoundingClientRect();
   const dpr = devicePixelRatio || 1;
@@ -41,187 +38,192 @@ function fitCanvasToCSS(cvs){
   return ctx;
 }
 
-function slideNoFromPath(p){
-  const m1 = /slide(\d+)\.png/i.exec(p || "");
-  if (m1) return parseInt(m1[1], 10);
-  const m2 = /frame(\d+)/i.exec(p || "");
-  return m2 ? parseInt(m2[1], 10) : null;
+// --- CSV → mask helpers (scaled to canvas size) ---
+async function loadCSVMatrix(url){
+  const r = await fetch(url, { cache:"no-store" });
+  if (!r.ok) throw new Error("Mask 404 " + url);
+  const txt = await r.text();
+  return txt.trim().split(/\r?\n/).map(r => r.split(",").map(v=>+v));
+}
+async function matrixToMaskBitmapScaled(mat, srcW, srcH, cssW, cssH){
+  const offSrc = new OffscreenCanvas(srcW, srcH);
+  const cSrc   = offSrc.getContext("2d", { willReadFrequently:true });
+  const img = cSrc.createImageData(srcW, srcH);
+  let k = 0;
+  for (let y=0; y<srcH; y++){
+    const row = mat[y];
+    for (let x=0; x<srcW; x++){
+      const a = row?.[x] ? 255 : 0;
+      img.data[k++] = 255; img.data[k++] = 255; img.data[k++] = 255; img.data[k++] = a;
+    }
+  }
+  cSrc.putImageData(img, 0, 0);
+
+  const offTgt = new OffscreenCanvas(Math.max(1, Math.round(cssW)), Math.max(1, Math.round(cssH)));
+  const cTgt = offTgt.getContext("2d");
+  cTgt.imageSmoothingEnabled = false;
+  cTgt.drawImage(offSrc, 0, 0, offTgt.width, offTgt.height);
+  return offTgt.transferToImageBitmap();
 }
 
-/* ---------- caches ---------- */
-const frameCache = new Map(); // `${prefix}|${count}` -> Image[]
+// caches
+const framesCache = new Map();    // key -> [Image...]
+const maskMatCache = new Map();   // key -> { mats, W, H }
+const maskBmpCache = new Map();   // key -> ImageBitmap
+const loops = new Set();
 
-async function getFrames(prefix, count){
-  const key = `${prefix}|${count}`;
-  if (frameCache.has(key)) return frameCache.get(key);
-  const frames = await Promise.all(
-    Array.from({length:count}, (_,i)=>loadImage(`${prefix}${i+1}.png`))
-  );
-  frameCache.set(key, frames);
-  return frames;
-}
-
-/* ---------- colored overlays (per-slide) ---------- */
+// colored overlays store (per story/char/slide)
 const OVERLAY_KEY = `coloredFrames:${storyId}:${selectedChar}`;
 let coloredBySlide = {};
-try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; }
-catch { coloredBySlide = {}; }
+try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
 
-const coloredSingleLegacy  = localStorage.getItem("coloredCharacter") || null;
-let   coloredFramesLegacy  = null;
-try {
-  const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
-  if (Array.isArray(arr) && arr.length) coloredFramesLegacy = arr;
-} catch {}
-
-/* ---------- host for character layers ---------- */
-let layerHost = document.getElementById("charHost");
-if (!layerHost) {
-  layerHost = document.createElement("div");
-  Object.assign(layerHost.style, {
-    position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none"
-  });
-  scene.parentElement.appendChild(layerHost);
-}
-function clearCharacters(){
-  for (const stop of animLoops) { try { stop(); } catch {} }
-  animLoops.clear();
-  layerHost.innerHTML = "";
-}
-
-/* ---------- boot ---------- */
-(async function boot(){
-  manifest = await loadManifestOrDiscover(storyId);
-  setTitle();
-
-  if (!manifest.slides?.length) {
-    console.error("[storyboard] No slides found for story:", storyId);
-    return;
-  }
-
-  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
-
-  addEventListener("keydown", (e)=>{
-    if (e.key === "ArrowRight") nextSlide();
-    if (e.key === "ArrowLeft")  prevSlide();
-  });
-})();
-
-async function loadManifestOrDiscover(storyId){
-  const slidesURL = `stories/${storyId}/slides.json`;
-
-  // A) try slides.json safely
-  try {
-    const r = await fetch(slidesURL, { cache: "no-store" });
-    if (r.ok) {
-      const txt = await r.text();   // guard against HTML error pages
-      try {
-        const json = JSON.parse(txt);
-        console.info("[storyboard] Using slides.json for", storyId);
-        return json;
-      } catch {
-        console.warn("[storyboard] slides.json exists but is not valid JSON; falling back to auto-discovery.");
-      }
-    } else {
-      console.info("[storyboard] slides.json not found (", r.status, "); using auto-discovery.");
-    }
-  } catch (err) {
-    console.warn("[storyboard] slides.json fetch failed; using auto-discovery.", err);
-  }
-
-  // B) fallback: discover slide1.png..slideN.png
-  const slides = [];
-  for (let i = 1; i <= 20; i++) {
-    const p = `stories/${storyId}/slide${i}.png`;
-    if (await urlExists(p)) slides.push({ background:p, characters:[] });
-    else if (slides.length) break; // stop after first gap once we’ve started
-  }
-  return {
-    storyTitle: storyId.replace(/-/g, " ").replace(/\b\w/g, s=>s.toUpperCase()),
-    slides
-  };
-}
+const legacySingle  = localStorage.getItem("coloredCharacter") || null;
+let   legacyFrames  = null;
+try { const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
+      if (Array.isArray(arr) && arr.length) legacyFrames = arr; } catch {}
 
 function setTitle(){
   const h2 = document.querySelector("h2");
   if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
 }
-
-/* ---------- navigation ---------- */
-function nextSlide(){ showSlide(idx + 1); }
-function prevSlide(){ showSlide(idx - 1); }
-Object.assign(window, { nextSlide, prevSlide, showSlide });
-
-/* ---------- render ---------- */
-async function showSlide(i){
-  idx = Math.max(0, Math.min(i, manifest.slides.length - 1));
-  const s = manifest.slides[idx];
-
-  // background first
-  try {
-    const bg = await loadImage(s.background);
-    scene.src = bg.src;
-  } catch {
-    console.error("[storyboard] Background failed:", s.background);
-    scene.removeAttribute("src");
-  }
-
-  clearCharacters();
-
-  // characters (optional if slides.json provides them)
-  const chars = Array.isArray(s.characters) ? s.characters : [];
-  await Promise.allSettled(chars.map(cfg => {
-    const basePrefix = cfg.framesPath || `images/frames/${cfg.id}/${cfg.id}`;
-    const frameCount = cfg.frameCount || 4;
-    const fps        = cfg.fps || 4;
-    const z          = cfg.z ?? 1;
-    return placeCharacter({ ...cfg, framesPath: basePrefix, frameCount, fps, z });
-  }));
-
-  // update URL + announce
-  const url = new URL(location.href);
-  url.searchParams.set("story", storyId);
-  url.searchParams.set("slide", idx);
-  history.replaceState({}, "", url);
-
-  window.__slides = { index: idx, count: manifest.slides.length };
-  window.dispatchEvent(new Event("slidechange"));
+function clearLayers(){
+  for (const stop of loops) { try { stop(); } catch{} }
+  loops.clear();
+  const host = document.getElementById("charHost");
+  if (host) host.innerHTML = "";
 }
 
-async function placeCharacter(c){
-  const { id, x, y, w, z=1, fps=4, framesPath, frameCount=4 } = c;
+async function discoverManifest(){
+  const url = `stories/${storyId}/slides.json`;
+  try{
+    const r = await fetch(url, { cache:"no-store" });
+    if (r.ok){
+      const txt = await r.text();
+      try{ return JSON.parse(txt); }
+      catch{ console.warn("[slides.json] invalid JSON, falling back"); }
+    }
+  }catch{}
+
+  // auto-discover slide1.png..slideN.png
+  const slides = [];
+  for (let i=1;i<=24;i++){
+    const p = `stories/${storyId}/slide${i}.png`;
+    if (await urlExists(p)) slides.push({ background:p, characters:[] });
+    else if (slides.length) break;
+  }
+  return {
+    storyTitle: storyId.replace(/-/g," ").replace(/\b\w/g,s=>s.toUpperCase()),
+    slides
+  };
+}
+
+async function getFrames(prefix, count){
+  const key = `${prefix}|${count}`;
+  if (framesCache.has(key)) return framesCache.get(key);
+  const images = await Promise.all(
+    Array.from({length:count},(_,i)=>loadImage(`${prefix}${i+1}.png`))
+  );
+  framesCache.set(key, images);
+  return images;
+}
+
+async function getMasksForSlide(charId, slideNo){
+  const prefix = `images/frames/${storyId}/frame${slideNo}/${charId}/${charId}_mask_`;
+  const key = `${prefix}|4`;
+  if (maskMatCache.has(key)) return maskMatCache.get(key);
+
+  const mats = await Promise.all(
+    [1,2,3,4].map(i => loadCSVMatrix(`${prefix}${i}.csv`))
+  );
+  const H = mats[0].length, W = mats[0][0].length;
+  const out = { mats, W, H, prefix };
+  maskMatCache.set(key, out);
+  return out;
+}
+
+async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs){
+  // scale the user's single colored image to canvas size,
+  // then apply each of the 4 masks for THIS slide
+  const r = cvs.getBoundingClientRect();
+  const base = await loadImage(coloredImg);
+  const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
+
+  const overlays = [];
+  for (let i=0;i<4;i++){
+    const bmpKey = `${prefix}${i+1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+    let bmp = maskBmpCache.get(bmpKey);
+    if (!bmp){
+      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
+      maskBmpCache.set(bmpKey, bmp);
+    }
+
+    // paint × mask → bitmap image
+    const off = document.createElement("canvas");
+    off.width = Math.round(r.width);
+    off.height = Math.round(r.height);
+    const cx = off.getContext("2d");
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(base, 0, 0, off.width, off.height);
+    cx.globalCompositeOperation = "destination-in";
+    cx.drawImage(bmp, 0, 0);
+    cx.globalCompositeOperation = "source-over";
+
+    overlays.push(await loadImage(off.toDataURL()));
+  }
+  return overlays;
+}
+
+async function placeCharacter(cfg, slideNo){
+  const { id, x, y, w, z=1, fps=4 } = cfg;
+
+  // default base frames location for this slide:
+  const framesPrefix = cfg.framesPath ||
+    `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
+
+  const host = (()=>{
+    let h = document.getElementById("charHost");
+    if (!h){
+      h = document.createElement("div");
+      h.id = "charHost";
+      Object.assign(h.style, { position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none" });
+      scene.parentElement.appendChild(h);
+    }
+    return h;
+  })();
 
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
-  Object.assign(cvs.style, {
-    position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:"auto",
-    zIndex:String(z), pointerEvents:"none"
-  });
-  layerHost.appendChild(cvs);
+  Object.assign(cvs.style, { position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:"auto", zIndex:String(z), pointerEvents:"none" });
+  host.appendChild(cvs);
   const ctx = fitCanvasToCSS(cvs);
-  const ro = new ResizeObserver(()=>fitCanvasToCSS(cvs));
+  const ro  = new ResizeObserver(()=>fitCanvasToCSS(cvs));
   ro.observe(cvs);
 
-  try {
-    const baseFrames = await getFrames(framesPath, frameCount);
+  try{
+    const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
 
-    // overlay selection for THIS slide
+    // choose / build overlays for THIS slide
     let overlays = null;
-    if (id === selectedChar) {
-      const slideNo = slideNoFromPath(manifest.slides[idx]?.background);
-      if (slideNo && Array.isArray(coloredBySlide[String(slideNo)])) {
-        overlays = await Promise.all(coloredBySlide[String(slideNo)].map(loadImage));
-      } else if (Array.isArray(coloredFramesLegacy) && coloredFramesLegacy.length) {
-        overlays = await Promise.all(coloredFramesLegacy.slice(0, frameCount).map(loadImage));
-      } else if (coloredSingleLegacy) {
-        overlays = [await loadImage(coloredSingleLegacy)];
+    if (id === selectedChar){
+      // 1) if we already stored per-slide overlays, use them
+      const stored = coloredBySlide[String(slideNo)];
+      if (Array.isArray(stored) && stored.length){
+        overlays = await Promise.all(stored.map(loadImage));
+      }
+      // 2) else if legacy 4-frames exist from canvas, use them (best effort)
+      else if (Array.isArray(legacyFrames) && legacyFrames.length){
+        overlays = await Promise.all(legacyFrames.slice(0, baseFrames.length).map(loadImage));
+      }
+      // 3) else remask the single colored bitmap through THIS slide's masks
+      else if (legacySingle){
+        overlays = await buildOverlaysForSlideFromSingle(legacySingle, slideNo, id, cvs);
       }
     }
 
     function draw(ix){
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0,0,r.width,r.height);
-      if (overlays) {
+      if (overlays){
         const ov = overlays[ix % overlays.length];
         ctx.drawImage(ov, 0, 0, r.width, r.height);
       }
@@ -229,19 +231,75 @@ async function placeCharacter(c){
       ctx.drawImage(base, 0, 0, r.width, r.height);
     }
 
-    // animate
-    let f = 0, last = performance.now(), rafId = 0, cancelled = false;
+    let i=0, last = performance.now(), raf=0, stop=false;
     const frameMs = 1000 / Math.max(1, fps);
     draw(0);
     function tick(ts){
-      if (cancelled) return;
-      if (ts - last >= frameMs) { last = ts; f = (f+1) % frameCount; draw(f); }
-      rafId = requestAnimationFrame(tick);
+      if (stop) return;
+      if (ts - last >= frameMs){ last = ts; i=(i+1)%baseFrames.length; draw(i); }
+      raf = requestAnimationFrame(tick);
     }
-    rafId = requestAnimationFrame(tick);
-    animLoops.add(() => { cancelled = true; cancelAnimationFrame(rafId); ro.disconnect(); });
-  } catch (e) {
-    console.warn("[storyboard] Character failed:", id, e);
+    raf = requestAnimationFrame(tick);
+    loops.add(()=>{ stop=true; cancelAnimationFrame(raf); ro.disconnect(); });
+  }catch(e){
+    console.warn("[storyboard] character failed:", id, e);
     ro.disconnect();
   }
 }
+
+async function showSlide(i){
+  if (!manifest) return;
+  cur = Math.max(0, Math.min(i, manifest.slides.length-1));
+  const s = manifest.slides[cur];
+
+  // background
+  try {
+    const bg = await loadImage(s.background);
+    scene.src = bg.src;
+  } catch {
+    console.error("[storyboard] background failed:", s.background);
+    scene.removeAttribute("src");
+  }
+
+  clearLayers();
+
+  const slideNo =
+    slideNoFromPath(s.background) ??
+    (manifest.slides.indexOf(s) + 1);
+
+  // place declared characters if provided; otherwise none (background-only slide still works)
+  const chars = Array.isArray(s.characters) ? s.characters : [];
+  await Promise.allSettled(chars.map(c => placeCharacter({
+    frameCount: 4,
+    fps: 4,
+    z: 1,
+    ...c
+  }, slideNo)));
+
+  const url = new URL(location.href);
+  url.searchParams.set("story", storyId);
+  url.searchParams.set("slide", cur);
+  history.replaceState({}, "", url);
+
+  window.__slides = { index: cur, count: manifest.slides.length };
+  window.dispatchEvent(new Event("slidechange"));
+}
+
+function nextSlide(){ showSlide(cur+1); }
+function prevSlide(){ showSlide(cur-1); }
+Object.assign(window, { nextSlide, prevSlide, showSlide });
+
+(async function boot(){
+  manifest = await discoverManifest();
+  setTitle();
+  if (!manifest.slides?.length){
+    console.error("[storyboard] No slides discovered for", storyId);
+    return;
+  }
+  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
+
+  addEventListener("keydown", e=>{
+    if (e.key === "ArrowRight") nextSlide();
+    if (e.key === "ArrowLeft")  prevSlide();
+  });
+})();
