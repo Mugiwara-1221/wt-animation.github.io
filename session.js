@@ -71,9 +71,30 @@ createBtn?.addEventListener("click", async () => {
       }
       };*/
 
-    const response = await fetch('api/createSession'); // your function route
-    const data = await response.json();
-    console.log('Raw response:', data);
+    const response = await fetch('/api/createSession'); // your function route
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    if (!text) {
+      throw new Error('Empty response from server');
+    }
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error('Invalid JSON:', err);
+      throw new Error('Failed to parse server response');
+    }
+    
+    // ✅ Now it's safe to use
+    console.log(data.sessionId);
+    
+        
+    //const data = await response.json();
+    //console.log('Raw response:', data);
 
     const { sessionCode, memberIds } = data;
 
@@ -87,6 +108,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
