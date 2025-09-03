@@ -1,19 +1,19 @@
 
-// storyboard.js — ordered slides from stories/<story-id>/slide#.png with fallbacks
+// storyboard.js — robust slide loader with auto-discovery fallback
 
-/* ---------------- context ---------------- */
 const qs            = new URLSearchParams(location.search);
-const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
+const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g,"-");
 const initialSlide  = Math.max(0, +qs.get("slide") || 0);
 const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 
 const scene = document.getElementById("scene");
-let manifest = null;         // { slides:[{background, characters?}] }
-let idx = 0;                 // current slide index
-const animLoops = new Set(); // cancelers per slide
+let manifest = null;
+let idx = 0;
+const animLoops = new Set();
 
-/* ---------------- utils ---------------- */
-function pct(n){ return `${n}%`; }
+/* ---------- utils ---------- */
+const pct = n => `${n}%`;
+
 function loadImage(src){
   return new Promise((res, rej) => {
     const im = new Image();
@@ -22,12 +22,14 @@ function loadImage(src){
     im.src = src;
   });
 }
+
 async function urlExists(url){
-  try {
+  try{
     const r = await fetch(url, { cache: "no-store" });
     return r.ok;
-  } catch { return false; }
+  }catch{ return false; }
 }
+
 function fitCanvasToCSS(cvs){
   const r = cvs.getBoundingClientRect();
   const dpr = devicePixelRatio || 1;
@@ -38,7 +40,7 @@ function fitCanvasToCSS(cvs){
   ctx.imageSmoothingEnabled = false;
   return ctx;
 }
-// accept slide<number>.png OR frame<number> in path
+
 function slideNoFromPath(p){
   const m1 = /slide(\d+)\.png/i.exec(p || "");
   if (m1) return parseInt(m1[1], 10);
@@ -46,41 +48,38 @@ function slideNoFromPath(p){
   return m2 ? parseInt(m2[1], 10) : null;
 }
 
-/* ---------------- caches ---------------- */
-const frameCache = new Map(); // `${prefix}|${count}` -> [Image,...]
+/* ---------- caches ---------- */
+const frameCache = new Map(); // `${prefix}|${count}` -> Image[]
+
 async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
   if (frameCache.has(key)) return frameCache.get(key);
-  const imgs = await Promise.all(
+  const frames = await Promise.all(
     Array.from({length:count}, (_,i)=>loadImage(`${prefix}${i+1}.png`))
   );
-  frameCache.set(key, imgs);
-  return imgs;
+  frameCache.set(key, frames);
+  return frames;
 }
 
-/* ---------------- colored overlay store (per slide) ---------------- */
-// New per-slide store written by canvas.js:
-//   localStorage[`coloredFrames:${storyId}:${char}`] = { "1":[dataURL...], "2":[...], ... }
+/* ---------- colored overlays (per-slide) ---------- */
 const OVERLAY_KEY = `coloredFrames:${storyId}:${selectedChar}`;
 let coloredBySlide = {};
-try {
-  coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {};
-} catch { coloredBySlide = {}; }
+try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; }
+catch { coloredBySlide = {}; }
 
-// Legacy fallbacks
-const coloredSingleLegacy = localStorage.getItem("coloredCharacter") || null;
-let coloredFramesLegacy = null;
+const coloredSingleLegacy  = localStorage.getItem("coloredCharacter") || null;
+let   coloredFramesLegacy  = null;
 try {
   const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
   if (Array.isArray(arr) && arr.length) coloredFramesLegacy = arr;
 } catch {}
 
-/* ---------------- layer host ---------------- */
+/* ---------- host for character layers ---------- */
 let layerHost = document.getElementById("charHost");
 if (!layerHost) {
   layerHost = document.createElement("div");
   Object.assign(layerHost.style, {
-    position: "absolute", left: 0, top: 0, width: "100%", height: "100%", pointerEvents: "none"
+    position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none"
   });
   scene.parentElement.appendChild(layerHost);
 }
@@ -90,25 +89,17 @@ function clearCharacters(){
   layerHost.innerHTML = "";
 }
 
-/* ---------------- boot: load manifest or auto-discover slides ---------------- */
+/* ---------- boot ---------- */
 (async function boot(){
-  // 1) try slides.json first
-  const slidesURL = `stories/${storyId}/slides.json`;
-  if (await urlExists(slidesURL)) {
-    manifest = await (await fetch(slidesURL, { cache: "no-store" })).json();
-  } else {
-    // 2) fallback: discover slide#.png sequentially (1..20)
-    const slides = [];
-    for (let i = 1; i <= 20; i++) {
-      const p = `stories/${storyId}/slide${i}.png`;
-      if (await urlExists(p)) slides.push({ background: p, characters: [] });
-      else if (slides.length) break; // stop after first gap once we’ve started
-    }
-    manifest = { storyTitle: storyId.replace(/-/g, " ").replace(/\b\w/g, s=>s.toUpperCase()), slides };
+  manifest = await loadManifestOrDiscover(storyId);
+  setTitle();
+
+  if (!manifest.slides?.length) {
+    console.error("[storyboard] No slides found for story:", storyId);
+    return;
   }
 
-  setTitle();
-  await showSlide(Math.min(initialSlide, (manifest.slides?.length || 1) - 1));
+  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
 
   addEventListener("keydown", (e)=>{
     if (e.key === "ArrowRight") nextSlide();
@@ -116,34 +107,68 @@ function clearCharacters(){
   });
 })();
 
+async function loadManifestOrDiscover(storyId){
+  const slidesURL = `stories/${storyId}/slides.json`;
+
+  // A) try slides.json safely
+  try {
+    const r = await fetch(slidesURL, { cache: "no-store" });
+    if (r.ok) {
+      const txt = await r.text();   // guard against HTML error pages
+      try {
+        const json = JSON.parse(txt);
+        console.info("[storyboard] Using slides.json for", storyId);
+        return json;
+      } catch {
+        console.warn("[storyboard] slides.json exists but is not valid JSON; falling back to auto-discovery.");
+      }
+    } else {
+      console.info("[storyboard] slides.json not found (", r.status, "); using auto-discovery.");
+    }
+  } catch (err) {
+    console.warn("[storyboard] slides.json fetch failed; using auto-discovery.", err);
+  }
+
+  // B) fallback: discover slide1.png..slideN.png
+  const slides = [];
+  for (let i = 1; i <= 20; i++) {
+    const p = `stories/${storyId}/slide${i}.png`;
+    if (await urlExists(p)) slides.push({ background:p, characters:[] });
+    else if (slides.length) break; // stop after first gap once we’ve started
+  }
+  return {
+    storyTitle: storyId.replace(/-/g, " ").replace(/\b\w/g, s=>s.toUpperCase()),
+    slides
+  };
+}
+
 function setTitle(){
   const h2 = document.querySelector("h2");
   if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
 }
 
-/* ---------------- navigation ---------------- */
+/* ---------- navigation ---------- */
 function nextSlide(){ showSlide(idx + 1); }
 function prevSlide(){ showSlide(idx - 1); }
 Object.assign(window, { nextSlide, prevSlide, showSlide });
 
-/* ---------------- show a slide ---------------- */
+/* ---------- render ---------- */
 async function showSlide(i){
-  if (!manifest) return;
   idx = Math.max(0, Math.min(i, manifest.slides.length - 1));
   const s = manifest.slides[idx];
 
-  // background first (sizes container)
+  // background first
   try {
     const bg = await loadImage(s.background);
     scene.src = bg.src;
   } catch {
-    console.error("Background failed:", s.background);
+    console.error("[storyboard] Background failed:", s.background);
     scene.removeAttribute("src");
   }
 
   clearCharacters();
 
-  // place characters if provided in slides.json; if not, just show background
+  // characters (optional if slides.json provides them)
   const chars = Array.isArray(s.characters) ? s.characters : [];
   await Promise.allSettled(chars.map(cfg => {
     const basePrefix = cfg.framesPath || `images/frames/${cfg.id}/${cfg.id}`;
@@ -153,7 +178,7 @@ async function showSlide(i){
     return placeCharacter({ ...cfg, framesPath: basePrefix, frameCount, fps, z });
   }));
 
-  // update URL + inform buttons
+  // update URL + announce
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
   url.searchParams.set("slide", idx);
@@ -163,15 +188,14 @@ async function showSlide(i){
   window.dispatchEvent(new Event("slidechange"));
 }
 
-/* ---------------- character layer ---------------- */
 async function placeCharacter(c){
   const { id, x, y, w, z=1, fps=4, framesPath, frameCount=4 } = c;
 
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
   Object.assign(cvs.style, {
-    position: "absolute", left: pct(x), top: pct(y), width: pct(w), height: "auto",
-    zIndex: String(z), pointerEvents: "none"
+    position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:"auto",
+    zIndex:String(z), pointerEvents:"none"
   });
   layerHost.appendChild(cvs);
   const ctx = fitCanvasToCSS(cvs);
@@ -181,12 +205,11 @@ async function placeCharacter(c){
   try {
     const baseFrames = await getFrames(framesPath, frameCount);
 
-    // choose overlay for THIS slide
+    // overlay selection for THIS slide
     let overlays = null;
     if (id === selectedChar) {
       const slideNo = slideNoFromPath(manifest.slides[idx]?.background);
       if (slideNo && Array.isArray(coloredBySlide[String(slideNo)])) {
-        // per-slide overlays (already masked & sized by canvas.js)
         overlays = await Promise.all(coloredBySlide[String(slideNo)].map(loadImage));
       } else if (Array.isArray(coloredFramesLegacy) && coloredFramesLegacy.length) {
         overlays = await Promise.all(coloredFramesLegacy.slice(0, frameCount).map(loadImage));
@@ -195,12 +218,9 @@ async function placeCharacter(c){
       }
     }
 
-    let f = 0;
-    const frameMs = 1000 / Math.max(1, fps);
-
     function draw(ix){
       const r = cvs.getBoundingClientRect();
-      ctx.clearRect(0, 0, r.width, r.height);
+      ctx.clearRect(0,0,r.width,r.height);
       if (overlays) {
         const ov = overlays[ix % overlays.length];
         ctx.drawImage(ov, 0, 0, r.width, r.height);
@@ -209,19 +229,19 @@ async function placeCharacter(c){
       ctx.drawImage(base, 0, 0, r.width, r.height);
     }
 
-    // first frame now, then loop
+    // animate
+    let f = 0, last = performance.now(), rafId = 0, cancelled = false;
+    const frameMs = 1000 / Math.max(1, fps);
     draw(0);
-    let rafId = 0, cancelled = false, last = performance.now();
     function tick(ts){
       if (cancelled) return;
       if (ts - last >= frameMs) { last = ts; f = (f+1) % frameCount; draw(f); }
       rafId = requestAnimationFrame(tick);
     }
     rafId = requestAnimationFrame(tick);
-
     animLoops.add(() => { cancelled = true; cancelAnimationFrame(rafId); ro.disconnect(); });
   } catch (e) {
-    console.warn("Character failed:", id, e);
+    console.warn("[storyboard] Character failed:", id, e);
     ro.disconnect();
   }
 }
