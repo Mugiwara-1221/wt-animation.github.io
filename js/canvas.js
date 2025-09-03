@@ -16,8 +16,14 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
-/* Transparent-outline sprites live here (single outline per character) */
+/* Single transparent outline per character (for coloring) */
 const OUTLINE_DIR = "images/outline";
+
+/* Your repo layout uses story folders + frameN folders */
+const STORY_FOLDER_MAP = new Map([
+  ["tortoise-hare", "tortoise_and_the_hare"],
+  ["lion-mouse",    "lion_and_the_mouse"],
+]);
 
 /* Full-window canvases; sprite sits in a centered box */
 const SPRITE_BOX_SIZE = 600;
@@ -27,7 +33,7 @@ let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 const urlParams     = new URLSearchParams(location.search);
 const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
 const sessionCode   =  urlParams.get("session") || localStorage.getItem("sessionCode")   || "";
-const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-"); // normalize
+const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
 
 localStorage.setItem("selectedCharacter", selectedChar);
@@ -75,7 +81,7 @@ outlineImg.onerror = () => alert(`Could not load outline: ${outlineImg.src}`);
 layoutAndRedraw();
 addEventListener("resize", layoutAndRedraw);
 
-/* ---------- Drawing (rounded stamping brush) ---------- */
+/* ---------- Drawing (rounded brush) ---------- */
 let drawing = false;
 let currentTool = "draw";
 let brushSize   = 18;
@@ -127,42 +133,33 @@ function redo() {
   ctx.putImageData(redoStack.pop(), 0, 0);
 }
 
-/* stamp a round dab (used for both draw & erase) */
-function stamp(x, y) {
-  ctx.globalAlpha = opacity;
-  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
+function dotAt(x, y) {
   ctx.beginPath();
   ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-  ctx.fillStyle = brushColor;
+  ctx.fillStyle = (currentTool === "erase") ? "#000" : brushColor;
+  ctx.globalAlpha = opacity;
+  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
   ctx.fill();
 }
 
-/* interpolate stamps along the path to avoid “bar” artifacts */
 function drawStroke(e) {
   if (!drawing) return;
-
   const [x, y] = getPos(e);
   if (!isInBounds(x, y)) return;
 
+  ctx.globalAlpha = opacity;
+  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
+  ctx.strokeStyle = brushColor;
+  ctx.lineWidth   = brushSize;
+
   if (prevX == null || prevY == null) {
-    stamp(x, y);                 // first dab for tap or new stroke
-    prevX = x; prevY = y;
-    return;
+    dotAt(x, y); // tap / first point = round dot
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(prevX, prevY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
   }
-
-  const dx = x - prevX;
-  const dy = y - prevY;
-  const dist = Math.hypot(dx, dy);
-
-  // spacing between stamps (smaller = smoother)
-  const step = Math.max(1, brushSize * 0.4);
-  const steps = Math.max(1, Math.ceil(dist / step));
-
-  for (let i = 1; i <= steps; i++) {
-    const t = i / steps;
-    stamp(prevX + dx * t, prevY + dy * t);
-  }
-
   prevX = x; prevY = y;
 }
 
@@ -231,7 +228,6 @@ async function loadCSVMatrix(url) {
   return { mat, W, H };
 }
 
-// Build a mask at CSV native size, then scale to (targetW, targetH)
 async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   const src = document.createElement("canvas");
   src.width = srcW; src.height = srcH;
@@ -258,33 +254,45 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   return scaled;
 }
 
-/* ---------- Find mask prefix from the story manifest ---------- */
-async function getMaskPrefixFromManifest(storyId, charId) {
-  // try both dashed and underscored story ids
-  const candidates = [
-    `stories/${storyId}/slides.json`,
-    `stories/${storyId.replace(/-/g, "_")}/slides.json`
-  ];
-  let manifest = null;
-  for (const u of candidates) {
-    try {
-      const r = await fetch(u, { cache: "no-store" });
-      if (r.ok) { manifest = await r.json(); break; }
-    } catch { /* keep trying */ }
-  }
-  if (!manifest?.slides) return null;
-
-  for (const slide of manifest.slides) {
-    for (const c of (slide.characters || [])) {
-      if (String(c.id).toLowerCase() === charId && c.maskCsvPrefix) {
-        return c.maskCsvPrefix; // exact prefix from your file
-      }
-    }
-  }
-  return null; // no mask for this character anywhere in the story
+/* ---------- Frame discovery & export ---------- */
+async function urlExists(url) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    return r.ok;
+  } catch { return false; }
 }
 
-/* ------- Send to storyboard (use mask if present; otherwise single image) ------- */
+function resolveStoryFolder(storyIdDash) {
+  const id = (storyIdDash || "").replace(/_/g, "-");
+  return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
+}
+
+/**
+ * Probe the story for all frame folders that contain masks for this character.
+ * Returns an array like:
+ *   [{ frame: 1, prefix: 'images/frames/<storyFolder>/frame1/<char>/<char>_mask_' }, ...]
+ */
+async function findMaskSets(storyIdDash, charId) {
+  const storyFolder = resolveStoryFolder(storyIdDash);
+  const base = `images/frames/${storyFolder}`;
+  const out = [];
+
+  // Probe a reasonable range of frames; stops after 2 consecutive misses.
+  let misses = 0;
+  for (let n = 1; n <= 20; n++) {
+    const prefix = `${base}/frame${n}/${charId}/${charId}_mask_`;
+    if (await urlExists(`${prefix}1.csv`)) {
+      out.push({ frame: n, prefix });
+      misses = 0;
+    } else {
+      misses++;
+      if (misses >= 2 && out.length) break;
+    }
+  }
+  return out;
+}
+
+/* ------- Send to storyboard (build masked frames grouped by slide) ------- */
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
@@ -294,15 +302,18 @@ async function sendToStoryboard() {
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // 2) find mask prefix directly from your story's manifest
-    const maskPrefix = await getMaskPrefixFromManifest(selectedStory || "tortoise-hare", selectedChar);
+    // 2) discover all frame folders that actually have masks for this character
+    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+    if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
-    const frameDataURLs = [];
-
-    if (maskPrefix) {
-      // 3) Build 4 masked frames using the manifest prefix
+    // 3) for each discovered frame folder, build up to 4 masked images
+    const bySlide = {}; // frameNumber -> [dataURL1..4] (only the ones that exist)
+    for (const { frame, prefix } of sets) {
+      const list = [];
       for (let i = 1; i <= 4; i++) {
-        const { mat, W, H } = await loadCSVMatrix(`${maskPrefix}${i}.csv`);
+        const csvURL = `${prefix}${i}.csv`;
+        if (!(await urlExists(csvURL))) continue;  // some frames may have <4> masks
+        const { mat, W, H } = await loadCSVMatrix(csvURL);
         const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
 
         const masked = document.createElement("canvas");
@@ -313,31 +324,35 @@ async function sendToStoryboard() {
         mctx.drawImage(maskCanvas, 0, 0);
         mctx.globalCompositeOperation = "source-over";
 
-        frameDataURLs.push(masked.toDataURL("image/png"));
+        list.push(masked.toDataURL("image/png"));
       }
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(frameDataURLs));
-      localStorage.setItem("coloredCharacter", frameDataURLs[0]);
-    } else {
-      // 4) No masks found anywhere for this character → just send single colored image
-      const single = crop.toDataURL("image/png");
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify([]));
-      localStorage.setItem("coloredCharacter", single);
+      if (list.length) bySlide[frame] = list;
     }
 
+    // 4) persist grouped results (story + char specific)
+    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+    const storageKey  = `coloredFrames:${storyFolder}:${selectedChar}`;
+    localStorage.setItem(storageKey, JSON.stringify(bySlide));
+
+    // Keep legacy single-frame keys so older storyboard code still works
+    const firstFrame = Object.values(bySlide)[0];
+    if (firstFrame?.length) {
+      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
+      localStorage.setItem("coloredCharacter", firstFrame[0]);
+    }
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    // 5) (optional) submit first frame/single to backend
-    const firstFrame = frameDataURLs[0] || localStorage.getItem("coloredCharacter");
+    // 5) (optional) submit just the first masked image to backend
+    const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    try { await submitDrawing(sessionCode, selectedChar, firstFrame, uid); } catch (err) {
+    try { if (firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch (err) {
       console.warn("[submitDrawing] non-blocking error:", err);
     }
 
     // 6) go to storyboard with context intact
-    const q = new URLSearchParams({ char: selectedChar });
-    if (sessionCode)   q.set("session", sessionCode);
-    if (selectedStory) q.set("story",   selectedStory);
-    if (selectedGrade) q.set("grade",   selectedGrade);
+    const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
+    if (sessionCode) q.set("session", sessionCode);
+    if (selectedGrade) q.set("grade", selectedGrade);
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
     console.error("[sendToStoryboard] failed:", err);
