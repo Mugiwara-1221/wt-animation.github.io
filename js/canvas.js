@@ -258,36 +258,33 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   return scaled;
 }
 
-/* ---------- Resolve where the mask CSVs live (handles your repo layout) ---------- */
-async function urlExists(url) {
-  try {
-    const r = await fetch(url, { cache: "no-store" });
-    return r.ok;
-  } catch { return false; }
-}
-
-/** Find a prefix that works so `${prefix}${i}.csv` exists. */
-async function resolveMaskPrefix(char, story) {
+/* ---------- Find mask prefix from the story manifest ---------- */
+async function getMaskPrefixFromManifest(storyId, charId) {
+  // try both dashed and underscored story ids
   const candidates = [
-    `images/frames/${story}/frame1/${char}/${char}_mask_`,
-    `images/frames/${story}/frame2/${char}/${char}_mask_`,
-    `images/frames/${story}/frame3/${char}/${char}_mask_`,
-    `images/frames/${story}/frame4/${char}/${char}_mask_`,
-    `images/frames/${story}/frame5/${char}/${char}_mask_`,
-    `images/frames/${story}/frame6/${char}/${char}_mask_`,
-    `images/frames/${story}/${char}/${char}_mask_`,
-    `images/frames/${char}/${char}_mask_`,
+    `stories/${storyId}/slides.json`,
+    `stories/${storyId.replace(/-/g, "_")}/slides.json`
   ];
-  for (const p of candidates) {
-    if (await urlExists(`${p}1.csv`)) return p;
+  let manifest = null;
+  for (const u of candidates) {
+    try {
+      const r = await fetch(u, { cache: "no-store" });
+      if (r.ok) { manifest = await r.json(); break; }
+    } catch { /* keep trying */ }
   }
-  throw new Error(
-    `No mask CSV found for "${char}". Looked under:\n` +
-    candidates.map(p => `• ${p}1.csv`).join("\n")
-  );
+  if (!manifest?.slides) return null;
+
+  for (const slide of manifest.slides) {
+    for (const c of (slide.characters || [])) {
+      if (String(c.id).toLowerCase() === charId && c.maskCsvPrefix) {
+        return c.maskCsvPrefix; // exact prefix from your file
+      }
+    }
+  }
+  return null; // no mask for this character anywhere in the story
 }
 
-/* ------- Send to storyboard (build FOUR masked frames) ------- */
+/* ------- Send to storyboard (use mask if present; otherwise single image) ------- */
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
@@ -297,34 +294,42 @@ async function sendToStoryboard() {
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // 2) find the correct mask prefix based on your repo
-    const maskPrefix = await resolveMaskPrefix(selectedChar, selectedStory || "tortoise-hare");
+    // 2) find mask prefix directly from your story's manifest
+    const maskPrefix = await getMaskPrefixFromManifest(selectedStory || "tortoise-hare", selectedChar);
 
-    // 3) build 4 masked frames using mask_1..mask_4.csv
     const frameDataURLs = [];
-    for (let i = 1; i <= 4; i++) {
-      const { mat, W, H } = await loadCSVMatrix(`${maskPrefix}${i}.csv`);
-      const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
 
-      const masked = document.createElement("canvas");
-      masked.width = width; masked.height = height;
-      const mctx   = masked.getContext("2d");
-      mctx.drawImage(crop, 0, 0);
-      mctx.globalCompositeOperation = "destination-in";
-      mctx.drawImage(maskCanvas, 0, 0);
-      mctx.globalCompositeOperation = "source-over";
+    if (maskPrefix) {
+      // 3) Build 4 masked frames using the manifest prefix
+      for (let i = 1; i <= 4; i++) {
+        const { mat, W, H } = await loadCSVMatrix(`${maskPrefix}${i}.csv`);
+        const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
 
-      frameDataURLs.push(masked.toDataURL("image/png"));
+        const masked = document.createElement("canvas");
+        masked.width = width; masked.height = height;
+        const mctx   = masked.getContext("2d");
+        mctx.drawImage(crop, 0, 0);
+        mctx.globalCompositeOperation = "destination-in";
+        mctx.drawImage(maskCanvas, 0, 0);
+        mctx.globalCompositeOperation = "source-over";
+
+        frameDataURLs.push(masked.toDataURL("image/png"));
+      }
+      localStorage.setItem("coloredCharacterFrames", JSON.stringify(frameDataURLs));
+      localStorage.setItem("coloredCharacter", frameDataURLs[0]);
+    } else {
+      // 4) No masks found anywhere for this character → just send single colored image
+      const single = crop.toDataURL("image/png");
+      localStorage.setItem("coloredCharacterFrames", JSON.stringify([]));
+      localStorage.setItem("coloredCharacter", single);
     }
 
-    // 4) store array for storyboard (keep frame0 also for legacy path)
-    localStorage.setItem("coloredCharacterFrames", JSON.stringify(frameDataURLs));
-    localStorage.setItem("coloredCharacter", frameDataURLs[0]);
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    // 5) (optional) submit just the first frame to your backend
+    // 5) (optional) submit first frame/single to backend
+    const firstFrame = frameDataURLs[0] || localStorage.getItem("coloredCharacter");
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    try { await submitDrawing(sessionCode, selectedChar, frameDataURLs[0], uid); } catch (err) {
+    try { await submitDrawing(sessionCode, selectedChar, firstFrame, uid); } catch (err) {
       console.warn("[submitDrawing] non-blocking error:", err);
     }
 
