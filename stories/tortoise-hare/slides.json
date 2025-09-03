@@ -60,10 +60,31 @@
       "characters": [
         {
           "id": "squirrel",
-          "x": 45, "y": 65, "w": 40,
+          "x": 10, "y": 60, "w": 70,
           "framesPath": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/squirrel/squirrel_mask_"
+        },
+        {
+          "id": "bird1",
+          "x": 30, "y": 30, "w": 70,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame3/bird1/bird",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/bird1/bird_mask_"
+        },
+        {
+          "id": "bird2",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame3/bird2/bird",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/bird2/bird_mask_"
+        },
+        {
+          "id": "bear",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame3/bear/bear",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame3/bear/bear_mask_"
         }
       ]
     },
@@ -71,18 +92,46 @@
       "background": "images/frames/tortoise_and_the_hare/frame4/slide4.png",
       "characters": [
         {
-          "id": "bird1",
-          "x": 70, "y": 20, "w": 14,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame4/bird1/bird1",
+          "id": "tortoise",
+          "x": 10, "y": 60, "w": 70,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/tortoise/tortoise",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/bird1/bird1_mask_"
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/tortoise/tortoise_mask_"
+        },
+        {
+          "id": "hare",
+          "x": 30, "y": 30, "w": 70,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/hare/hare",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/hare/hare_mask_"
+        },
+        {
+          "id": "bird1",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/bird1/bird",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/bird1/bird_mask_"
         },
         {
           "id": "bird2",
-          "x": 78, "y": 24, "w": 14,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame4/bird2/bird2",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/bird2/bird",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/bird2/bird2_mask_"
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/bird2/bird_mask_"
+        },
+        {
+          "id": "squirrel",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/squirrel/squirrel",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/squirrel/squirrel_mask_"
+        },
+        {
+          "id": "bear",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame4/bear/bear",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/bear/bear_mask_"
         }
       ]
     },
@@ -91,17 +140,45 @@
       "characters": [
         {
           "id": "tortoise",
-          "x": 45, "y": 62, "w": 18,
+          "x": 10, "y": 60, "w": 70,
           "framesPath": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise_mask_"
         },
         {
           "id": "hare",
-          "x": 64, "y": 60, "w": 18,
+          "x": 30, "y": 30, "w": 70,
           "framesPath": "images/frames/tortoise_and_the_hare/frame5/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/hare/hare_mask_"
+        },
+        {
+          "id": "bird1",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame5/bird1/bird",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/bird1/bird_mask_"
+        },
+        {
+          "id": "bird2",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame5/bird2/bird",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/bird2/bird_mask_"
+        },
+        {
+          "id": "squirrel",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame5/squirrel/squirrel",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/squirrel/squirrel_mask_"
+        },
+        {
+          "id": "bear",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame5/bear/bear",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/bear/bear_mask_"
         }
       ]
     },
@@ -109,22 +186,29 @@
       "background": "images/frames/tortoise_and_the_hare/frame6/slide6.png",
       "characters": [
         {
-          "id": "tortoise",
-          "x": 50, "y": 65, "w": 20,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame6/tortoise/tortoise",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame6/tortoise/tortoise_mask_"
-        },
-        {
           "id": "hare",
-          "x": 60, "y": 55, "w": 20,
+          "x": 55, "y": 5, "w": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame6/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame6/hare/hare_mask_"
         },
         {
+          "id": "tortoise",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame6/tortoise/tortoise",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame6/tortoise/tortoise_mask_"
+        },
+        {
+          "id": "squirrel",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/frames/tortoise_and_the_hare/frame6/squirrel/squirrel",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/squirrel/squirrel_mask_"
+        },
+        {
           "id": "bear",
-          "x": 30, "y": 50, "w": 22,
+          "x": 8, "y": 48, "w": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame6/bear/bear",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame6/bear/bear_mask_"
