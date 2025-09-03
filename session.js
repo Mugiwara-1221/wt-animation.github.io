@@ -71,7 +71,7 @@ createBtn?.addEventListener("click", async () => {
       }
       };*/
 
-    const response = await fetch('/api/createSession'); // your function route
+    const response = await fetch('api/createSession'); // your function route
     const data = await response.json();
     const { sessionCode, memberIds } = data;
 
@@ -85,6 +85,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
