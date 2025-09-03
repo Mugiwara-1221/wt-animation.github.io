@@ -1,20 +1,30 @@
 
-// sprite-select.js
-//import * as Azure from "./js/azure-api.js"; 
+// js/sprite-select.js
+// Wires pixel-accurate hover & click on .character sprites
+// Locks via Azure if available; otherwise just navigates.
 
-/************ Session detection (non-blocking) ************/
-const qs = new URLSearchParams(window.location.search);
-const sessionId = qs.get("session") || localStorage.getItem("sessionCode") || null;
+import { readCtx, nextURL } from './flow.js';
 
-// device token (for locking)
+// Try to import Azure helpers if present
+let Azure = null;
+try {
+  Azure = await import('./azure-api.js');
+} catch {
+  // ok to proceed without locks locally
+}
+
+/************ Session / flow ctx ************/
+const ctx = readCtx(); // has session/story/grade if user followed the flow
+const sessionId = ctx.session || null;
+
+// stable device token (for locking)
 const deviceToken = (() => {
-  let t = localStorage.getItem("deviceToken");
-  if (!t) { t = crypto.randomUUID(); localStorage.setItem("deviceToken", t); }
+  let t = localStorage.getItem('deviceToken');
+  if (!t) { t = (crypto.randomUUID?.() || String(Date.now())); localStorage.setItem('deviceToken', t); }
   return t;
 })();
 
 /************ Pixel-accurate hover + click ************/
-const sprites = Array.from(document.querySelectorAll(".character"));
 const hit = new Map();
 
 function buildHitCanvas(img) {
@@ -22,9 +32,9 @@ function buildHitCanvas(img) {
   const h = img.naturalHeight || img.height;
   if (!w || !h) return;
 
-  const c = document.createElement("canvas");
+  const c = document.createElement('canvas');
   c.width = w; c.height = h;
-  const cx = c.getContext("2d", { willReadFrequently: true });
+  const cx = c.getContext('2d', { willReadFrequently: true });
   cx.drawImage(img, 0, 0, w, h);
   hit.set(img, { canvas: c, ctx: cx, w, h });
 }
@@ -43,81 +53,90 @@ function isOverInk(img, off, evt) {
   return off.ctx.getImageData(x, y, 1, 1).data[3] > 10;
 }
 
+function goToCanvas(charKey) {
+  // carry flow context forward
+  const url = nextURL('canvas.html', ctx, { char: charKey });
+  location.href = url;
+}
+
 function wire(img) {
   if (img.complete && (img.naturalWidth || img.width)) buildHitCanvas(img);
-  else img.addEventListener("load", () => buildHitCanvas(img), { once: true });
+  else img.addEventListener('load', () => buildHitCanvas(img), { once: true });
 
   const onMove = (e) => {
     const off = hit.get(img);
     if (!off) return;
     const over = isOverInk(img, off, e);
-    img.classList.toggle("hovered", over && !img.classList.contains("locked"));
+    img.classList.toggle('hovered', over && !img.classList.contains('locked'));
   };
-  const onLeave = () => img.classList.remove("hovered");
+  const onLeave = () => img.classList.remove('hovered');
 
-  img.addEventListener("mousemove", onMove);
-  img.addEventListener("mouseleave", onLeave);
-  img.addEventListener("touchstart", onMove, { passive: true });
+  img.addEventListener('mousemove', onMove);
+  img.addEventListener('mouseleave', onLeave);
+  img.addEventListener('touchstart', onMove, { passive: true });
 
-  img.addEventListener("click", async (e) => {
-    // If we can't verify pixel hit (e.g., image not decoded yet), allow click anyway
+  img.addEventListener('click', async (e) => {
     const off = hit.get(img);
     if (off && !isOverInk(img, off, e)) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
-    if (img.classList.contains("locked")) return;
+    if (img.classList.contains('locked')) return;
 
     const charKey = img.dataset.char;
-    // If no session, just go straight to canvas (standalone mode)
-    if (!sessionId) {
-      window.location.href = `canvas.html?char=${charKey}`;
+
+    // No session? just navigate (standalone)
+    if (!sessionId || !Azure?.lockCharacter) {
+      goToCanvas(charKey);
       return;
     }
 
-    // Try Azure lock; if it fails, fall back to navigating (so class can proceed)
+    // Try Azure lock; on failure, proceed anyway so class can continue
     try {
       const res = await Azure.lockCharacter(sessionId, charKey, deviceToken);
       const ok = !!res && !!res.locks && res.locks[charKey] === deviceToken;
       if (!ok) {
-        alert("Sorry, this character is already taken.");
+        alert('Sorry, this character is already taken.');
         return;
       }
-      window.location.href = `canvas.html?char=${charKey}&session=${sessionId}`;
+      goToCanvas(charKey);
     } catch (err) {
-      console.warn("Lock failed, proceeding without lock:", err);
-      window.location.href = `canvas.html?char=${charKey}&session=${sessionId}`;
+      console.warn('Lock failed, proceeding without lock:', err);
+      goToCanvas(charKey);
     }
   }, true);
 }
 
-sprites.forEach(wire);
+function wireAllCurrentSprites() {
+  const sprites = Array.from(document.querySelectorAll('.character'));
+  sprites.forEach(wire);
 
-// Rebuild hit-maps if images resize
-const ro = new ResizeObserver(entries => {
-  for (const e of entries) {
-    const el = e.target;
-    if (el.classList.contains("character")) buildHitCanvas(el);
-  }
-});
-sprites.forEach(img => ro.observe(img));
+  // Rebuild hit-maps if images resize
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const el = e.target;
+      if (el.classList.contains('character')) buildHitCanvas(el);
+    }
+  });
+  sprites.forEach(img => ro.observe(img));
+}
+
+// In case this script is imported before sprites are injected, delay a tick:
+queueMicrotask(wireAllCurrentSprites);
 
 /************ Refresh locks (non-blocking) ************/
 async function refreshLocks() {
-  if (!sessionId) return; // standalone mode
+  if (!sessionId || !Azure?.getSession) return; // standalone mode
   try {
     const sess = await Azure.getSession(sessionId);
     const taken = (sess && sess.locks) || {};
-    sprites.forEach(el => {
+    document.querySelectorAll('.character').forEach(el => {
       const key = el.dataset.char;
-      if (taken[key]) el.classList.add("locked");
-      else el.classList.remove("locked");
+      if (taken[key]) el.classList.add('locked');
+      else el.classList.remove('locked');
     });
-  } catch (e) {
-    // don’t spam; log once in a while
-    // console.debug("refreshLocks error:", e?.message || e);
-  }
+  } catch (_) { /* quiet */ }
 }
 refreshLocks();
 setInterval(refreshLocks, 1000);
