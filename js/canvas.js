@@ -75,7 +75,7 @@ outlineImg.onerror = () => alert(`Could not load outline: ${outlineImg.src}`);
 layoutAndRedraw();
 addEventListener("resize", layoutAndRedraw);
 
-/* ---------- Drawing (rounded brush) ---------- */
+/* ---------- Drawing (rounded stamping brush) ---------- */
 let drawing = false;
 let currentTool = "draw";
 let brushSize   = 18;
@@ -127,33 +127,42 @@ function redo() {
   ctx.putImageData(redoStack.pop(), 0, 0);
 }
 
-function dotAt(x, y) {
+/* stamp a round dab (used for both draw & erase) */
+function stamp(x, y) {
+  ctx.globalAlpha = opacity;
+  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
   ctx.beginPath();
   ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = brushColor;
-  ctx.globalAlpha = opacity;
-  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
   ctx.fill();
 }
 
+/* interpolate stamps along the path to avoid “bar” artifacts */
 function drawStroke(e) {
   if (!drawing) return;
+
   const [x, y] = getPos(e);
   if (!isInBounds(x, y)) return;
 
-  ctx.globalAlpha = opacity;
-  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
-  ctx.strokeStyle = brushColor;
-  ctx.lineWidth   = brushSize;
-
   if (prevX == null || prevY == null) {
-    dotAt(x, y); // tap / first point = round dot
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(prevX, prevY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    stamp(x, y);                 // first dab for tap or new stroke
+    prevX = x; prevY = y;
+    return;
   }
+
+  const dx = x - prevX;
+  const dy = y - prevY;
+  const dist = Math.hypot(dx, dy);
+
+  // spacing between stamps (smaller = smoother)
+  const step = Math.max(1, brushSize * 0.4);
+  const steps = Math.max(1, Math.ceil(dist / step));
+
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    stamp(prevX + dx * t, prevY + dy * t);
+  }
+
   prevX = x; prevY = y;
 }
 
@@ -260,7 +269,6 @@ async function urlExists(url) {
 /** Find a prefix that works so `${prefix}${i}.csv` exists. */
 async function resolveMaskPrefix(char, story) {
   const candidates = [
-    // common story folder patterns
     `images/frames/${story}/frame1/${char}/${char}_mask_`,
     `images/frames/${story}/frame2/${char}/${char}_mask_`,
     `images/frames/${story}/frame3/${char}/${char}_mask_`,
@@ -268,7 +276,6 @@ async function resolveMaskPrefix(char, story) {
     `images/frames/${story}/frame5/${char}/${char}_mask_`,
     `images/frames/${story}/frame6/${char}/${char}_mask_`,
     `images/frames/${story}/${char}/${char}_mask_`,
-    // legacy per-character folder
     `images/frames/${char}/${char}_mask_`,
   ];
   for (const p of candidates) {
