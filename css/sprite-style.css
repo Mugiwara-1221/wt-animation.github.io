@@ -1,10 +1,10 @@
 
 /* Sprite Selection Page Styles */
 
+/* Caps to keep every story's character-select a consistent size */
 :root{
-  /* caps to prevent the scene from getting too large */
-  --scene-max-w: 92vw;     /* width clamp against viewport */
-  --scene-max-h: 78vh;     /* height clamp against viewport */
+  --scene-max-w: 92vw;  /* width clamp vs viewport */
+  --scene-max-h: 78vh;  /* height clamp vs viewport */
 }
 
 html, body {
@@ -36,31 +36,35 @@ h2 {
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  /* Let the image decide its own aspect while staying within viewport */
+
+  /* Uniform size for ALL stories */
   max-width: var(--scene-max-w);
   max-height: var(--scene-max-h);
+  overflow: hidden;
 }
 
 /* Background image for the selection scene (story-specific) */
 #scene {
   display: block;
-  width: 100%;         /* fill wrapper width */
-  height: auto;        /* keep image aspect */
+  width: 100%;   /* fill wrapper width */
+  height: auto;  /* maintain aspect */
   border-radius: 12px;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-/* Characters (injected by index.html) */
+/* Characters (injected) */
 .character {
   position: absolute;
   cursor: pointer;
   user-select: none;
   -webkit-user-drag: none;
   transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
-  image-rendering: auto;         /* crisp art without pixelation */
+  image-rendering: auto;   /* crisp vector-ish look */
   transform-origin: center;
 }
 
-/* Pixel-accurate hover supplied by JS; CSS fallback below still helps */
+/* Pixel-accurate hover gets .hovered via JS; CSS fallback hover too */
 .character.hovered:not(.locked),
 .character:not(.locked):hover {
   transform: scale(1.12);
@@ -73,8 +77,7 @@ h2 {
   filter: grayscale(100%);
 }
 
-/* Default sizes per id (kept so your existing placements work).
-   These are only used if the story’s characters.json does NOT set w/x/y. */
+/* Default sizes (used only if a story's characters.json doesn't override w/x/y) */
 .hare     { width: 300px; height: auto; }
 .tortoise { width: 280px; height: auto; }
 .bear     { width: 145px; height: auto; }
@@ -82,9 +85,8 @@ h2 {
 .bird1    { width:  45px; height: auto; }
 .bird2    { width:  60px; height: auto; }
 
-/* Default positions for the Tortoise & Hare selection scene.
-   If a story needs different placement, provide x/y/w in its characters.json
-   (percent-based) and those inline styles will override these. */
+/* Default positions that matched your original Tortoise & Hare layout.
+   Any story can override with percent-based x/y/w in characters.json. */
 .hare     { top: 450px; left:  90px; }
 .tortoise { top: 466px; left: 510px; }
 .bear     { top: 156px; left: 505px; }
@@ -97,7 +99,7 @@ h2 {
   :root{ --scene-max-w: 96vw; --scene-max-h: 72vh; }
 }
 
-/* Accessibility: make keyboard focus visible if/when we add tabindex later */
+/* Keyboard-accessible focus (if you add tabindex later) */
 .character:focus-visible {
   outline: 3px solid #BADA55;
   outline-offset: 3px;
