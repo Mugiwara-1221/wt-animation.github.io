@@ -7,6 +7,7 @@
   --accent: #BADA55;
 }
 
+/* Page */
 body {
   margin: 0;
   padding: 0;
@@ -17,32 +18,22 @@ body {
   background: #fff; /* white background like storyboard */
 }
 
-/* ---------------- Canvas Layers ---------------- */
+/* ---------- Canvas Layers ---------- */
 canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
+#bgCanvas    { z-index: 1; }
+#drawCanvas  { z-index: 10; pointer-events: auto; } /* interactive */
+#spriteCanvas{ z-index: 20; }
 
-#bgCanvas {
-  z-index: 1;
-}
-#drawCanvas {
-  z-index: 10;
-  pointer-events: auto; /* only this one is interactive */
-}
-#spriteCanvas {
-  z-index: 20;
-}
-
-/* ---------------- Left Navigation Panel ---------------- */
+/* ---------- Left Navigation Panel ---------- */
 #navLeft {
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 250px;
   height: 100%;
   background-color: var(--panel-bg);
@@ -59,8 +50,8 @@ canvas {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; 
-  align-items: center;     
+  justify-content: center;
+  align-items: center;
   padding: 20px 0;
   border-bottom: 1px solid #ccc;
   box-sizing: border-box;
@@ -95,12 +86,9 @@ canvas {
   cursor: pointer;
   transition: background 0.2s;
 }
+.nav-content button:hover { background-color: var(--accent); }
 
-.nav-content button:hover {
-  background-color: var(--accent);
-}
-
-/* ---------------- Toggle Arrow ---------------- */
+/* ---------- Toggle Arrow ---------- */
 .toggleNavLeft {
   position: fixed;
   top: 10px;
@@ -116,11 +104,10 @@ canvas {
   transition: left 0.4s ease;
 }
 
-/* ---------------- Tools (optional draggable panel) ---------------- */
+/* ---------- Optional draggable tools panel ---------- */
 .tools {
   position: fixed;
-  top: 10px;
-  right: 10px;
+  top: 10px; right: 10px;
   width: 160px;
   background: white;
   border-radius: 8px;
@@ -133,7 +120,6 @@ canvas {
   cursor: grab;
   user-select: none;
 }
-
 .tools button {
   width: 100%;
   min-height: 32px;
@@ -141,7 +127,7 @@ canvas {
   cursor: pointer;
 }
 
-/* ---------------- Save Dropdown ---------------- */
+/* ---------- Save Dropdown ---------- */
 .save-options {
   display: flex;
   flex-direction: column;
@@ -162,26 +148,26 @@ canvas {
   background-color: #ffffff;
   cursor: pointer;
 }
-.save-options button:hover {
-  background-color: var(--accent);
-}
+.save-options button:hover { background-color: var(--accent); }
 .hidden { display: none; }
 
-/* ---------------- Slider Styling ---------------- */
+/* ---------- Slider Styling (visible + progress fill) ---------- */
 input[type="range"] {
   -webkit-appearance: none;
   width: 80%;
   height: 8px;
-  background: linear-gradient(
-    to right,
-    var(--accent) 0%,
-    var(--accent) var(--percent),
-    white var(--percent),
-    white 100%
-  );
   border-radius: 4px;
   outline: none;
   padding: 0;
+
+  /* JS updates --percent; provides clear visibility */
+  background: linear-gradient(
+    to right,
+    var(--accent) 0%,
+    var(--accent) var(--percent, 50%),
+    #ffffff var(--percent, 50%),
+    #ffffff 100%
+  );
 }
 
 /* WebKit thumbs */
@@ -191,15 +177,13 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   border-radius: 50%;
   background: var(--accent);
+  border: 2px solid #2c3e50;
   cursor: pointer;
   margin-top: -4px;
-  position: relative;
-  z-index: 1;
 }
-
-/* Firefox thumbs */
+/* Firefox track/progress/thumb */
 input[type="range"]::-moz-range-track {
-  background: white;
+  background: #ffffff;
   height: 8px;
   border-radius: 4px;
 }
@@ -210,7 +194,7 @@ input[type="range"]::-moz-range-progress {
 }
 input[type="range"]::-moz-range-thumb {
   background: var(--accent);
-  border: none;
+  border: 2px solid #2c3e50;
   height: 16px;
   width: 16px;
   border-radius: 50%;
