@@ -33,7 +33,7 @@ createBtn?.addEventListener("click", async () => {
         localStorage.setItem("sessionCode", session.id);
   
         // Redirect to session page
-        window.location.href = `/session.html?session=${session.id}`;
+        //window.location.href = `/session.html?session=${session.id}`;
       } catch (err) {
         console.error("Error creating session:", err);
         alert("Could not create session, try again.");
@@ -71,7 +71,7 @@ createBtn?.addEventListener("click", async () => {
       }
       };*/
 
-    const response = await fetch('/api/createSession'); // your function route
+    /*const response = await fetch('/api/createSession'); // your function route
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
@@ -90,7 +90,7 @@ createBtn?.addEventListener("click", async () => {
     }
     
     // ✅ Now it's safe to use
-    console.log(data.sessionId);
+    console.log(data.sessionId);*/
     
         
     //const data = await response.json();
@@ -108,6 +108,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
