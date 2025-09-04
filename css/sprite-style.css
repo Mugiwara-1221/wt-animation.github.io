@@ -1,7 +1,6 @@
 
 /* Sprite Selection Page Styles */
 
-/* Caps to keep every story's character-select a consistent size */
 :root{
   --scene-max-w: 92vw;  /* width clamp vs viewport */
   --scene-max-h: 78vh;  /* height clamp vs viewport */
@@ -46,8 +45,8 @@ h2 {
 /* Background image for the selection scene (story-specific) */
 #scene {
   display: block;
-  width: 100%;   /* fill wrapper width */
-  height: auto;  /* maintain aspect */
+  width: 100%;
+  height: auto;
   border-radius: 12px;
   user-select: none;
   -webkit-user-drag: none;
@@ -60,11 +59,16 @@ h2 {
   user-select: none;
   -webkit-user-drag: none;
   transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
-  image-rendering: auto;   /* crisp vector-ish look */
+  image-rendering: auto;
   transform-origin: center;
+
+  /* Reasonable defaults if a story doesn't provide x/y/w */
+  top: 0;
+  left: 0;
+  width: 18%;
 }
 
-/* Pixel-accurate hover gets .hovered via JS; CSS fallback hover too */
+/* Hover/lock styling */
 .character.hovered:not(.locked),
 .character:not(.locked):hover {
   transform: scale(1.12);
