@@ -12,8 +12,8 @@ export default async function (context, req) {
   try {
     // ⚡ Connect to Cosmos
     const client = new CosmosClient(process.env.COSMOS_CONNECTION_STRING);
-    const database = client.database(process.env.COSMOS_DATABASE);
-    const container = database.container(SESSIONS_TABLE);
+    const database = client.database("animationapp");
+    const container = database.container("sessions");
 
     // Query for the session by id
     const { resources } = await container.items
