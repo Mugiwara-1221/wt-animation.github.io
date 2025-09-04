@@ -1,7 +1,7 @@
-
 const SESSIONS_TABLE = "sessions";
-const MEMBERS_TABLE = "sessionMembers"; // separate table for members, or reuse same with different partition
+const MEMBERS_TABLE = "sessionMembers"; // optional: separate table for members
 
+// UI elements
 const createBtn = document.getElementById("createSessionBtn");
 const joinBtn = document.getElementById("joinSessionBtn");
 const joinInput = document.getElementById("joinCodeInput");
@@ -9,6 +9,7 @@ const joinId = document.getElementById("joinCodeId");
 const sessionCodeDisplay = document.getElementById("sessionCodeDisplay");
 const joinError = document.getElementById("joinError");
 
+// ---- Helpers ----
 function getDeviceToken() {
   let token = localStorage.getItem("deviceToken");
   if (!token) {
@@ -19,111 +20,38 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
+// random 6-digit join code
 function genCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+// ---- Create session ----
 createBtn?.addEventListener("click", async () => {
   try {
-        const res = await fetch("/api/createSession", { method: "POST" });
-        if (!res.ok) throw new Error("Failed to create session");
-        const session = await res.json();
-  
-        // Save locally
-        localStorage.setItem("sessionCode", session.id);
-  
-        // Redirect to session page
-        //window.location.href = `/session.html?session=${session.id}`;
-      } catch (err) {
-        console.error("Error creating session:", err);
-        alert("Could not create session, try again.");
-      };
-      /*
-  
-          // Create up to 6 member IDs for the session in the same table (or use separate one)
-          const memberEntries = [];
-          for (let memberId = 1; memberId <= 6; memberId++) {
-          memberEntries.push({
-              partitionKey: sessionCode,
-              rowKey: memberId.toString(),
-              createdAt: Date.now(),
-          });
-          }
-  
-          // Insert members sequentially (or batch if needed)
-          for (const entity of memberEntries) {
-          await client.createEntity(entity);
-          }
-  
-          context.res = {
-          status: 200,
-          jsonBody: {
-              sessionCode,
-              memberIds: memberEntries.map(e => e.rowKey),
-          },
-          }
-      } catch (err) {
-          context.log.error(err);
-          context.res = {
-          status: 500,
-          jsonBody: { error: "create_failed" },
-          };
-      }
-      };*/
+    const res = await fetch("/api/createSession", { method: "POST" });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
 
-    /*const response = await fetch('/api/createSession'); // your function route
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    if (!text) {
-      throw new Error('Empty response from server');
-    }
-    
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      console.error('Invalid JSON:', err);
-      throw new Error('Failed to parse server response');
-    }
-    
-    // ✅ Now it's safe to use
-    console.log(data.sessionId);*/
-    
-        
-    const data = await response.json();
-    console.log('Raw response:', data);
+    const data = await res.json();
+    console.log("Session created:", data);
 
-    const { sessionCode, memberIds } = data;
+    const { id: sessionCode, memberIds } = data;
 
+    // Save locally
     localStorage.setItem("sessionCode", sessionCode);
-    localStorage.setItem("memberIds", JSON.stringify(memberIds));
+    if (memberIds) {
+      localStorage.setItem("memberIds", JSON.stringify(memberIds));
+    }
 
+    // Show user
     sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
 
+    // Redirect to session page after short delay
     setTimeout(() => {
-    window.location.href = `index.html?session=${sessionCode}`;
+      window.location.href = `index.html?session=${sessionCode}`;
     }, 1500);
+
+  } catch (err) {
+    console.error("Error creating session:", err);
+    alert("Could not create session, please try again.");
+  }
 });
-    // This file is used to create a new session and initialize members
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
