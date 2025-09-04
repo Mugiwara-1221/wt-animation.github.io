@@ -57,8 +57,12 @@ function isOverInk(img, off, evt) {
   return off.ctx.getImageData(x, y, 1, 1).data[3] > 10;
 }
 
-function goToCanvas(charKey) {
-  const url = nextURL("canvas.html", ctx, { char: charKey });
+// Include sprite URL so canvas never confuses cross-story characters
+function goToCanvas(charKey, spriteUrl) {
+  const url = nextURL("canvas.html", ctx, {
+    char: charKey,
+    sprite: spriteUrl || ""
+  });
   location.href = url;
 }
 
@@ -66,7 +70,6 @@ function wire(img) {
   // Build hit-map as soon as the image is ready
   if (img.complete && (img.naturalWidth || img.width)) buildHitCanvas(img);
   else {
-    // .decode() is nicer when available
     if ("decode" in img) {
       img.decode().then(() => buildHitCanvas(img)).catch(() => buildHitCanvas(img));
     } else {
@@ -95,11 +98,12 @@ function wire(img) {
     }
     if (img.classList.contains("locked")) return;
 
-    const charKey = img.dataset.char;
+    const charKey   = img.dataset.char;
+    const spriteUrl = img.dataset.sprite || img.src;
 
     // No session or no Azure? Just navigate — do NOT block rendering.
     if (!sessionId || !Azure?.lockCharacter) {
-      goToCanvas(charKey);
+      goToCanvas(charKey, spriteUrl);
       return;
     }
 
@@ -111,10 +115,10 @@ function wire(img) {
         alert("Sorry, this character is already taken.");
         return;
       }
-      goToCanvas(charKey);
+      goToCanvas(charKey, spriteUrl);
     } catch (err) {
       console.warn("Lock failed, proceeding without lock:", err);
-      goToCanvas(charKey);
+      goToCanvas(charKey, spriteUrl);
     }
   }, true);
 }
@@ -135,29 +139,21 @@ function wireAllCurrentSprites() {
 
 /************ Boot: ALWAYS wire sprites first ************/
 async function boot() {
-  // Ensure DOM is ready
   if (document.readyState === "loading") {
     await new Promise(r => document.addEventListener("DOMContentLoaded", r, { once: true }));
   }
-
-  // Wire sprites immediately — this ensures all characters appear
-  wireAllCurrentSprites();
-
-  // Start non-blocking lock refresh (graceful failure w/ light backoff)
-  scheduleLockRefresh(0);
+  wireAllCurrentSprites();   // characters are already injected by sprite-select.html
+  scheduleLockRefresh(0);    // non-blocking lock polling
 }
 
 /************ Refresh locks (non-blocking with backoff) ************/
-let lockPollMs = 1000; // start at 1s, back off on errors up to ~10s
+let lockPollMs = 1000; // start at 1s, back off up to ~10s
 function scheduleLockRefresh(delay) {
   setTimeout(refreshLocks, delay);
 }
 
 async function refreshLocks() {
-  if (!sessionId || !Azure?.getSession) {
-    // Standalone mode: nothing to refresh; keep UI responsive
-    return;
-  }
+  if (!sessionId || !Azure?.getSession) return; // standalone: nothing to refresh
   try {
     const sess = await Azure.getSession(sessionId);
     const taken = (sess && sess.locks) || {};
@@ -166,12 +162,10 @@ async function refreshLocks() {
       if (taken[key]) el.classList.add("locked");
       else el.classList.remove("locked");
     });
-    // Success: reset poll interval to fast cadence
-    lockPollMs = 1000;
+    lockPollMs = 1000; // success: fast cadence
   } catch (err) {
-    // Failure: don’t spam; back off a bit
     console.warn("getSession failed (UI continues):", err);
-    lockPollMs = Math.min(10000, (lockPollMs * 1.7) | 0);
+    lockPollMs = Math.min(10000, (lockPollMs * 1.7) | 0); // gentle backoff
   } finally {
     scheduleLockRefresh(lockPollMs);
   }
