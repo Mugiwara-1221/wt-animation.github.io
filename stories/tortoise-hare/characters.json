@@ -2,11 +2,11 @@
 {
   "background": "images/backgrounds/tortoise-hare/frame5.png",
   "characters": [
-    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/tortoise-hare/frame5/hare.png" },
-    { "id": "tortoise", "name": "Tortoise", "sprite": "images/sprites/tortoise-hare/frame5/tortoise.png" },
-    { "id": "bear",     "name": "Bear",     "sprite": "images/sprites/tortoise-hare/frame5/bear.png" },
-    { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/tortoise-hare/frame5/squirrel.png" },
-    { "id": "bird1",    "name": "Bird 1",   "sprite": "images/sprites/tortoise-hare/frame5/bird1.png" },
-    { "id": "bird2",    "name": "Bird 2",   "sprite": "images/sprites/tortoise-hare/frame5/bird2.png" }
+    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/tortoise-hare/hare.png" },
+    { "id": "tortoise", "name": "Tortoise", "sprite": "images/sprites/tortoise-hare/tortoise.png" },
+    { "id": "bear",     "name": "Bear",     "sprite": "images/sprites/tortoise-hare/bear.png" },
+    { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/tortoise-hare/squirrel.png" },
+    { "id": "bird1",    "name": "Bird 1",   "sprite": "images/sprites/tortoise-hare/bird1.png" },
+    { "id": "bird2",    "name": "Bird 2",   "sprite": "images/sprites/tortoise-hare/bird2.png" }
   ]
 }
