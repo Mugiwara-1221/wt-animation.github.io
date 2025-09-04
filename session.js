@@ -33,7 +33,7 @@ createBtn?.addEventListener("click", async () => {
         localStorage.setItem("sessionCode", session.id);
   
         // Redirect to session page
-        window.location.href = `/sessions.html?session=${session.id}`;
+        window.location.href = `/session.html?session=${session.id}`;
       } catch (err) {
         console.error("Error creating session:", err);
         alert("Could not create session, try again.");
@@ -108,6 +108,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
