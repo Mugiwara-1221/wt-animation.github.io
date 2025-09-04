@@ -32,7 +32,7 @@ createBtn?.addEventListener("click", async () => {
     const res = await fetch("/api/createSession", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: sessionCode }), // <─ send the code to API
+      body: JSON.stringify({ id: sessionCode }) // <─ send the code to API
     });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
 
@@ -60,4 +60,5 @@ createBtn?.addEventListener("click", async () => {
     alert("Could not create session, please try again.");
   }
 });
+
 
