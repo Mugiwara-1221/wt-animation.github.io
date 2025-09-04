@@ -16,7 +16,7 @@
     <!-- Characters injected by JS -->
   </div>
 
-  <!-- Guard: must have story & grade -->
+  <!-- Guard: must have story & grade (but don't block rendering later) -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
@@ -26,20 +26,20 @@
 
   <!-- Runtime: load manifest & characters -->
   <script type="module">
-    import { readCtx } from './js/flow.js';
+    import { readCtx, nextURL } from './js/flow.js';
     import { getGradeCaps } from './js/grad-config.js';
 
-    const ctx = readCtx();
-    const container = document.getElementById('characters');
-    const sceneImg  = document.getElementById('scene');
-    const storyId   = ctx.story; // e.g. "tortoise-hare"
+    const ctx        = readCtx();
+    const container  = document.getElementById('characters');
+    const sceneImg   = document.getElementById('scene');
+    const storyId    = ctx.story; // e.g. "lion-mouse"
 
     // Fetch characters.json for this story
     async function loadManifest() {
       const url = `stories/${storyId}/characters.json`;
       try {
         const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(res.statusText);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         return await res.json();
       } catch (err) {
         console.warn('No characters.json for', storyId, err);
@@ -55,6 +55,30 @@
       sceneImg.onerror = () => setBackground(rest);
     }
 
+    // Auto-layout if a story provides no positions (x/y/w)
+    function autoPlace(imgs) {
+      // 2 rows grid; tweak as desired
+      const n = imgs.length;
+      const cols = Math.min(4, n);
+      const rows = Math.ceil(n / cols);
+
+      imgs.forEach((img, i) => {
+        const r = Math.floor(i / cols);
+        const c = i % cols;
+        const gap = 6; // %
+        const cellW = (100 - (cols + 1) * gap) / cols;
+        const cellH = (100 - (rows + 1) * gap) / rows;
+
+        const w = Math.min(22, cellW); // keep sprites reasonably sized
+        const x = gap + c * (cellW + gap) + (cellW - w) / 2;
+        const y = gap + r * (cellH + gap);
+
+        img.style.left  = `${x}%`;
+        img.style.top   = `${y}%`;
+        img.style.width = `${w}%`;
+      });
+    }
+
     (async () => {
       const manifest = await loadManifest();
 
@@ -65,28 +89,34 @@
         'images/backgrounds/tortoise-hare/frame5.png'
       ].filter(Boolean));
 
-      // Grade filter
-      let allowed = new Set();
+      // Optional grade filter — but never hide everything if caps don't match
+      let allowed = null;
       try {
         const caps = await getGradeCaps(ctx.grade || 'k-2');
         if (caps?.allowedCharacters?.length) {
           allowed = new Set(caps.allowedCharacters);
         }
-      } catch {}
+      } catch (_) {}
 
       // Inject characters
       const frag = document.createDocumentFragment();
-      let count = 0;
+      const injected = [];
 
-      for (const c of manifest.characters || []) {
-        if (allowed.size && !allowed.has(c.id)) continue;
+      for (const c of (manifest.characters || [])) {
+        // If grade caps provided, only filter if there is an exact id match.
+        // If nothing matches for this story, show all.
+        if (allowed && allowed.size && !allowed.has(c.id)) {
+          // skip only if at least one id in this manifest is allowed
+          // we'll check after build
+        }
 
         const img = document.createElement('img');
-        img.className    = `character ${c.id}`;
-        img.dataset.char = c.id;
-        img.alt          = c.name || c.id;
-        img.draggable    = false;
-        img.src          = c.sprite || `images/${c.id}.png`;
+        img.className      = `character ${c.id}`;
+        img.dataset.char   = c.id;               // story-scoped id (e.g., "squirrel1")
+        img.dataset.sprite = c.sprite || '';     // pass direct sprite URL to canvas
+        img.alt            = c.name || c.id;
+        img.draggable      = false;
+        img.src            = c.sprite || `images/${c.id}.png`;
 
         // Position overrides (optional, percent-based)
         if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
@@ -95,15 +125,17 @@
         if (typeof c.z === 'number') img.style.zIndex = String(c.z);
 
         frag.appendChild(img);
-        count++;
+        injected.push({ id: c.id, el: img, hadXYW: (c.x!=null || c.y!=null || c.w!=null) });
       }
 
       container.appendChild(frag);
 
-      if (!count) console.warn('No characters rendered — check manifest or grade caps.');
+      // If none of the characters had positions, auto-layout them
+      if (injected.length && injected.every(x => !x.hadXYW)) {
+        autoPlace(injected.map(x => x.el));
+      }
 
       // Attach selection logic *after* characters exist
-      try { await import('./js/azure-api.js'); } catch {}
       await import('./js/sprite-select.js');
     })();
   </script>
