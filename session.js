@@ -61,9 +61,38 @@ createBtn?.addEventListener("click", async () => {
   }
 });
 
+// ---- Join session ----
+joinBtn?.addEventListener("click", async () => {
+  const code = joinInput.value.trim();
 
+  if (!code) {
+    joinError.textContent = "Please enter a session code.";
+    return;
+  }
 
+  try {
+    const res = await fetch(`/api/getSession?id=${encodeURIComponent(code)}`);
+    if (!res.ok) {
+      if (res.status === 404) {
+        joinError.textContent = "❌ Session not found.";
+        return;
+      }
+      throw new Error(`Server error ${res.status}`);
+    }
 
+    const session = await res.json();
 
+    // Save locally
+    localStorage.setItem("sessionCode", session.id);
+    if (session.memberIds) {
+      localStorage.setItem("memberIds", JSON.stringify(session.memberIds));
+    }
 
+    // Redirect to session
+    window.location.href = `index.html?session=${session.id}`;
 
+  } catch (err) {
+    console.error("Error joining session:", err);
+    joinError.textContent = "⚠️ Could not join session, please try again.";
+  }
+});
