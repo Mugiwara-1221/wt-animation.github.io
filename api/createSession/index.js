@@ -7,6 +7,11 @@ const container = database.container("sessions");
 
 module.exports = async function (context, req) {
   try {
+    const { id } = req.body;
+    if (!id) {
+      context.res = { status: 400, body: { error: "Missing id" } };
+      return;
+    }
     const sessionId = crypto.randomUUID();
 
     const newSession = {
