@@ -39,20 +39,20 @@ createBtn?.addEventListener("click", async () => {
     const data = await res.json();
     console.log("Session created:", data);
 
-    const { id: sessionCode, memberIds } = data;
+    const { id: returned_sessionCode, memberIds } = data;
 
     // Save locally
-    localStorage.setItem("sessionCode", sessionCode);
+    localStorage.setItem("sessionCode", returned_sessionCode);
     if (memberIds) {
       localStorage.setItem("memberIds", JSON.stringify(memberIds));
     }
 
     // Show user
-    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+    sessionCodeDisplay.textContent = `Session ID: ${returned_returned_sessionCode}`;
 
     // Redirect to session page after short delay
     setTimeout(() => {
-      window.location.href = `index.html?session=${sessionCode}`;
+      window.location.href = `index.html?session=${returned_sessionCode}`;
     }, 1500);
 
   } catch (err) {
@@ -60,5 +60,6 @@ createBtn?.addEventListener("click", async () => {
     alert("Could not create session, please try again.");
   }
 });
+
 
 
