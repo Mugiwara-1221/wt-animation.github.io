@@ -27,8 +27,13 @@ function genCode() {
 
 // ---- Create session ----
 createBtn?.addEventListener("click", async () => {
+  const sessionCode = genCode();
   try {
-    const res = await fetch("/api/createSession", { method: "POST" });
+    const res = await fetch("/api/createSession", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: sessionCode }), // <─ send the code to API
+    });
     if (!res.ok) throw new Error(`Server error ${res.status}`);
 
     const data = await res.json();
@@ -55,3 +60,4 @@ createBtn?.addEventListener("click", async () => {
     alert("Could not create session, please try again.");
   }
 });
+
