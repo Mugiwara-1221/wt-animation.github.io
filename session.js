@@ -37,7 +37,7 @@ createBtn?.addEventListener("click", async () => {
     if (!res.ok) throw new Error(`Server error ${res.status}`);
 
     const data = await res.json();
-    console.log("Session created:", data);
+    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
 
     const { id: returned_sessionCode, memberIds } = data;
 
@@ -60,6 +60,7 @@ createBtn?.addEventListener("click", async () => {
     alert("Could not create session, please try again.");
   }
 });
+
 
 
 
