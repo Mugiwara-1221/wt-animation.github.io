@@ -29,18 +29,32 @@ let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 /* ---------- Selected character & flow ---------- */
 const urlParams     = new URLSearchParams(location.search);
 const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
-const spriteParam   =  urlParams.get("sprite") || ""; // <-- direct sprite URL from select page
+const spriteParam   =  urlParams.get("sprite") || "";      // colored sprite (fallback)
+const outlineParam  =  urlParams.get("outline") || "";     // direct outline override (optional)
 const sessionCode   =  urlParams.get("session") || localStorage.getItem("sessionCode")   || "";
 const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
-/* ---------- Resolve the one-and-only image to paint ---------- */
-/** Prefer ?sprite=… (exact URL). If missing, use story’s characters.json. */
+/* ---------- Helpers ---------- */
+function resolveStoryFolder(storyIdDash) {
+  const id = (storyIdDash || "").replace(/_/g, "-");
+  return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
+}
+
+async function urlExists(url) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    return r.ok;
+  } catch { return false; }
+}
+
+/** Prefer ?sprite=… if we must show colored art; used as final fallback. */
 async function resolveSpriteURL() {
   if (spriteParam) return spriteParam;
 
+  // Otherwise look up from the story manifest
   const storyId = selectedStory || "tortoise-hare";
   const manifestURL = `stories/${storyId}/characters.json`;
   try {
@@ -50,11 +64,30 @@ async function resolveSpriteURL() {
     const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
     if (hit?.sprite) return hit.sprite;
   } catch (e) {
-    console.warn("[resolveSpriteURL] fallback; manifest load failed:", e);
+    console.warn("[resolveSpriteURL] manifest load failed:", e);
   }
-
-  // Final fallback: legacy outline path (kept so nothing hard-crashes)
+  // Nothing else—return a dummy that will 404 rather than crash
   return `images/outline/${selectedChar}-transparent.png`;
+}
+
+/** Choose the transparent outline to paint:
+ *  1) ?outline=<url> (explicit override)
+ *  2) images/outline/<story>/<char>-transparent.png
+ *  3) images/outline/<char>-transparent.png
+ *  4) FALLBACK to colored sprite URL
+ */
+async function resolveOutlineURL() {
+  if (outlineParam) return outlineParam;
+
+  const storyId = selectedStory || "tortoise-hare";
+  const storyScoped = `images/outline/${storyId}/${selectedChar}-transparent.png`;
+  if (await urlExists(storyScoped)) return storyScoped;
+
+  const legacy = `images/outline/${selectedChar}-transparent.png`;
+  if (await urlExists(legacy)) return legacy;
+
+  // Last resort: use the colored sprite so the app still works
+  return await resolveSpriteURL();
 }
 
 /* ---------- Sprite (outline) rendering ---------- */
@@ -292,28 +325,11 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
 }
 
 /* ---------- Frame discovery & export ---------- */
-async function urlExists(url) {
-  try {
-    const r = await fetch(url, { cache: "no-store" });
-    return r.ok;
-  } catch { return false; }
-}
-function resolveStoryFolder(storyIdDash) {
-  const id = (storyIdDash || "").replace(/_/g, "-");
-  return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
-}
-
-/**
- * Probe the story for all frame folders that contain masks for this character.
- * Returns an array like:
- *   [{ frame: 1, prefix: 'images/frames/<storyFolder>/frame1/<char>/<char>_mask_' }, ...]
- */
 async function findMaskSets(storyIdDash, charId) {
   const storyFolder = resolveStoryFolder(storyIdDash);
   const base = `images/frames/${storyFolder}`;
   const out = [];
 
-  // Probe a reasonable range of frames; stops after 2 consecutive misses.
   let misses = 0;
   for (let n = 1; n <= 20; n++) {
     const prefix = `${base}/frame${n}/${charId}/${charId}_mask_`;
@@ -343,12 +359,12 @@ async function sendToStoryboard() {
     if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
     // 3) for each discovered frame folder, build up to 4 masked images
-    const bySlide = {}; // frameNumber -> [dataURL1..4] (only the ones that exist)
+    const bySlide = {};
     for (const { frame, prefix } of sets) {
       const list = [];
       for (let i = 1; i <= 4; i++) {
         const csvURL = `${prefix}${i}.csv`;
-        if (!(await urlExists(csvURL))) continue;  // some frames may have <4> masks
+        if (!(await urlExists(csvURL))) continue;
         const { mat, W, H } = await loadCSVMatrix(csvURL);
         const maskCanvas = await matrixToMaskCanvas(mat, W, H, width, height);
 
@@ -370,7 +386,7 @@ async function sendToStoryboard() {
     const storageKey  = `coloredFrames:${storyFolder}:${selectedChar}`;
     localStorage.setItem(storageKey, JSON.stringify(bySlide));
 
-    // Keep legacy single-frame keys so older storyboard code still works
+    // Legacy single-frame keys
     const firstFrame = Object.values(bySlide)[0];
     if (firstFrame?.length) {
       localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
@@ -378,16 +394,16 @@ async function sendToStoryboard() {
     }
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    // 5) (optional) submit just the first masked image to backend
+    // Optional submit
     const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
     try { if (firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch (err) {
       console.warn("[submitDrawing] non-blocking error:", err);
     }
 
-    // 6) go to storyboard with context intact
+    // Navigate to storyboard
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode)  q.set("session", sessionCode);
+    if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade",   selectedGrade);
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
@@ -415,9 +431,9 @@ function updateSliderFill(slider) {
     sl.addEventListener("input", () => updateSliderFill(sl));
   });
 
-/* ---------- Boot: resolve the one sprite, then draw ---------- */
+/* ---------- Boot: resolve OUTLINE then draw ---------- */
 (async function boot() {
-  const spriteURL = await resolveSpriteURL();
-  outlineImg.src = spriteURL;     // draw THIS image only
+  const outlineURL = await resolveOutlineURL(); // <-- transparent outline first
+  outlineImg.src = outlineURL;
   layoutAndRedraw();
 })();
