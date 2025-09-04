@@ -2,12 +2,12 @@
 {
   "background": "images/backgrounds/lion-mouse/frame6.png",
   "characters": [
-    { "id": "owl",     "name": "Owl",     "sprite": "images/sprites/lion-mouse/frame6/owl.png" },
+    { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/frame6/owl.png" },
     { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/frame6/lion.png" },
-    { "id": "geese",     "name": "Geese",     "sprite": "images/sprites/lion-mouse/frame6/geese.png" },
+    { "id": "geese", "name": "Geese", "sprite": "images/sprites/lion-mouse/frame6/geese.png" },
     { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/lion-mouse/frame6/squirrel.png" },
-    { "id": "deer",    "name": "Deer",   "sprite": "images/sprites/lion-mouse/frame6/deer.png" },
-    { "id": "butterfly",    "name": "Butterfly",   "sprite": "images/sprites/lion-mouse/frame6/butterfly.png" },
-    { "id": "mouse",    "name": "Mouse",   "sprite": "images/sprites/lion-mouse/frame6/mouse.png" }
+    { "id": "deer", "name": "Deer", "sprite": "images/sprites/lion-mouse/frame6/deer.png" },
+    { "id": "butterfly", "name": "Butterfly",  "sprite": "images/sprites/lion-mouse/frame6/butterfly.png" },
+    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/frame6/mouse.png" }
   ]
 }
