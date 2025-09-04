@@ -93,8 +93,8 @@ createBtn?.addEventListener("click", async () => {
     console.log(data.sessionId);*/
     
         
-    //const data = await response.json();
-    //console.log('Raw response:', data);
+    const data = await response.json();
+    console.log('Raw response:', data);
 
     const { sessionCode, memberIds } = data;
 
@@ -108,6 +108,7 @@ createBtn?.addEventListener("click", async () => {
     }, 1500);
 });
     // This file is used to create a new session and initialize members
+
 
 
 
