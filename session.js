@@ -48,7 +48,7 @@ createBtn?.addEventListener("click", async () => {
     }
 
     // Show user
-    sessionCodeDisplay.textContent = `Session ID: ${returned_returned_sessionCode}`;
+    sessionCodeDisplay.textContent = `Session ID: ${returned_sessionCode}`;
 
     // Redirect to session page after short delay
     setTimeout(() => {
@@ -60,6 +60,7 @@ createBtn?.addEventListener("click", async () => {
     alert("Could not create session, please try again.");
   }
 });
+
 
 
 
