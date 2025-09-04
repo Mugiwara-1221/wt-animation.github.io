@@ -16,10 +16,7 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
-/* Single transparent outline per character (for coloring) */
-const OUTLINE_DIR = "images/outline";
-
-/* Your repo layout uses story folders + frameN folders */
+/* Your repo layout uses story folders + frameN folders (for masks) */
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
@@ -32,17 +29,41 @@ let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 /* ---------- Selected character & flow ---------- */
 const urlParams     = new URLSearchParams(location.search);
 const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
+const spriteParam   =  urlParams.get("sprite") || ""; // <-- direct sprite URL from select page
 const sessionCode   =  urlParams.get("session") || localStorage.getItem("sessionCode")   || "";
 const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
-/* ---------- Load outline for coloring layer ---------- */
-const outlineImg = new Image();
-outlineImg.src = `${OUTLINE_DIR}/${selectedChar}-transparent.png`;
-let outlineLoaded = false;
+/* ---------- Resolve the one-and-only image to paint ---------- */
+/** Prefer ?sprite=… (exact URL). If missing, use story’s characters.json. */
+async function resolveSpriteURL() {
+  if (spriteParam) return spriteParam;
 
+  const storyId = selectedStory || "tortoise-hare";
+  const manifestURL = `stories/${storyId}/characters.json`;
+  try {
+    const r = await fetch(manifestURL, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const manifest = await r.json();
+    const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
+    if (hit?.sprite) return hit.sprite;
+  } catch (e) {
+    console.warn("[resolveSpriteURL] fallback; manifest load failed:", e);
+  }
+
+  // Final fallback: legacy outline path (kept so nothing hard-crashes)
+  return `images/outline/${selectedChar}-transparent.png`;
+}
+
+/* ---------- Sprite (outline) rendering ---------- */
+let outlineLoaded = false;
+const outlineImg = new Image();
+outlineImg.onload  = () => { outlineLoaded = true; layoutAndRedraw(); };
+outlineImg.onerror = () => alert(`Could not load character image: ${outlineImg.src}`);
+
+/* ---------- Layout ---------- */
 function getSpriteBox() {
   const size = SPRITE_BOX_SIZE;
   return {
@@ -54,7 +75,7 @@ function getSpriteBox() {
 }
 
 function drawWhiteBG() {
-  bgCtx.fillStyle = "white";
+  bgCtx.fillStyle = "#ffffff";
   bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
 }
 
@@ -72,16 +93,14 @@ function layoutAndRedraw() {
     const box = getSpriteBox();
     allowedArea = { ...box };
     sctx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+    sctx.imageSmoothingEnabled = true;   // nicer scaling
     sctx.drawImage(outlineImg, box.x, box.y, box.width, box.height);
   }
 }
 
-outlineImg.onload  = () => { outlineLoaded = true; layoutAndRedraw(); };
-outlineImg.onerror = () => alert(`Could not load outline: ${outlineImg.src}`);
-layoutAndRedraw();
 addEventListener("resize", layoutAndRedraw);
 
-/* ---------- Drawing (rounded brush) ---------- */
+/* ---------- Drawing (round, smooth brush) ---------- */
 let drawing = false;
 let currentTool = "draw";
 let brushSize   = 18;
@@ -115,7 +134,9 @@ function isInBounds(x, y) {
 
 ctx.lineJoin = "round";
 ctx.lineCap  = "round";
+ctx.imageSmoothingEnabled = true;
 
+/* History */
 let history = [], redoStack = [];
 function saveHistory() {
   history.push(ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
@@ -133,6 +154,7 @@ function redo() {
   ctx.putImageData(redoStack.pop(), 0, 0);
 }
 
+/* Stamp a perfect circle */
 function dotAt(x, y) {
   ctx.beginPath();
   ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
@@ -142,23 +164,39 @@ function dotAt(x, y) {
   ctx.fill();
 }
 
+/* Fill gaps by stamping circles along the segment (prevents “barring”) */
+function stampSegment(x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const dist = Math.hypot(dx, dy);
+  if (dist === 0) { dotAt(x0, y0); return; }
+  const step = Math.max(1, (brushSize / 2) * 0.6); // tighter than radius to avoid gaps
+  const count = Math.ceil(dist / step);
+  for (let i = 0; i <= count; i++) {
+    const t = i / count;
+    dotAt(x0 + dx * t, y0 + dy * t);
+  }
+}
+
 function drawStroke(e) {
   if (!drawing) return;
   const [x, y] = getPos(e);
   if (!isInBounds(x, y)) return;
 
-  ctx.globalAlpha = opacity;
-  ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
-  ctx.strokeStyle = brushColor;
-  ctx.lineWidth   = brushSize;
-
   if (prevX == null || prevY == null) {
-    dotAt(x, y); // tap / first point = round dot
+    dotAt(x, y); // first point
   } else {
+    // stroke + stamp to guarantee a solid round line
+    ctx.globalAlpha = opacity;
+    ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth   = brushSize;
+
     ctx.beginPath();
     ctx.moveTo(prevX, prevY);
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    stampSegment(prevX, prevY, x, y);
   }
   prevX = x; prevY = y;
 }
@@ -169,7 +207,7 @@ drawCanvas.addEventListener("mousedown", (e) => {
   if (isInBounds(x, y)) { saveHistory(); drawing = true; prevX = prevY = null; drawStroke(e); }
 });
 drawCanvas.addEventListener("mousemove", drawStroke);
-drawCanvas.addEventListener("mouseup",   () => { drawing = false; prevX = prevY = null; });
+addEventListener("mouseup",   () => { drawing = false; prevX = prevY = null; });
 drawCanvas.addEventListener("mouseout",  () => { drawing = false; prevX = prevY = null; });
 
 drawCanvas.addEventListener("touchstart", (e) => {
@@ -216,7 +254,7 @@ function downloadImage() {
   document.getElementById("saveOptions").classList.add("hidden");
 }
 
-/* ---------- CSV → alpha mask helpers ---------- */
+/* ---------- CSV → alpha mask helpers (unchanged) ---------- */
 async function loadCSVMatrix(url) {
   const resp = await fetch(url, { cache: "no-store" });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
@@ -227,7 +265,6 @@ async function loadCSVMatrix(url) {
   if (!W || !H) throw new Error(`Empty/invalid CSV: ${url}`);
   return { mat, W, H };
 }
-
 async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   const src = document.createElement("canvas");
   src.width = srcW; src.height = srcH;
@@ -261,7 +298,6 @@ async function urlExists(url) {
     return r.ok;
   } catch { return false; }
 }
-
 function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
@@ -351,8 +387,8 @@ async function sendToStoryboard() {
 
     // 6) go to storyboard with context intact
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode) q.set("session", sessionCode);
-    if (selectedGrade) q.set("grade", selectedGrade);
+    if (sessionCode)  q.set("session", sessionCode);
+    if (selectedGrade) q.set("grade",   selectedGrade);
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
     console.error("[sendToStoryboard] failed:", err);
@@ -378,3 +414,10 @@ function updateSliderFill(slider) {
     updateSliderFill(sl);
     sl.addEventListener("input", () => updateSliderFill(sl));
   });
+
+/* ---------- Boot: resolve the one sprite, then draw ---------- */
+(async function boot() {
+  const spriteURL = await resolveSpriteURL();
+  outlineImg.src = spriteURL;     // draw THIS image only
+  layoutAndRedraw();
+})();
