@@ -25,21 +25,39 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
-// Local fallback 6-digit code
-const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
-
 // --- Create a new session ---
 createBtn?.addEventListener('click', async () => {
+  const sessionCode = () => String(Math.floor(100000 + Math.random() * 900000));
+  sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
   try {
-    const sessionCode = makeCode();
-    localStorage.setItem('sessionCode', sessionCode);
-    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
+    const res = await fetch("/api/createSession", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: sessionCode }) // <─ send the code to API
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
 
-    // Forward to story selection with the session in the URL
-    const url = nextURL('story-select.html', { session: sessionCode });
-    location.href = url;
-  } catch (e) {
-    alert('Failed to create session. ' + (e?.message || e));
+    const data = await res.json();
+
+    const { id: returned_sessionCode, memberIds } = data;
+
+    // Save locally
+    localStorage.setItem("sessionCode", returned_sessionCode);
+    if (memberIds) {
+      localStorage.setItem("memberIds", JSON.stringify(memberIds));
+    }
+
+    // Show user
+    // sessionCodeDisplay.textContent = `Session ID: ${returned_sessionCode}`;
+
+    // Redirect to session page after short delay
+    setTimeout(() => {
+      window.location.href = `index.html?session=${returned_sessionCode}`;
+    }, 1500);
+
+  } catch (err) {
+    console.error("Error creating session:", err);
+    alert("Could not create session, please try again.");
   }
 });
 
