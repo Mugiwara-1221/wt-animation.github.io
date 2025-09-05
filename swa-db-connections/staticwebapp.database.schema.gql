@@ -1,0 +1,11 @@
+type Products {
+  id: ID!
+  name: String
+  price: Float
+}
+
+type Orders {
+  id: ID!
+  productId: ID
+  quantity: Int
+}
