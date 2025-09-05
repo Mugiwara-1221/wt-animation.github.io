@@ -42,7 +42,6 @@ function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
 }
-
 async function urlExists(url) {
   try {
     const r = await fetch(url, { cache: "no-store" });
@@ -50,43 +49,68 @@ async function urlExists(url) {
   } catch { return false; }
 }
 
+/* Build reasonable alias ids for outline lookup (handles squirrel1 -> squirrel, etc.) */
+function idAliases(id) {
+  const base = id.replace(/[-_]?(\d+)$/, "");   // drop trailing number (and optional -/_)
+  const num  = (id.match(/(\d+)$/) || [,""])[1];
+  const withDash = num ? `${base}-${num}` : base;
+  const withUnd  = num ? `${base}_${num}` : base;
+  const uniq = new Set([id, base, withDash, withUnd]);
+  return Array.from(uniq);
+}
+
 /** Prefer ?sprite=… if we must show colored art; used as final fallback. */
 async function resolveSpriteURL() {
   if (spriteParam) return spriteParam;
 
-  // Otherwise look up from the story manifest
   const storyId = selectedStory || "tortoise-hare";
-  const manifestURL = `stories/${storyId}/characters.json`;
+  // 1) try story manifest
   try {
+    const manifestURL = `stories/${storyId}/characters.json`;
     const r = await fetch(manifestURL, { cache: "no-store" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const manifest = await r.json();
-    const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
-    if (hit?.sprite) return hit.sprite;
-  } catch (e) {
-    console.warn("[resolveSpriteURL] manifest load failed:", e);
-  }
-  // Nothing else—return a dummy that will 404 rather than crash
+    if (r.ok) {
+      const manifest = await r.json();
+      const hit = (manifest.characters || []).find(
+        c => (c.id || "").toLowerCase() === selectedChar
+      );
+      if (hit?.sprite) return hit.sprite;
+    }
+  } catch (_) {}
+
+  // 2) common sprite locations (story-scoped then global)
+  const tries = [
+    `images/sprites/${storyId}/${selectedChar}.png`,
+    `images/sprites/${selectedChar}.png`
+  ];
+  for (const t of tries) if (await urlExists(t)) return t;
+
+  // Last resort: return something deterministic (may 404, but won’t crash)
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
 /** Choose the transparent outline to paint:
  *  1) ?outline=<url> (explicit override)
- *  2) images/outline/<story>/<char>-transparent.png
- *  3) images/outline/<char>-transparent.png
- *  4) FALLBACK to colored sprite URL
+ *  2) images/outline/<story>/<alias>-transparent.png (try aliases)
+ *  3) images/outline/<alias>-transparent.png
+ *  4) FALLBACK to story sprite URL
  */
 async function resolveOutlineURL() {
   if (outlineParam) return outlineParam;
 
   const storyId = selectedStory || "tortoise-hare";
-  const storyScoped = `images/outline/${storyId}/${selectedChar}-transparent.png`;
-  if (await urlExists(storyScoped)) return storyScoped;
+  const ids = idAliases(selectedChar);
 
-  const legacy = `images/outline/${selectedChar}-transparent.png`;
-  if (await urlExists(legacy)) return legacy;
-
-  // Last resort: use the colored sprite so the app still works
+  // Story-scoped outlines (recommended)
+  for (const id of ids) {
+    const p = `images/outline/${storyId}/${id}-transparent.png`;
+    if (await urlExists(p)) return p;
+  }
+  // Legacy global outlines
+  for (const id of ids) {
+    const p = `images/outline/${id}-transparent.png`;
+    if (await urlExists(p)) return p;
+  }
+  // No outline yet → fall back to colored sprite so app keeps working
   return await resolveSpriteURL();
 }
 
@@ -106,12 +130,10 @@ function getSpriteBox() {
     y: Math.round((bgCanvas.height - size) / 2),
   };
 }
-
 function drawWhiteBG() {
   bgCtx.fillStyle = "#ffffff";
   bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
 }
-
 function layoutAndRedraw() {
   const w = innerWidth;
   const h = innerHeight;
@@ -130,7 +152,6 @@ function layoutAndRedraw() {
     sctx.drawImage(outlineImg, box.x, box.y, box.width, box.height);
   }
 }
-
 addEventListener("resize", layoutAndRedraw);
 
 /* ---------- Drawing (round, smooth brush) ---------- */
@@ -202,7 +223,7 @@ function stampSegment(x0, y0, x1, y1) {
   const dx = x1 - x0, dy = y1 - y0;
   const dist = Math.hypot(dx, dy);
   if (dist === 0) { dotAt(x0, y0); return; }
-  const step = Math.max(1, (brushSize / 2) * 0.6); // tighter than radius to avoid gaps
+  const step = Math.max(1, (brushSize / 2) * 0.6);
   const count = Math.ceil(dist / step);
   for (let i = 0; i <= count; i++) {
     const t = i / count;
@@ -216,9 +237,8 @@ function drawStroke(e) {
   if (!isInBounds(x, y)) return;
 
   if (prevX == null || prevY == null) {
-    dotAt(x, y); // first point
+    dotAt(x, y);
   } else {
-    // stroke + stamp to guarantee a solid round line
     ctx.globalAlpha = opacity;
     ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
     ctx.strokeStyle = brushColor;
