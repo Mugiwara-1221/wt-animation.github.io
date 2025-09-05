@@ -82,10 +82,21 @@ joinBtn?.addEventListener('click', async () => {
   }
 
   try {
+    const res = await fetch("/api/getSession?id=" + encodeURIComponent(code));
+    if (!res.ok) {
+      if (res.status === 404) {
+        joinError.textContent = 'Session not found or closed.';
+        return;
+      }
+      throw new Error(`Server error ${res.status}`);
+    }
+    const session = await res.json();
     // Local acceptance; wire Azure validation here later if needed
-    localStorage.setItem('sessionCode', code);
-    localStorage.setItem('memberId', idCode);
-    localStorage.setItem('deviceToken', deviceToken);
+    localStorage.setItem('sessionCode', session.id);
+    if (session.memberIds) {
+      localStorage.setItem('memberIds', JSON.stringify(session.memberIds));
+    }
+    //localStorage.setItem('deviceToken', deviceToken);
 
     const url = nextURL('story-select.html', { session: code });
     location.href = url;
