@@ -98,7 +98,7 @@ joinBtn?.addEventListener('click', async () => {
     }
     //localStorage.setItem('deviceToken', deviceToken);
 
-    const url = nextURL('story-select.html', { session: code });
+    const url = nextURL('story-select.html', { session: session.id });
     location.href = url;
   } catch (e) {
     joinError.textContent = 'Session not found or closed.';
