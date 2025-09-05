@@ -5,7 +5,7 @@
   "slideCount": 6,
   "slides": [
     {
-      "background": "images/frames/lion_and_the_mouse/frame1/slide1.png",
+      "background": "stories/lion-mouse/slide1.png",
       "characters": [
         {
           "id": "owl",
@@ -24,7 +24,7 @@
       ]
     },
     {
-      "background": "images/frames/lion_and_the_mouse/frame2/slide2.png",
+      "background": "stories/lion-mouse/slide2.png",
       "characters": [
         {
           "id": "lion",
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "background": "images/frames/lion_and_the_mouse/frame3/slide3.png",
+      "background": "stories/lion-mouse/slide3.png",
       "characters": [
         {
           "id": "lion",
@@ -69,7 +69,7 @@
       ]
     },
     {
-      "background": "images/frames/lion_and_the_mouse/frame4/slide4.png",
+      "background": "stories/lion-mouse/slide4.png",
       "characters": [
         {
           "id": "lion",
@@ -88,7 +88,7 @@
       ]
     },
     {
-      "background": "images/frames/lion_and_the_mouse/frame5/slide5.png",
+      "background": "stories/lion-mouse/slide5.png",
       "characters": [
         {
           "id": "lion",
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "background": "images/frames/lion_and_the_mouse/frame6/slide6.png",
+      "background": "stories/lion-mouse/slide6.png",
       "characters": [
         {
           "id": "lion",
