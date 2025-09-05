@@ -45,9 +45,10 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "upload"
-          app_location: "."
-          api_location: ""
-          output_location: "dist"
+          app_location: "/"
+          api_location: "api"
+          output_location: "."
+          app_build_command: ""
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -67,7 +68,6 @@ jobs:
             --name "pntanimation" \
             --resource-group "Animation" \
             --environment-name "pull/${{ github.event.pull_request.number }}"
-
 
 
 
