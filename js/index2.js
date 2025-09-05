@@ -11,6 +11,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (sessionCode) {
     sessionDisplay.textContent = `✅ You are in session: ${sessionCode}`;
+    const topBanner = document.createElement("div");
+    topBanner.textContent = sessionCode;
+    topBanner.style.background = "#f0f0f0";
+    topBanner.style.padding = "10px";
+    topBanner.style.textAlign = "center";
+    topBanner.style.fontWeight = "bold";
+    document.body.insertBefore(topBanner, document.body.firstChild);
 
     // save locally too if you want
     localStorage.setItem("sessionCode", sessionCode);
