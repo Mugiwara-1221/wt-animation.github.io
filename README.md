@@ -55,13 +55,17 @@ windtree-animation-canvas
  ┃ images/
  
  ┃ ┗ icons
+
+ ┃ js/
+
+ ┃ ┗ index.js
+
+ ┃ css/
+
+ ┃ ┗ style.css
  
  ┣ index.html
- 
- ┣ style.css
- 
- ┣ main.js
- 
+  
  ┣ README.md
  
  
