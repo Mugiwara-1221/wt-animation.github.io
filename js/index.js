@@ -27,7 +27,7 @@ const deviceToken = getDeviceToken();
 
 // --- Create a new session ---
 createBtn?.addEventListener('click', async () => {
-  const sessionCode = () => String(Math.floor(100000 + Math.random() * 900000));
+  const sessionCode = String(Math.floor(100000 + Math.random() * 900000));
   sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
   try {
     const res = await fetch("/api/createSession", {
