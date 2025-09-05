@@ -51,11 +51,17 @@ bash
 Copy
 Edit
 windtree-animation-canvas
+
  ┃ images/
+ 
  ┃ ┗ icons
+ 
  ┣ index.html
+ 
  ┣ style.css
+ 
  ┣ main.js
+ 
  ┣ README.md
  
  
