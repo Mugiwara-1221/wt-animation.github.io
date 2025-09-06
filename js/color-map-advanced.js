@@ -267,7 +267,7 @@ export async function colorCharacterFrames({
       frame1URL: base,
       map1CSVURL: `${dir}/mask_${n}.csv`,
       frame2URL: `${dir}/${character}${n}.png`,
-      map2CSVURL: `${dir}/mask_${n+1}.csv`,
+      map2CSVURL: `${dir}/mask_${n}.csv`,
     });
     results.push({ n, dataURL });
     base = dataURL;
