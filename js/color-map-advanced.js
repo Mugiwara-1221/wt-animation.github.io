@@ -263,7 +263,7 @@ export async function colorCharacterFrames({
   const results = [];
   for (let n = 1; n <= frameCount; n++) {
     const dataURL = await colorAFrameAdvanced({
-      frame1URL: maskedBaseDataURL,
+      //frame1URL: maskedBaseDataURL,
       map1CSVURL: `${maskCsvPrefix}}/mask_${n}.csv`,
       frame2URL: `${framesPath}${n}.png`,
       //map2CSVURL: `${dir}/mask_${n}.csv`,
