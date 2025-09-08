@@ -294,7 +294,7 @@ export async function colorCharacterFrames({
 }) {
   const results = [];
 
-  for (let n = 2; n <= character.frameCount; n++) {
+  for (let n = 1; n <= character.frameCount; n++) {
     try {
       // Load frame image to get dimensions
       const frameImg = await loadImage(`${character.framesPath}${n}.png`);
@@ -313,6 +313,7 @@ export async function colorCharacterFrames({
         frame2URL: `${character.framesPath}${n}.png`,
         map1: scaledMask,   // <-- pass array, not URL
       });
+      console.log(`✅ Processed frame ${n}`);
 
       results.push({ n, dataURL });
     } catch (err) {
