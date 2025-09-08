@@ -44,6 +44,7 @@ h2 {
 
 /* Background image for the selection scene (story-specific) */
 #scene {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
@@ -54,6 +55,8 @@ h2 {
 
 /* Characters (injected) */
 .character {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges; /* fallback for Firefox */
   position: absolute;
   cursor: pointer;
   user-select: none;
