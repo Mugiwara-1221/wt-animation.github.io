@@ -274,6 +274,20 @@ export async function maskColoredBase(
   return results;
 }*/
 
+function scaleMask(mask, srcW, srcH, targetW, targetH) {
+  const scaled = [];
+  for (let y = 0; y < targetH; y++) {
+    const row = [];
+    for (let x = 0; x < targetW; x++) {
+      const srcX = Math.floor(x * srcW / targetW);
+      const srcY = Math.floor(y * srcH / targetH);
+      row.push(mask[srcY][srcX]);
+    }
+    scaled.push(row);
+  }
+  return scaled;
+}
+
 export async function colorCharacterFrames({
   character,
   maskedBaseDataURL,   // output of maskColoredBase()
@@ -282,10 +296,21 @@ export async function colorCharacterFrames({
 
   for (let n = 1; n <= character.frameCount; n++) {
     try {
-      const dataURL = await colorAFrameAdvanced({
+        // Load frame image to get dimensions
+        const frameImg = await loadImage(`${character.framesPath}${n}.png`);
+        const targetW = frameImg.width;
+        const targetH = frameImg.height;
+
+        // Load mask CSV
+        const mask = await loadCsv(`${character.maskCsvPrefix}${n}.csv`);
+
+        // Scale mask to match frame image size
+        const scaledMask = scaleMask(mask, mask[0].length, mask.length, targetW, targetH);
+
+        const dataURL = await colorAFrameAdvanced({
         frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
-        map1CSVURL: `${character.maskCsvPrefix}${n}.csv`
+        map1CSVURL: scaleMask,
       });
 
       results.push({ n, dataURL });
