@@ -310,7 +310,7 @@ export async function colorCharacterFrames({
         const dataURL = await colorAFrameAdvanced({
         frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
-        map1CSVURL: scaleMask,
+        map1CSVURL: scaledMask,
       });
 
       results.push({ n, dataURL });
