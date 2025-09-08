@@ -294,7 +294,7 @@ export async function colorCharacterFrames({
 }) {
   const results = [];
 
-  for (let n = 1; n <= character.frameCount; n++) {
+  for (let n = 2; n <= character.frameCount; n++) {
     try {
       // Load frame image to get dimensions
       const frameImg = await loadImage(`${character.framesPath}${n}.png`);
@@ -309,7 +309,7 @@ export async function colorCharacterFrames({
 
       // Now pass the scaled mask into your painter
       const dataURL = await colorAFrameAdvanced({
-        //frame1URL: maskedBaseDataURL,
+        frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
         map1: scaledMask,   // <-- pass array, not URL
       });
