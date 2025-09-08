@@ -55,7 +55,7 @@ h2 {
 
 /* Characters (injected) */
 .character {
-  position: relative;
+  position: absolute;
   cursor: pointer;
   user-select: none;
   -webkit-user-drag: none;
