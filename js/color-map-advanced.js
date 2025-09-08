@@ -309,7 +309,7 @@ export async function colorCharacterFrames({
 
       // Now pass the scaled mask into your painter
       const dataURL = await colorAFrameAdvanced({
-        frame1URL: maskedBaseDataURL,
+        //frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
         map1: scaledMask,   // <-- pass array, not URL
       });
