@@ -55,14 +55,13 @@ h2 {
 
 /* Characters (injected) */
 .character {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges; /* fallback for Firefox */
-  position: absolute;
+  position: relative;
   cursor: pointer;
   user-select: none;
   -webkit-user-drag: none;
   transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
-  image-rendering: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges; /* fallback for Firefox */
   transform-origin: center;
 
   /* Reasonable defaults if a story doesn't provide x/y/w */
