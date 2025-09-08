@@ -254,7 +254,7 @@ export async function maskColoredBase(
 }
 
 /* -------------------- Convenience for 4 frames -------------------- */
-export async function colorCharacterFrames({
+/*export async function colorCharacterFrames({
   character,
   maskedBaseDataURL,                    // output of maskColoredBase()
   dir = `images/frames/${character}`,   // where your frames & masks live
@@ -271,6 +271,29 @@ export async function colorCharacterFrames({
     results.push({ n, dataURL });
     //base = dataURL;
   }
+  return results;
+}*/
+
+export async function colorCharacterFrames({
+  character,
+  maskedBaseDataURL,   // output of maskColoredBase()
+}) {
+  const results = [];
+
+  for (let n = 1; n <= character.frameCount; n++) {
+    try {
+      const dataURL = await colorAFrameAdvanced({
+        frame1URL: maskedBaseDataURL,
+        frame2URL: `${character.framesPath}${n}.png`,
+        map1CSVURL: `${character.maskCsvPrefix}${n}.csv`
+      });
+
+      results.push({ n, dataURL });
+    } catch (err) {
+      console.warn(`⚠️ Skipping frame ${n}: ${err.message}`);
+    }
+  }
+
   return results;
 }
 
