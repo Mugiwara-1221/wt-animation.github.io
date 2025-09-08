@@ -296,21 +296,22 @@ export async function colorCharacterFrames({
 
   for (let n = 1; n <= character.frameCount; n++) {
     try {
-        // Load frame image to get dimensions
-        const frameImg = await loadImage(`${character.framesPath}${n}.png`);
-        const targetW = frameImg.width;
-        const targetH = frameImg.height;
+      // Load frame image to get dimensions
+      const frameImg = await loadImage(`${character.framesPath}${n}.png`);
+      const targetW = frameImg.width;
+      const targetH = frameImg.height;
 
-        // Load mask CSV
-        const mask = await loadCsv(`${character.maskCsvPrefix}${n}.csv`);
+      // Load mask CSV
+      const mask = await loadCsv(`${character.maskCsvPrefix}${n}.csv`);
 
-        // Scale mask to match frame image size
-        const scaledMask = scaleMask(mask, mask[0].length, mask.length, targetW, targetH);
+      // Scale mask to match frame image size
+      const scaledMask = scaleMask(mask, mask[0].length, mask.length, targetW, targetH);
 
-        const dataURL = await colorAFrameAdvanced({
+      // Now pass the scaled mask into your painter
+      const dataURL = await colorAFrameAdvanced({
         frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
-        map1CSVURL: scaledMask,
+        map1: scaledMask,   // <-- pass array, not URL
       });
 
       results.push({ n, dataURL });
@@ -321,6 +322,7 @@ export async function colorCharacterFrames({
 
   return results;
 }
+
 
 /* Example:
 const masked = await maskColoredBase(childPNG, 'images/frames/tortoise/mask_1.csv', { erode: 1 });
