@@ -302,7 +302,7 @@ export async function colorCharacterFrames({
       const targetH = frameImg.height;
 
       // Load mask CSV
-      const mask = await loadCsv(`${character.maskCsvPrefix}${n}.csv`);
+      const mask = await loadCSV(`${character.maskCsvPrefix}${n}.csv`);
 
       // Scale mask to match frame image size
       const scaledMask = scaleMask(mask, mask[0].length, mask.length, targetW, targetH);
