@@ -113,22 +113,28 @@ export function getBlockBBox(mask2D, blockID) {
 export async function colorAFrameAdvanced({
   frame1URL, map1CSVURL,
   frame2URL, map2CSVURL,
+  frame3URL, map3CSVURL,
+  frame4URL, map4CSVURL,
 }) {
-  const [img1, img2, map1, map2] = await Promise.all([
-    loadImage(frame1URL),
-    loadImage(frame2URL),
-    loadCSV(map1CSVURL),
-    loadCSV(map2CSVURL),
-  ]);
+  const [img1, img2, img3, img4, map1, map2, map3, map4] = await Promise.all([
+  loadImage(frame1URL), loadImage(frame2URL), loadImage(frame3URL), loadImage(frame4URL),
+  loadCSV(map1CSVURL), loadCSV(map2CSVURL), loadCSV(map3CSVURL), loadCSV(map4CSVURL),
+]);
+
 
   const id1 = imageToImageData(img1); // source colors
   const id2 = imageToImageData(img2); // base (with outlines)
+  const id3 = imageToImageData(img3); 
+  const id4 = imageToImageData(img4); 
   const { width, height, data: base } = id2;
 
-  if (map1.length !== height || map1[0].length !== width ||
-      map2.length !== height || map2[0].length !== width) {
-    throw new Error('Image and map sizes must match.');
-  }
+  const maps = [map1, map2, map3, map4];
+
+  maps.forEach((map, index) => {
+    if (!map || map.length !== height || map[0].length !== width) {
+      throw new Error(`Image and map sizes must match for mask ${index + 1}`);
+    }
+  });
 
   const out = emptyImageDataLike(width, height);
   const o = out.data;
@@ -297,15 +303,18 @@ export async function colorCharacterFrames({
   for (let n = 1; n <= character.frameCount; n++) {
     try {
       // Load frame image to get dimensions
-      const frameImg = await loadImage(`${character.framesPath}${n}.png`);
+      /*const frameImg = await loadImage(`${character.framesPath}${n}.png`);
       const targetW = frameImg.width;
-      const targetH = frameImg.height;
+      const targetH = frameImg.height;*/
+
+      const img = document.querySelector(`img.character.${character}`);
+      const { width, height } = img.getBoundingClientRect();
 
       // Load mask CSV
       const mask = await loadCSV(`${character.maskCsvPrefix}${n}.csv`);
 
       // Scale mask to match frame image size
-      const scaledMask = scaleMask(mask, mask[0].length, mask.length, targetW, targetH);
+      const scaledMask = scaleMask(mask, mask[0].length, mask.length, width, height);
 
       // Now pass the scaled mask into your painter
       const dataURL = await colorAFrameAdvanced({
