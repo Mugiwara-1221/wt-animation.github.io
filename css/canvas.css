@@ -196,13 +196,13 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* --- Mini preview HUD (top-right) --- */
+/* --- Mini preview HUD (top-right) --- 
 .preview-hud{
   position: fixed; right: 24px; top: 24px;
   z-index: 120; background:#fff; border:2px solid #e74c3c;
   border-radius: 16px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
   width: 340px;
-}
+} */
 #previewCanvas{ display:block; width:320px; height:200px; border-radius: 12px; }
 .preview-caption{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-weight:600; }
 
