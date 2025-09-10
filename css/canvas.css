@@ -196,7 +196,7 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* --- Mini preview HUD (top-right) --- 
+/*--- Mini preview HUD (top-right) ---
 .preview-hud{
   position: fixed; right: 24px; top: 24px;
   z-index: 120; background:#fff; border:2px solid #e74c3c;
@@ -204,7 +204,7 @@ input[type="range"]::-moz-range-thumb {
   width: 340px;
 } */
 #previewCanvas{ display:block; width:320px; height:200px; border-radius: 12px; }
-.preview-caption{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-weight:600; }
+/*.preview-caption{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-weight:600; }*/
 
 /* --- Bottom-right floating nav (perpendicular to preview) --- */
 .nav-floating{
