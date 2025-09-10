@@ -69,8 +69,7 @@
     <canvas id="previewCanvas" width="320" height="200"></canvas>
   </div>
 
-
-  <!-- Floating slide nav (bottom-right, perpendicular to preview) -->
+  <!-- Floating slide nav (bottom-right) -->
   <div class="nav-floating" aria-label="Slide navigation">
     <button id="prevAppBtn" aria-label="Previous scene">◀</button>
     <button id="nextAppBtn" aria-label="Next scene">▶</button>
@@ -80,21 +79,14 @@
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
-
-    // Must have story, grade, and a character chosen
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
     if (!ctx.grade)   { location.replace(nextURL('grade-select.html', ctx)); throw 0; }
     if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
-
-    // Keep context available to storyboard.js if needed
     window.__flowCtx = ctx;
   </script>
 
-  <!-- Optional Azure client (safe no-op locally) -->
   <script type="module" src="js/azure-api.js"></script>
-
-  <!-- Drawing runtime -->
   <script type="module" src="js/canvas.js"></script>
 </body>
 </html>
