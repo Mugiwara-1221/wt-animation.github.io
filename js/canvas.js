@@ -16,12 +16,29 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
-/* === Mini preview + appearances-only nav (NEW) === */
+/* === Mini preview + appearances-only nav === */
 const previewCanvas = document.getElementById("previewCanvas");
 const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
 const slideLabelEl  = document.getElementById("slideLabel");
 const prevAppBtn    = document.getElementById("prevAppBtn");
 const nextAppBtn    = document.getElementById("nextAppBtn");
+
+/* Hide the orange label chip and move the red border to the canvas (no CSS change needed) */
+(() => {
+  const hud = document.getElementById("previewHUD");
+  const cap = document.querySelector(".preview-caption");
+  if (cap) { cap.style.display = "none"; }
+  if (hud) {
+    hud.style.background = "transparent";
+    hud.style.border = "none";
+    hud.style.boxShadow = "none";
+    hud.style.padding = "0";
+  }
+  if (previewCanvas) {
+    previewCanvas.style.border = "2px solid #e74c3c";
+    previewCanvas.style.borderRadius = "12px";
+  }
+})();
 
 /* Offscreen buffer to prevent flicker */
 const previewBuffer = (() => {
@@ -482,7 +499,7 @@ function updateSliderFill(slider) {
     sl.addEventListener("input", () => updateSliderFill(sl));
   });
 
-/* === Appearances-only model + preview (NEW) === */
+/* === Appearances-only model + preview === */
 let slidesManifest = null;     // stories/<story>/slides.json
 let appearances    = [];       // array of global slide indexes (0-based) where this char appears
 let appearCursor   = 0;        // which appearance we are on
@@ -492,6 +509,29 @@ function updateSlideLabel(){
   const your = appearances.length ? (appearCursor+1) : 0;
   const global = appearances.length ? (appearCursor >= 0 ? appearances[appearCursor] + 1 : 1) : 1;
   slideLabelEl.textContent = `Your scenes ${your}/${appearances.length || 0}  •  Slide ${global}/${slidesManifest?.slides?.length || 0}`;
+}
+
+/* Resize preview canvases to match bg aspect (so the whole image fits, no crop) */
+function ensurePreviewDimsFor(bgIm){
+  const sceneW = bgIm.naturalWidth  || bgIm.width  || 1600;
+  const sceneH = bgIm.naturalHeight || bgIm.height || 900;
+
+  const MAX_W = 320, MAX_H = 200; // visual bounds for the mini preview
+  const scale = Math.min(MAX_W / sceneW, MAX_H / sceneH);
+  const cw = Math.max(1, Math.round(sceneW * scale));
+  const ch = Math.max(1, Math.round(sceneH * scale));
+
+  if (previewCanvas && (previewCanvas.width !== cw || previewCanvas.height !== ch)){
+    previewCanvas.width  = cw;
+    previewCanvas.height = ch;
+    previewCanvas.style.width  = `${cw}px`;
+    previewCanvas.style.height = `${ch}px`;
+  }
+  if (previewBuffer.width !== cw || previewBuffer.height !== ch){
+    previewBuffer.width  = cw;
+    previewBuffer.height = ch;
+  }
+  return { sceneW, sceneH };
 }
 
 /* atomic updates to avoid flicker */
@@ -507,18 +547,18 @@ async function drawPreview(){
   const slide     = slidesManifest.slides[globalIdx];
   if (!slide) return;
 
-  // draw into buffer first
-  pb.clearRect(0,0,previewBuffer.width, previewBuffer.height);
-
   try{
     const bgIm = await loadImageCached(slide.background);
 
-    // CONTAIN: show the whole background (no crop)
-    const sceneW = bgIm.naturalWidth || bgIm.width  || 1600;
-    const sceneH = bgIm.naturalHeight|| bgIm.height || 900;
-    const scale = Math.min(previewBuffer.width/sceneW, previewBuffer.height/sceneH);
-    const vw = sceneW*scale, vh = sceneH*scale;
-    const ox = (previewBuffer.width - vw)/2, oy = (previewBuffer.height - vh)/2;
+    // Resize to bg aspect & draw full background (contain)
+    const { sceneW, sceneH } = ensurePreviewDimsFor(bgIm);
+    const scale = Math.min(previewBuffer.width / sceneW, previewBuffer.height / sceneH);
+    const vw = sceneW * scale, vh = sceneH * scale;
+    const ox = (previewBuffer.width  - vw) / 2;
+    const oy = (previewBuffer.height - vh) / 2;
+
+    // draw into buffer first
+    pb.clearRect(0,0,previewBuffer.width, previewBuffer.height);
     pb.drawImage(bgIm, ox, oy, vw, vh);
 
     // character placement for this slide
@@ -566,12 +606,15 @@ async function drawPreview(){
         }
       } catch {}
     }
-  }catch{}
 
-  // only swap if this is the latest render
-  if (myToken === previewToken){
+    // only swap if this is the latest render
+    if (myToken === previewToken){
+      pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+      pctx.drawImage(previewBuffer, 0, 0);
+    }
+  }catch{
+    // best-effort: clear if something failed
     pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
-    pctx.drawImage(previewBuffer, 0, 0);
   }
 }
 
