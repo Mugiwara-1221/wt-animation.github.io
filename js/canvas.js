@@ -23,21 +23,29 @@ const slideLabelEl  = document.getElementById("slideLabel");
 const prevAppBtn    = document.getElementById("prevAppBtn");
 const nextAppBtn    = document.getElementById("nextAppBtn");
 
-/* Hide the orange label chip and move the red border to the canvas (no CSS change needed) */
+/* Remove the orange label chip and its box; keep just the canvas */
 (() => {
-  const hud = document.getElementById("previewHUD");
-  const cap = document.querySelector(".preview-caption");
-  if (cap) { cap.style.display = "none"; }
-  if (hud) {
-    hud.style.background = "transparent";
-    hud.style.border = "none";
-    hud.style.boxShadow = "none";
-    hud.style.padding = "0";
-  }
-  if (previewCanvas) {
-    previewCanvas.style.border = "2px solid #e74c3c";
-    previewCanvas.style.borderRadius = "12px";
-  }
+  try {
+    const chip = document.querySelector(".preview-caption");
+    if (chip) chip.remove(); // fully remove the label so it can't flash on refresh
+
+    const hud = document.getElementById("previewHUD");
+    if (hud) {
+      hud.style.background = "transparent";
+      hud.style.border = "none";
+      hud.style.boxShadow = "none";
+      hud.style.padding = "0";
+      hud.style.zIndex = "150";
+      hud.style.pointerEvents = "none"; // HUD shouldn't eat clicks
+    }
+    if (previewCanvas) {
+      previewCanvas.style.display = "block";
+      previewCanvas.style.border = "2px solid #e74c3c";
+      previewCanvas.style.borderRadius = "12px";
+      previewCanvas.style.background = "#fff";
+      previewCanvas.style.pointerEvents = "none";
+    }
+  } catch {}
 })();
 
 /* Offscreen buffer to prevent flicker */
@@ -267,7 +275,7 @@ function stampSegment(x0, y0, x1, y1) {
   const dx = x1 - x0, dy = y1 - y0;
   const dist = Math.hypot(dx, dy);
   if (dist === 0) { dotAt(x0, y0); return; }
-  const step = Math.max(1, (brushSize / 2) * 0.6); // tighter than radius to avoid gaps
+  const step = Math.max(1, (brushSize / 2) * 0.6);
   const count = Math.ceil(dist / step);
   for (let i = 0; i <= count; i++) {
     const t = i / count;
@@ -289,7 +297,7 @@ function drawStroke(e) {
   if (!isInBounds(x, y)) return;
 
   if (prevX == null || prevY == null) {
-    dotAt(x, y); // first point
+    dotAt(x, y);
   } else {
     ctx.globalAlpha = opacity;
     ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
@@ -383,9 +391,7 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
     const row = mat[y];
     for (let x = 0; x < srcW; x++) {
       const id = row?.[x] || 0;
-      imgData.data[k++] = 255;
-      imgData.data[k++] = 255;
-      imgData.data[k++] = 255;
+      imgData.data[k++] = 255; imgData.data[k++] = 255; imgData.data[k++] = 255;
       imgData.data[k++] = id > 0 ? 255 : 0; // alpha
     }
   }
@@ -511,12 +517,12 @@ function updateSlideLabel(){
   slideLabelEl.textContent = `Your scenes ${your}/${appearances.length || 0}  •  Slide ${global}/${slidesManifest?.slides?.length || 0}`;
 }
 
-/* Resize preview canvases to match bg aspect (so the whole image fits, no crop) */
+/* Ensure preview canvas matches bg aspect (so entire PNG shows) */
 function ensurePreviewDimsFor(bgIm){
   const sceneW = bgIm.naturalWidth  || bgIm.width  || 1600;
   const sceneH = bgIm.naturalHeight || bgIm.height || 900;
 
-  const MAX_W = 320, MAX_H = 200; // visual bounds for the mini preview
+  const MAX_W = 320, MAX_H = 200; // preview bounds
   const scale = Math.min(MAX_W / sceneW, MAX_H / sceneH);
   const cw = Math.max(1, Math.round(sceneW * scale));
   const ch = Math.max(1, Math.round(sceneH * scale));
@@ -550,14 +556,13 @@ async function drawPreview(){
   try{
     const bgIm = await loadImageCached(slide.background);
 
-    // Resize to bg aspect & draw full background (contain)
+    // Fit preview to bg aspect; draw full bg (contain)
     const { sceneW, sceneH } = ensurePreviewDimsFor(bgIm);
     const scale = Math.min(previewBuffer.width / sceneW, previewBuffer.height / sceneH);
     const vw = sceneW * scale, vh = sceneH * scale;
     const ox = (previewBuffer.width  - vw) / 2;
     const oy = (previewBuffer.height - vh) / 2;
 
-    // draw into buffer first
     pb.clearRect(0,0,previewBuffer.width, previewBuffer.height);
     pb.drawImage(bgIm, ox, oy, vw, vh);
 
@@ -607,13 +612,11 @@ async function drawPreview(){
       } catch {}
     }
 
-    // only swap if this is the latest render
     if (myToken === previewToken){
       pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
       pctx.drawImage(previewBuffer, 0, 0);
     }
   }catch{
-    // best-effort: clear if something failed
     pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
   }
 }
@@ -623,7 +626,6 @@ async function gotoAppearance(n){
   if (n < 0 || n >= appearances.length) return;
   appearCursor = n;
 
-  // switch outline to this slide’s frame1 if it exists (fallbacks handled)
   const outlineURL = await resolveOutlineURLForSlide(appearances[appearCursor] + 1);
   outlineImg.src = outlineURL;
 
