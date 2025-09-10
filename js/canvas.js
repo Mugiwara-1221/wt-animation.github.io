@@ -16,6 +16,13 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
+/* === Mini preview + appearances-only nav (NEW) === */
+const previewCanvas = document.getElementById("previewCanvas");
+const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
+const slideLabelEl  = document.getElementById("slideLabel");
+const prevAppBtn    = document.getElementById("prevAppBtn");
+const nextAppBtn    = document.getElementById("nextAppBtn");
+
 /* Your repo layout uses story folders + frameN folders (for masks) */
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
@@ -42,12 +49,25 @@ function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(id) || id; // fallback: identical id
 }
-
 async function urlExists(url) {
-  try {
-    const r = await fetch(url, { cache: "no-store" });
-    return r.ok;
-  } catch { return false; }
+  try { const r = await fetch(url, { cache: "no-store" }); return r.ok; }
+  catch { return false; }
+}
+async function loadSlidesManifest(storyIdDash){
+  const url = `stories/${storyIdDash}/slides.json`;
+  try { const r = await fetch(url, { cache:"no-store" }); if (!r.ok) throw 0; return await r.json(); }
+  catch { return { slides: [] }; }
+}
+function buildAppearances(manifest, charId){
+  const out = [];
+  (manifest.slides || []).forEach((sl, idx) => {
+    const has = Array.isArray(sl.characters) && sl.characters.some(c => (c.id||"").toLowerCase() === charId);
+    if (has) out.push(idx);
+  });
+  return out;
+}
+function perSlidePaintKey(story, charId, slide1){
+  return `perSlidePaint:${story}:${charId}:${slide1}`;
 }
 
 /** Prefer ?sprite=… if we must show colored art; used as final fallback. */
@@ -66,27 +86,29 @@ async function resolveSpriteURL() {
   } catch (e) {
     console.warn("[resolveSpriteURL] manifest load failed:", e);
   }
-  // Nothing else—return a dummy that will 404 rather than crash
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
 /** Choose the transparent outline to paint:
- *  1) ?outline=<url> (explicit override)
- *  2) images/outline/<story>/<char>-transparent.png
- *  3) images/outline/<char>-transparent.png
- *  4) FALLBACK to colored sprite URL
+ *  1) per-slide frame1 if it exists
+ *  2) ?outline=<url> (explicit override)
+ *  3) images/outline/<story>/<char>-transparent.png
+ *  4) images/outline/<char>-transparent.png
+ *  5) FALLBACK to colored sprite URL
  */
-async function resolveOutlineURL() {
+async function resolveOutlineURLForSlide(slide1) {
+  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+  const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
+  if (await urlExists(frame1)) return frame1;
+
   if (outlineParam) return outlineParam;
 
-  const storyId = selectedStory || "tortoise-hare";
-  const storyScoped = `images/outline/${storyId}/${selectedChar}-transparent.png`;
+  const storyScoped = `images/outline/${selectedStory || "tortoise-hare"}/${selectedChar}-transparent.png`;
   if (await urlExists(storyScoped)) return storyScoped;
 
   const legacy = `images/outline/${selectedChar}-transparent.png`;
   if (await urlExists(legacy)) return legacy;
 
-  // Last resort: use the colored sprite so the app still works
   return await resolveSpriteURL();
 }
 
@@ -106,12 +128,10 @@ function getSpriteBox() {
     y: Math.round((bgCanvas.height - size) / 2),
   };
 }
-
 function drawWhiteBG() {
   bgCtx.fillStyle = "#ffffff";
   bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
 }
-
 function layoutAndRedraw() {
   const w = innerWidth;
   const h = innerHeight;
@@ -129,8 +149,8 @@ function layoutAndRedraw() {
     sctx.imageSmoothingEnabled = true;   // nicer scaling
     sctx.drawImage(outlineImg, box.x, box.y, box.width, box.height);
   }
+  schedulePreview();
 }
-
 addEventListener("resize", layoutAndRedraw);
 
 /* ---------- Drawing (round, smooth brush) ---------- */
@@ -180,11 +200,15 @@ function undo() {
   if (!history.length) return;
   redoStack.push(ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
   ctx.putImageData(history.pop(), 0, 0);
+  persistCurrentAppearance();
+  schedulePreview();
 }
 function redo() {
   if (!redoStack.length) return;
   saveHistory();
   ctx.putImageData(redoStack.pop(), 0, 0);
+  persistCurrentAppearance();
+  schedulePreview();
 }
 
 /* Stamp a perfect circle */
@@ -210,6 +234,14 @@ function stampSegment(x0, y0, x1, y1) {
   }
 }
 
+/* lightweight preview throttle */
+let previewScheduled = false;
+function schedulePreview(){
+  if (previewScheduled) return;
+  previewScheduled = true;
+  requestAnimationFrame(() => { previewScheduled = false; drawPreview(); });
+}
+
 function drawStroke(e) {
   if (!drawing) return;
   const [x, y] = getPos(e);
@@ -218,7 +250,6 @@ function drawStroke(e) {
   if (prevX == null || prevY == null) {
     dotAt(x, y); // first point
   } else {
-    // stroke + stamp to guarantee a solid round line
     ctx.globalAlpha = opacity;
     ctx.globalCompositeOperation = (currentTool === "erase") ? "destination-out" : "source-over";
     ctx.strokeStyle = brushColor;
@@ -232,6 +263,7 @@ function drawStroke(e) {
     stampSegment(prevX, prevY, x, y);
   }
   prevX = x; prevY = y;
+  schedulePreview();
 }
 
 /* Mouse / touch */
@@ -240,7 +272,7 @@ drawCanvas.addEventListener("mousedown", (e) => {
   if (isInBounds(x, y)) { saveHistory(); drawing = true; prevX = prevY = null; drawStroke(e); }
 });
 drawCanvas.addEventListener("mousemove", drawStroke);
-addEventListener("mouseup",   () => { drawing = false; prevX = prevY = null; });
+addEventListener("mouseup",   () => { drawing = false; prevX = prevY = null; persistCurrentAppearance(); schedulePreview(); });
 drawCanvas.addEventListener("mouseout",  () => { drawing = false; prevX = prevY = null; });
 
 drawCanvas.addEventListener("touchstart", (e) => {
@@ -251,12 +283,13 @@ drawCanvas.addEventListener("touchmove", (e) => {
   e.preventDefault();
   drawStroke(e.touches[0]);
 }, { passive: false });
-drawCanvas.addEventListener("touchend", () => { drawing = false; prevX = prevY = null; });
+drawCanvas.addEventListener("touchend", () => { drawing = false; prevX = prevY = null; persistCurrentAppearance(); schedulePreview(); });
 
 /* Clear + zoom */
 function clearCanvas() {
   ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   layoutAndRedraw();
+  persistCurrentAppearance();
 }
 function zoomIn()  { zoomLevel *= 1.1; applyZoom(); }
 function zoomOut() { zoomLevel /= 1.1; applyZoom(); }
@@ -265,6 +298,7 @@ function applyZoom() {
     c.style.transformOrigin = "center center";
     c.style.transform = `scale(${zoomLevel})`;
   }
+  schedulePreview();
 }
 
 /* Save dropdown */
@@ -324,7 +358,7 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH) {
   return scaled;
 }
 
-/* ---------- Frame discovery & export ---------- */
+/* ---------- Frame discovery & export (unchanged) ---------- */
 async function findMaskSets(storyIdDash, charId) {
   const storyFolder = resolveStoryFolder(storyIdDash);
   const base = `images/frames/${storyFolder}`;
@@ -344,7 +378,7 @@ async function findMaskSets(storyIdDash, charId) {
   return out;
 }
 
-/* ------- Send to storyboard (build masked frames grouped by slide) ------- */
+/* ------- Send to storyboard (kept as-is) ------- */
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
@@ -370,70 +404,4 @@ async function sendToStoryboard() {
 
         const masked = document.createElement("canvas");
         masked.width = width; masked.height = height;
-        const mctx   = masked.getContext("2d");
-        mctx.drawImage(crop, 0, 0);
-        mctx.globalCompositeOperation = "destination-in";
-        mctx.drawImage(maskCanvas, 0, 0);
-        mctx.globalCompositeOperation = "source-over";
-
-        list.push(masked.toDataURL("image/png"));
-      }
-      if (list.length) bySlide[frame] = list;
-    }
-
-    // 4) persist grouped results (story + char specific)
-    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-    const storageKey  = `coloredFrames:${storyFolder}:${selectedChar}`;
-    localStorage.setItem(storageKey, JSON.stringify(bySlide));
-
-    // Legacy single-frame keys
-    const firstFrame = Object.values(bySlide)[0];
-    if (firstFrame?.length) {
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
-      localStorage.setItem("coloredCharacter", firstFrame[0]);
-    }
-    localStorage.setItem("selectedCharacter", selectedChar);
-
-    // Optional submit
-    const firstImg = firstFrame?.[0] || "";
-    const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    try { if (firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch (err) {
-      console.warn("[submitDrawing] non-blocking error:", err);
-    }
-
-    // Navigate to storyboard
-    const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode)   q.set("session", sessionCode);
-    if (selectedGrade) q.set("grade",   selectedGrade);
-    location.href = `storyboard.html?${q.toString()}`;
-  } catch (err) {
-    console.error("[sendToStoryboard] failed:", err);
-    alert("Send to Storyboard failed. See console for details.");
-  }
-}
-
-/* ---------- Expose for buttons ---------- */
-Object.assign(window, {
-  setTool, undo, redo, clearCanvas, toggleSaveOptions,
-  downloadImage, sendToStoryboard, zoomIn, zoomOut,
-});
-
-/* ---------- Slider fill cosmetics ---------- */
-function updateSliderFill(slider) {
-  if (!slider) return;
-  const value = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
-  slider.style.setProperty("--percent", `${value}%`);
-}
-[document.querySelector(".brush-size-slider"), document.querySelector(".opacity-slider")]
-  .forEach(sl => {
-    if (!sl) return;
-    updateSliderFill(sl);
-    sl.addEventListener("input", () => updateSliderFill(sl));
-  });
-
-/* ---------- Boot: resolve OUTLINE then draw ---------- */
-(async function boot() {
-  const outlineURL = await resolveOutlineURL(); // <-- transparent outline first
-  outlineImg.src = outlineURL;
-  layoutAndRedraw();
-})();
+        const m
