@@ -64,6 +64,18 @@
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
+  <!-- Mini Live Preview + appearances-only navigation (NEW) -->
+  <div id="previewHUD" class="preview-hud" aria-label="Page preview">
+    <canvas id="previewCanvas" width="320" height="200" aria-label="Scene preview"></canvas>
+    <div class="preview-caption">
+      <span id="slideLabel">Slide …</span>
+      <div class="nav">
+        <button id="prevAppBtn" aria-label="Previous scene">◀</button>
+        <button id="nextAppBtn" aria-label="Next scene">▶</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Route guard & pass-through context -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
@@ -82,7 +94,7 @@
   <!-- Optional Azure client (safe no-op locally) -->
   <script type="module" src="js/azure-api.js"></script>
 
-  <!-- Drawing runtime (we’ll make the brush perfectly round in the next JS step) -->
+  <!-- Drawing runtime -->
   <script type="module" src="js/canvas.js"></script>
 </body>
 </html>
