@@ -23,6 +23,31 @@ const slideLabelEl  = document.getElementById("slideLabel");
 const prevAppBtn    = document.getElementById("prevAppBtn");
 const nextAppBtn    = document.getElementById("nextAppBtn");
 
+/* Offscreen buffer to prevent flicker */
+const previewBuffer = (() => {
+  const c = document.createElement("canvas");
+  c.width  = previewCanvas ? previewCanvas.width  : 0;
+  c.height = previewCanvas ? previewCanvas.height : 0;
+  return c;
+})();
+const pb = previewBuffer.getContext("2d");
+
+/* Preload/cache */
+const imgCache = new Map();
+function loadImageCached(src){
+  if (!src) return Promise.reject(new Error("no src"));
+  if (imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise((resolve, reject) => {
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = src;
+  });
+  imgCache.set(src, p);
+  return p;
+}
+
 /* Your repo layout uses story folders + frameN folders (for masks) */
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
@@ -74,7 +99,6 @@ function perSlidePaintKey(story, charId, slide1){
 async function resolveSpriteURL() {
   if (spriteParam) return spriteParam;
 
-  // Otherwise look up from the story manifest
   const storyId = selectedStory || "tortoise-hare";
   const manifestURL = `stories/${storyId}/characters.json`;
   try {
@@ -321,7 +345,7 @@ function downloadImage() {
   document.getElementById("saveOptions").classList.add("hidden");
 }
 
-/* ---------- CSV → alpha mask helpers (unchanged) ---------- */
+/* ---------- CSV → alpha mask helpers ---------- */
 async function loadCSVMatrix(url) {
   const resp = await fetch(url, { cache: "no-store" });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
@@ -383,16 +407,13 @@ async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
 
-    // 1) crop paint layer to sprite box once
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // 2) discover all frame folders that actually have masks for this character
     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
     if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
-    // 3) for each discovered frame folder, build up to 4 masked images
     const bySlide = {};
     for (const { frame, prefix } of sets) {
       const list = [];
@@ -415,12 +436,10 @@ async function sendToStoryboard() {
       if (list.length) bySlide[frame] = list;
     }
 
-    // 4) persist grouped results (story + char specific)
     const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
     const storageKey  = `coloredFrames:${storyFolder}:${selectedChar}`;
     localStorage.setItem(storageKey, JSON.stringify(bySlide));
 
-    // Legacy single-frame keys
     const firstFrame = Object.values(bySlide)[0];
     if (firstFrame?.length) {
       localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
@@ -428,14 +447,12 @@ async function sendToStoryboard() {
     }
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    // Optional submit
     const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
     try { if (firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch (err) {
       console.warn("[submitDrawing] non-blocking error:", err);
     }
 
-    // Navigate to storyboard
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
     if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade",   selectedGrade);
@@ -477,70 +494,85 @@ function updateSlideLabel(){
   slideLabelEl.textContent = `Your scenes ${your}/${appearances.length || 0}  •  Slide ${global}/${slidesManifest?.slides?.length || 0}`;
 }
 
+/* atomic updates to avoid flicker */
+let previewToken = 0;
 async function drawPreview(){
   if (!pctx || !slidesManifest || !appearances.length) {
     if (pctx) pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
     return;
   }
+  const myToken = ++previewToken;
+
   const globalIdx = appearances[appearCursor];
   const slide     = slidesManifest.slides[globalIdx];
   if (!slide) return;
 
-  pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+  // draw into buffer first
+  pb.clearRect(0,0,previewBuffer.width, previewBuffer.height);
+
   try{
-    const bgIm = await (async () => { const im=new Image(); im.crossOrigin="anonymous"; await new Promise((res,rej)=>{ im.onload=res; im.onerror=rej; im.src=slide.background; }); return im; })();
-    const sceneW = bgIm.width  || 1600;
-    const sceneH = bgIm.height || 900;
-    const scale = Math.min(previewCanvas.width/sceneW, previewCanvas.height/sceneH);
+    const bgIm = await loadImageCached(slide.background);
+
+    // CONTAIN: show the whole background (no crop)
+    const sceneW = bgIm.naturalWidth || bgIm.width  || 1600;
+    const sceneH = bgIm.naturalHeight|| bgIm.height || 900;
+    const scale = Math.min(previewBuffer.width/sceneW, previewBuffer.height/sceneH);
     const vw = sceneW*scale, vh = sceneH*scale;
-    const ox = (previewCanvas.width - vw)/2, oy = (previewCanvas.height - vh)/2;
-    pctx.drawImage(bgIm, ox, oy, vw, vh);
+    const ox = (previewBuffer.width - vw)/2, oy = (previewBuffer.height - vh)/2;
+    pb.drawImage(bgIm, ox, oy, vw, vh);
 
+    // character placement for this slide
     const charCfg = (slide.characters || []).find(c => (c.id||"").toLowerCase() === selectedChar);
-    if (!charCfg) return;
+    if (charCfg){
+      const dx = ox + (charCfg.x/100) * vw;
+      const dy = oy + (charCfg.y/100) * vh;
+      const dw = (charCfg.w/100) * vw;
+      const dh = dw; // frames are square
 
-    const dx = ox + (charCfg.x/100) * vw;
-    const dy = oy + (charCfg.y/100) * vh;
-    const dw = (charCfg.w/100) * vw;
-    const dh = dw; // square
+      // build sprite from current paint (600x600)
+      const sprite = document.createElement("canvas");
+      sprite.width = Math.max(1, Math.round(dw));
+      sprite.height= Math.max(1, Math.round(dh));
+      const scx = sprite.getContext("2d");
+      scx.imageSmoothingEnabled = false;
+      scx.drawImage(
+        drawCanvas,
+        allowedArea.x, allowedArea.y, allowedArea.width, allowedArea.height,
+        0, 0, sprite.width, sprite.height
+      );
 
-    // build a sprite bitmap from current paint (600x600) scaled and optionally masked by mask_1
-    const sprite = document.createElement("canvas");
-    sprite.width = Math.max(1, Math.round(dw));
-    sprite.height= Math.max(1, Math.round(dh));
-    const scx = sprite.getContext("2d");
-    scx.imageSmoothingEnabled = false;
-    scx.drawImage(
-      drawCanvas,
-      allowedArea.x, allowedArea.y, allowedArea.width, allowedArea.height,
-      0, 0, sprite.width, sprite.height
-    );
+      // optional mask_1.csv to keep edges clean
+      try{
+        const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+        const csvURL = `images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}_mask_1.csv`;
+        if (await urlExists(csvURL)) {
+          const { mat, W, H } = await loadCSVMatrix(csvURL);
+          const mask = await matrixToMaskCanvas(mat, W, H, sprite.width, sprite.height);
+          scx.globalCompositeOperation = "destination-in";
+          scx.drawImage(mask, 0, 0);
+          scx.globalCompositeOperation = "source-over";
+        }
+      } catch {}
 
-    // optional mask_1.csv if exists
-    try{
-      const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-      const csvURL = `images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}_mask_1.csv`;
-      if (await urlExists(csvURL)) {
-        const { mat, W, H } = await loadCSVMatrix(csvURL);
-        const mask = await matrixToMaskCanvas(mat, W, H, sprite.width, sprite.height);
-        scx.globalCompositeOperation = "destination-in";
-        scx.drawImage(mask, 0, 0);
-        scx.globalCompositeOperation = "source-over";
-      }
-    } catch {}
+      pb.drawImage(sprite, dx, dy, dw, dh);
 
-    pctx.drawImage(sprite, dx, dy, dw, dh);
-
-    // outline frame1 over preview
-    try{
-      const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-      const frame1 = `images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}1.png`;
-      if (await urlExists(frame1)) {
-        const ol = new Image(); await new Promise((res,rej)=>{ ol.onload=res; ol.onerror=rej; ol.src=frame1; });
-        pctx.drawImage(ol, dx, dy, dw, dh);
-      }
-    } catch {}
+      // crisp outline over sprite
+      try{
+        const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+        const frame1 = `images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}1.png`;
+        if (await urlExists(frame1)) {
+          const ol = await loadImageCached(frame1);
+          pb.drawImage(ol, dx, dy, dw, dh);
+        }
+      } catch {}
+    }
   }catch{}
+
+  // only swap if this is the latest render
+  if (myToken === previewToken){
+    pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+    pctx.drawImage(previewBuffer, 0, 0);
+  }
 }
 
 async function gotoAppearance(n){
@@ -552,7 +584,6 @@ async function gotoAppearance(n){
   const outlineURL = await resolveOutlineURLForSlide(appearances[appearCursor] + 1);
   outlineImg.src = outlineURL;
 
-  // restore per-slide paint (if saved)
   restoreCurrentAppearance();
   updateSlideLabel();
   schedulePreview();
@@ -562,6 +593,13 @@ function prevAppearance(){ gotoAppearance(appearCursor - 1); }
 prevAppBtn?.addEventListener("click", prevAppearance);
 nextAppBtn?.addEventListener("click", nextAppearance);
 
+/* keyboard nav also */
+addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") nextAppearance();
+  if (e.key === "ArrowLeft")  prevAppearance();
+});
+
+/* per-slide autosave/restore */
 function persistCurrentAppearance(){
   if (!appearances.length) return;
   const slide1 = appearances[appearCursor] + 1;
@@ -591,21 +629,18 @@ function restoreCurrentAppearance(){
   img.src = dataURL;
 }
 
-/* ---------- Boot: resolve OUTLINE then draw, then wire appearances ---------- */
+/* ---------- Boot ---------- */
 (async function boot() {
-  // Initial outline (fallback) so the page has something ASAP
   const fallbackOutline = await resolveOutlineURLForSlide(1);
   outlineImg.src = fallbackOutline;
   layoutAndRedraw();
 
-  // Build appearances from slides.json and jump to the first one
   slidesManifest = await loadSlidesManifest(selectedStory || "tortoise-hare");
   appearances    = buildAppearances(slidesManifest, selectedChar);
 
   if (appearances.length) {
-    await gotoAppearance(0); // sets correct outline + restore paint + preview
+    await gotoAppearance(0);
   } else {
-    // no appearances: still update label/preview bg (none) gracefully
     updateSlideLabel();
     schedulePreview();
   }
