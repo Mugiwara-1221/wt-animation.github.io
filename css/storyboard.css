@@ -64,7 +64,7 @@ h2 {
    ────────────────────────────────────────────────────────────── */
 
 img.character {
-  position: absolute;
+  position: relative;
   user-select: none;
   pointer-events: none;
 }
