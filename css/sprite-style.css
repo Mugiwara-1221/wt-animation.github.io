@@ -96,8 +96,8 @@ h2 {
 .tortoise { top: 65%; left: 50%; }
 .bear     { top: 28%; left: 60%; }
 .squirrel { top: 40%; left: 78%; }
-.bird1    { top: 10%; left: 30%; }
-.bird2    { top: 15%; left: 38%; }
+.bird1    { top: 10%; left: 28%; }
+.bird2    { top: 15%; left: 35%; }
 
 /* Tighter view on small screens */
 @media (max-width: 960px) {
