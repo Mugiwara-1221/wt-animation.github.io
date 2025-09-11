@@ -39,8 +39,8 @@ h2 {
 
 #scene {
   display: block;
-  width: 100%;
-  height: auto;
+  width: 110%;
+  height: 100%;
   border-radius: 12px;
 }
 
