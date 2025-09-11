@@ -92,12 +92,12 @@ h2 {
 
 /* Default positions that matched your original Tortoise & Hare layout.
    Any story can override with percent-based x/y/w in characters.json. */
-.hare     { top: 450px; left:  90px; }
-.tortoise { top: 466px; left: 510px; }
+.hare     { top: 50%; left: 15%; }
+.tortoise { top: 65%; left: 50%; }
 .bear     { top: 156px; left: 505px; }
 .squirrel { top: 260px; left: 640px; }
-.bird1    { top: 142px; left: 337px; }
-.bird2    { top: 147px; left: 385px; }
+.bird1    { top: 10%; left: 30%; }
+.bird2    { top: 15%; left: 38%; }
 
 /* Tighter view on small screens */
 @media (max-width: 960px) {
