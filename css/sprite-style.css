@@ -85,8 +85,8 @@ h2 {
 /* Default sizes (used only if a story's characters.json doesn't override w/x/y) */
 .hare     { width: 300px; height: auto; }
 .tortoise { width: 280px; height: auto; }
-.bear     { width: 145px; height: auto; }
-.squirrel { width:  85px; height: auto; }
+/*.bear     { width: 145px; height: auto; }*/
+/*.squirrel { width:  85px; height: auto; }*/
 .bird1    { width:  45px; height: auto; }
 .bird2    { width:  60px; height: auto; }
 
