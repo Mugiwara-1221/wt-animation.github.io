@@ -174,7 +174,7 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
 }
 
 async function placeCharacter(cfg, slideNo){
-  const { id, x, y, w, z=1, fps=4 } = cfg;
+  const { id, x, y, w, h, z=1, fps=4 } = cfg;
 
   // default base frames location for this slide:
   const framesPrefix = cfg.framesPath ||
@@ -193,7 +193,7 @@ async function placeCharacter(cfg, slideNo){
 
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
-  Object.assign(cvs.style, { position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:"auto", zIndex:String(z), pointerEvents:"none" });
+  Object.assign(cvs.style, { position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:pct(h), zIndex:String(z), pointerEvents:"none" });
   host.appendChild(cvs);
   const ctx = fitCanvasToCSS(cvs);
   const ro  = new ResizeObserver(()=>fitCanvasToCSS(cvs));
