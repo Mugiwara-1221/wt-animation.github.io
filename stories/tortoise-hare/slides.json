@@ -8,28 +8,28 @@
       "characters": [
         {
           "id": "tortoise",
-          "x": 10, "y": 60, "w": 70,
+          "x": 10, "y": 50, "w": 60, "h": 60,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_"
         },
         {
           "id": "hare",
-          "x": 30, "y": 30, "w": 70,
+          "x": 30, "y": 7, "w": 70, "h": 80,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/hare/hare_mask_"
         },
         {
           "id": "bird1",
-          "x": 55, "y": 5, "w": 20,
+          "x": 65, "y": 3, "w": 20, "h": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird1/bird",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird1/bird_mask_"
         },
         {
           "id": "bird2",
-          "x": 8, "y": 48, "w": 20,
+          "x": 8, "y": 40, "w": 20, "h": 20,
           "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird2/bird",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird2/bird_mask_"
