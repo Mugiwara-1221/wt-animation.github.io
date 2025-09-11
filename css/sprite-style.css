@@ -46,8 +46,8 @@ h2 {
 #scene {
   position: relative;
   display: block;
-  width: 100%;
-  height: auto;
+  width: 110%;
+  height: 110%;
   border-radius: 12px;
   user-select: none;
   -webkit-user-drag: none;
