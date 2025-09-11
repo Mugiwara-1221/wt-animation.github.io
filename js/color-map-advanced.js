@@ -128,6 +128,8 @@ export async function colorAFrameAdvanced({
   const id4 = imageToImageData(img4); 
   const { width, height, data: base } = id2;
 
+  const pixelCount = width * height;
+
   const maps = [map1, map2, map3, map4];
 
   maps.forEach((map, index) => {
@@ -153,9 +155,13 @@ export async function colorAFrameAdvanced({
   // Precompute bboxes
   const bbox1 = new Map();
   const bbox2 = new Map();
+  const bbox3 = new Map();
+  const bbox4 = new Map();
   for (const bid of blockIDs) {
     try { bbox1.set(bid, getBlockBBox(map1, bid)); } catch {}
     try { bbox2.set(bid, getBlockBBox(map2, bid)); } catch {}
+    try { bbox3.set(bid, getBlockBBox(map3, bid)); } catch {}
+    try { bbox4.set(bid, getBlockBBox(map4, bid)); } catch {}
   }
 
   // Transfer
@@ -321,7 +327,8 @@ export async function colorCharacterFrames({
         frame1URL: maskedBaseDataURL,
         frame2URL: `${character.framesPath}${n}.png`,
         map1: scaledMask,   // <-- pass array, not URL
-      });
+      }
+    );
       console.log(`✅ Processed frame ${n}`);
 
       results.push({ n, dataURL });
