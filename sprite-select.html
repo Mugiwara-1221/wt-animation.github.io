@@ -119,13 +119,13 @@
         img.src            = c.sprite || `images/${c.id}.png`;
 
         // Position overrides (optional, percent-based)
-        if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
-        if (typeof c.y === 'number') img.style.top    = `${c.y}%`;
-        if (typeof c.w === 'number') img.style.width  = `${c.w}%`;
-        if (typeof c.z === 'number') img.style.zIndex = String(c.z);
+        //if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
+        //if (typeof c.y === 'number') img.style.top    = `${c.y}%`;
+        //if (typeof c.w === 'number') img.style.width  = `${c.w}%`;
+        //if (typeof c.z === 'number') img.style.zIndex = String(c.z);
 
         frag.appendChild(img);
-        injected.push({ id: c.id, el: img, hadXYW: (c.x!=null || c.y!=null || c.w!=null) });
+        //injected.push({ id: c.id, el: img, hadXYW: (c.x!=null || c.y!=null || c.w!=null) });
       }
 
       container.appendChild(frag);
