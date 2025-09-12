@@ -21,9 +21,8 @@
         {
           "id": "bird1",
           "x": 65, "y": 3, "w": 20, "h": 20,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird1/bird",
+          "framesPath": "images/gifs/tortise_and_the_hare/Slide_1/Bird1_Colored.gif",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/bird1/bird_mask_"
         },
         {
           "id": "bird2",
