@@ -6,6 +6,18 @@ const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") 
 const initialSlide  = Math.max(0, +qs.get("slide") || 0);
 const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 
+// storyIDs correct file path (masks)
+
+const STORY_FOLDER_MAP = new Map([
+  ["tortoise-hare", "tortoise_and_the_hare"],
+  ["lion-mouse",    "lion_and_the_mouse"],
+]);
+function resolveStoryFolder(id) {
+  const dash = (id || "").replace(/_/g, "-");
+  return STORY_FOLDER_MAP.get(dash) || dash; // fallback to id if already matches
+}
+const storyFolder = resolveStoryFolder(storyId);
+
 const scene = document.getElementById("scene");
 let manifest = null;
 let cur = 0;
