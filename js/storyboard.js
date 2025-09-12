@@ -2,7 +2,7 @@
 // js/storyboard.js — per-slide remasking so colors line up with each animation
 
 const qs            = new URLSearchParams(location.search);
-const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g,"-");
+const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare");//.replace(/_/g,"-");
 const initialSlide  = Math.max(0, +qs.get("slide") || 0);
 const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 
