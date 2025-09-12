@@ -354,7 +354,6 @@ async function sendToStoryboard(){
         // <--- New download logic here:
         downloadImage(dataUrl, `${selectedChar}_slide${frame}_mask${i}.png`);
         // This will prompt the user to download this PNG
-        }
       }
       if(list.length) bySlide[frame]=list;
     }
