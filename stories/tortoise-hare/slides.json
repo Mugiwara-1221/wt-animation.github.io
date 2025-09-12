@@ -33,14 +33,14 @@
       ]
     },
     {
-      "background": "images/frames/tortoise_and_the_hare/frame2/slide2.png",
+      "background": "images/frames/tortoise_and_the_hare/frame2/slide5.png",
       "characters": [
         {
           "id": "tortoise",
           "x": 15, "y": 60, "w": 65,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame2/tortoise/tortoise",
+          "framesPath": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame2/tortoise/tortoise_mask_"
+          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise_mask_"
         },
         {
           "id": "hare",
