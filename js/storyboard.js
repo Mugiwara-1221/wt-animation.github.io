@@ -191,7 +191,7 @@ async function placeCharacter(cfg, slideNo){
     return h;
     // Optionally, you can do further setup, e.g. masking or layer effects
   }
-                  } else {
+  } else {
     const framesPrefix = cfg.framesPath ||
       `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
   
