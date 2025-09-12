@@ -314,13 +314,14 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH){
 }
 
 /* ---------- Frame discovery & export ---------- */
+/*images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_1.csv*/
 async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
   let misses=0;
   for(let n=1;n<=20;n++){
     const prefix=`${base}/frame${n}/${charId}/${charId}_mask_`;
-    if(await urlExists(`${prefix}1.csv`)){ out.push({frame:n,prefix}); misses=0; }
+    if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; }
     else{ misses++; if(misses>=2 && out.length) break; }
   }
   return out;
