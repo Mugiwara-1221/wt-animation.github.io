@@ -21,6 +21,7 @@
           "x": 30,
           "y": 7,
           "w": 20,
+          "h": 20,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_1/haree_colored.gif",
           "frameCount": 4
         },
