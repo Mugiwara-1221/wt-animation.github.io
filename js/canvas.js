@@ -315,6 +315,7 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH){
 
 /* ---------- Frame discovery & export ---------- */
 /*images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_1.csv*/
+/*Fix this code as the it needs to call upon all forlders! before it was circulating between frames 1 to 5 folders*/
 async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
