@@ -15,9 +15,8 @@
         },
         {
           "id": "hare",
-          "x": 30, "y": 7, "w": 70, "h": 80,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_1/Hare_Colored.gif",
-          "fameCount": 4
+          "x": 30, "y": 7, "w": 70,
+          "framesPath": "images/gifs/tortoise_and_the_hare/Slide_1/Hare_Colored.gif"
         },
         {
           "id": "bird1",
