@@ -50,7 +50,7 @@
       "characters": [
         {
           "id": "tortoise",
-          "x": 20,
+          "x": 30,
           "y": 60,
           "w": 50,
           "h": 50,
@@ -62,14 +62,14 @@
           "id": "hare",
           "x": 10,
           "y": 30,
-          "w": 50,
-          "h": 50,
+          "w": 40,
+          "h": 40,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_5/hare_colored.gif",
           "frameCount": 4
         },
         {
           "id": "bird1",
-          "x": 20,
+          "x": 18,
           "y": 5,
           "w": 30,
           "h": 30,
@@ -79,7 +79,7 @@
         {
           "id": "bird2",
           "x": 5,
-          "y": 0,
+          "y": -5,
           "w": 30,
           "h": 30,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_5/bird2_colored.gif",
