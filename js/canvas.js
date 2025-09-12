@@ -326,6 +326,15 @@ async function findMaskSets(storyIdDash, charId){
   return out;
 }
 
+function downloadDataUrl(dataUrl, filename) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 /* ------- Send to storyboard ------- */
 async function sendToStoryboard(){
   try{
@@ -352,7 +361,7 @@ async function sendToStoryboard(){
         list.push(masked.toDataURL("image/png"));
 
         // <--- New download logic here:
-        downloadImage(mctx, `${selectedChar}_slide${frame}_mask${i}.png`);
+        downloadDataUrl(mctx, `${selectedChar}_slide${frame}_mask${i}.png`);
         // This will prompt the user to download this PNG
       }
       if(list.length) bySlide[frame]=list;
