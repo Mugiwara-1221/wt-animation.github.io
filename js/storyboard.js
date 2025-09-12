@@ -12,6 +12,7 @@ const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
 ]);
+
 function resolveStoryFolder(id) {
   const dash = (id || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(dash) || dash; // fallback to id if already matches
@@ -85,7 +86,7 @@ const maskBmpCache = new Map();   // key -> ImageBitmap
 const loops = new Set();
 
 // colored overlays store (per story/char/slide)
-const OVERLAY_KEY = `coloredFrames:${storyId}:${selectedChar}`;
+const OVERLAY_KEY = `coloredFrames:${storyFolder}:${selectedChar}`;
 let coloredBySlide = {};
 try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
 
@@ -137,7 +138,8 @@ async function getFrames(prefix, count){
 }
 
 async function getMasksForSlide(charId, slideNo){
-  const prefix = `images/frames/${storyId}/frame${slideNo}/${charId}/${charId}_mask_`;
+  const prefix = `images/frames/${storyFolder}/frame${slideNo}/${charId}/${charId}_mask_`;
+  /* const prefix = `images/frames/${storyId}/frame${slideNo}/${charId}/${charId}_mask_`;       edited 9/12/25' */
   const key = `${prefix}|4`;
   if (maskMatCache.has(key)) return maskMatCache.get(key);
 
@@ -202,7 +204,10 @@ async function placeCharacter(cfg, slideNo){
   }
 
   // Otherwise: default PNG frames location (or provided prefix)
-  const framesPrefix = src || `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
+  /* const framesPrefix = src || `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;         edited 9/12/25' */
+
+  const framesPrefix = cfg.framesPath ||
+  `images/frames/${storyFolder}/frame${slideNo}/${id}/${id}`;
 
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
