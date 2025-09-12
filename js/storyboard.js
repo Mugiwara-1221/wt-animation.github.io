@@ -177,10 +177,10 @@ async function placeCharacter(cfg, slideNo){
   const { id, x, y, w, h, z=1, fps=4 } = cfg;
 
   // default base frames location for this slide:
-  if (cfg.framesPath.toLowerCase().endsWith('.gif')) {
-    // If it's a GIF, use it directly
-    img.src = character.framesPath;
-    const host = (()=>{
+  const framesPrefix = cfg.framesPath ||
+    `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
+
+  const host = (()=>{
     let h = document.getElementById("charHost");
     if (!h){
       h = document.createElement("div");
@@ -189,23 +189,6 @@ async function placeCharacter(cfg, slideNo){
       scene.parentElement.appendChild(h);
     }
     return h;
-    // Optionally, you can do further setup, e.g. masking or layer effects
-  }
-  } else {
-    const framesPrefix = cfg.framesPath ||
-      `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
-  
-    const host = (()=>{
-      let h = document.getElementById("charHost");
-      if (!h){
-        h = document.createElement("div");
-        h.id = "charHost";
-        Object.assign(h.style, { position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none" });
-        scene.parentElement.appendChild(h);
-      }
-      return h;
-    }
-                  }
   })();
 
   const cvs = document.createElement("canvas");
