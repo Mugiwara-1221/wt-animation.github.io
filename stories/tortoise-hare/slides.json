@@ -19,7 +19,7 @@
         {
           "id": "hare",
           "x": 30,
-          "y": 7,
+          "y": 30,
           "w": 50,
           "h": 50,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_1/haree_colored.gif",
@@ -28,7 +28,7 @@
         {
           "id": "bird1",
           "x": 65,
-          "y": 3,
+          "y": 0,
           "w": 30,
           "h": 30,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_1/bird11_colored.gif",
@@ -36,8 +36,8 @@
         },
         {
           "id": "bird2",
-          "x": 8,
-          "y": 40,
+          "x": 5,
+          "y": 43,
           "w": 30,
           "h": 20,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_1/bird2_colored.gif",
