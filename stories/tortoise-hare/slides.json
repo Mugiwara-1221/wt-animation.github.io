@@ -46,31 +46,31 @@
         {
           "id": "hare",
           "x": 30, "y": 30, "w": 70,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_5/Hare_Colored.gif",
+          "framesPath": "images/gifs/tortise_and_the_hare/slide_5/hare_colored.gif",
           "frameCount": 4,
         },
         {
           "id": "bird1",
           "x": 55, "y": 5, "w": 20,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_5/Bird1_Colored.gif",
+          "framesPath": "images/gifs/tortise_and_the_hare/slide_5/bird1_colored.gif",
           "frameCount": 4,
         },
         {
           "id": "bird2",
           "x": 8, "y": 48, "w": 20,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_5/Bird2_Colored.gif",
+          "framesPath": "images/gifs/tortise_and_the_hare/slide_5/bird2_colored.gif",
           "frameCount": 4,
         },
         {
           "id": "squirrel",
           "x": 55, "y": 5, "w": 20,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_5/Squirrel_Colored.gif",
+          "framesPath": "images/gifs/tortise_and_the_hare/slide_5/squirrel_colored.gif",
           "frameCount": 4,
         },
         {
           "id": "bear",
           "x": 8, "y": 48, "w": 20,
-          "framesPath": "images/gifs/tortise_and_the_hare/Slide_5/Bear_Colored.gif",
+          "framesPath": "images/gifs/tortise_and_the_hare/slide_5/bear_colored.gif",
           "frameCount": 4,
         }
       ]
