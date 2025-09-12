@@ -4,7 +4,7 @@
   "slideCount": 6,
   "slides": [
     {
-      "background": "images/frames/tortoise-hare/slide1.png",
+      "background": "images/frames/tortoise_and_the_hare/frame1/slide1.png",
       "characters": [
         {
           "id": "tortoise",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "background": "images/frames/tortoise-hare/slide5.png",
+      "background": "images/frames/tortoise_and_the_hare/frame5/slide5.png",
       "characters": [
         {
           "id": "tortoise",
