@@ -159,10 +159,6 @@
           "framesPath": "images/frames/tortoise_and_the_hare/frame4/hare/hare",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame4/hare/hare_mask_"
-        },
-        {
-          "id": "bird1",
-          "x": 55,
-          "y": 5,
-          "w": 20,
-          "framesPath": "images/frames/tortoise_and_the_ha_
+        }
+      ]
+    }
