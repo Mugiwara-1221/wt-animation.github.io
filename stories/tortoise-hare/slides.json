@@ -52,8 +52,8 @@
           "id": "tortoise",
           "x": 10,
           "y": 60,
-          "w": 60,
-          "h": 60,
+          "w": 50,
+          "h": 50,
           "framesPath": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame5/tortoise/tortoise_mask_"
@@ -62,14 +62,14 @@
           "id": "hare",
           "x": 30,
           "y": 30,
-          "w": 60,
-          "h": 60,
+          "w": 50,
+          "h": 50,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_5/hare_colored.gif",
           "frameCount": 4
         },
         {
           "id": "bird1",
-          "x": 10,
+          "x": 20,
           "y": 5,
           "w": 20,
           "h": 20,
@@ -78,7 +78,7 @@
         },
         {
           "id": "bird2",
-          "x": 25,
+          "x": 10,
           "y": 5,
           "w": 30,
           "h": 30,
@@ -97,7 +97,7 @@
         {
           "id": "bear",
           "x": 55,
-          "y": 48,
+          "y": 30,
           "w": 40,
           "h": 40,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_5/bear_colored.gif",
