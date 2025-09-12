@@ -1,5 +1,5 @@
 
-// js/storyboard.js — per-slide remasking so colors line up with each animation
+// js/storyboard.js — PNG frame animation + optional GIF characters
 
 const qs            = new URLSearchParams(location.search);
 const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g,"-");
@@ -93,30 +93,27 @@ function clearLayers(){
   if (host) host.innerHTML = "";
 }
 
-async function discoverManifest(){
-  const url = `stories/${storyId}/slides.json`;
-  try{
-    const r = await fetch(url, { cache:"no-store" });
-    if (r.ok){
-      const txt = await r.text();
-      try{ return JSON.parse(txt); }
-      catch{ console.warn("[slides.json] invalid JSON, falling back"); }
-    }
-  }catch{}
-
-  // auto-discover slide1.png..slideN.png
-  const slides = [];
-  for (let i=1;i<=24;i++){
-    const p = `stories/${storyId}/slide${i}.png`;
-    if (await urlExists(p)) slides.push({ background:p, characters:[] });
-    else if (slides.length) break;
-  }
-  return {
-    storyTitle: storyId.replace(/-/g," ").replace(/\b\w/g,s=>s.toUpperCase()),
-    slides
-  };
+/* ----------------- NEW: Mount a GIF when framesPath is a .gif ----------------- */
+function mountGif(host, cfg){
+  const { id, x, y, w, h, z=1 } = cfg;
+  const img = document.createElement("img");
+  img.src = cfg.framesPath;           // you already put the GIF here
+  img.alt = id || "";
+  img.className = `character ${id||""}`;
+  Object.assign(img.style, {
+    position: "absolute",
+    left: pct(x), top: pct(y),
+    width: pct(w),
+    height: (h != null ? pct(h) : "auto"),
+    zIndex: String(z),
+    pointerEvents: "none"
+  });
+  host.appendChild(img);
+  const stop = () => { try { img.remove(); } catch {} };
+  loops.add(stop);
 }
 
+/* ----------------- PNG stack (existing behavior) ----------------- */
 async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
   if (framesCache.has(key)) return framesCache.get(key);
@@ -142,8 +139,6 @@ async function getMasksForSlide(charId, slideNo){
 }
 
 async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs){
-  // scale the user's single colored image to canvas size,
-  // then apply each of the 4 masks for THIS slide
   const r = cvs.getBoundingClientRect();
   const base = await loadImage(coloredImg);
   const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
@@ -157,7 +152,6 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
       maskBmpCache.set(bmpKey, bmp);
     }
 
-    // paint × mask → bitmap image
     const off = document.createElement("canvas");
     off.width = Math.round(r.width);
     off.height = Math.round(r.height);
@@ -173,12 +167,9 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
   return overlays;
 }
 
+/* ----------------- Character placement ----------------- */
 async function placeCharacter(cfg, slideNo){
   const { id, x, y, w, h, z=1, fps=4 } = cfg;
-
-  // default base frames location for this slide:
-  const framesPrefix = cfg.framesPath ||
-    `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
 
   const host = (()=>{
     let h = document.getElementById("charHost");
@@ -191,9 +182,26 @@ async function placeCharacter(cfg, slideNo){
     return h;
   })();
 
+  // If framesPath is a GIF, mount it and return
+  const src = (cfg.framesPath || "").trim();
+  if (src && /\.gif(\?.*)?$/i.test(src)){
+    mountGif(host, cfg);
+    return;
+  }
+
+  // Otherwise: default PNG frames location (or provided prefix)
+  const framesPrefix = src || `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;
+
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
-  Object.assign(cvs.style, { position:"absolute", left:pct(x), top:pct(y), width:pct(w), height:pct(h), zIndex:String(z), pointerEvents:"none" });
+  Object.assign(cvs.style, {
+    position:"absolute",
+    left:pct(x), top:pct(y),
+    width:pct(w),
+    height:(h != null ? pct(h) : "auto"),
+    zIndex:String(z),
+    pointerEvents:"none"
+  });
   host.appendChild(cvs);
   const ctx = fitCanvasToCSS(cvs);
   const ro  = new ResizeObserver(()=>fitCanvasToCSS(cvs));
@@ -205,17 +213,12 @@ async function placeCharacter(cfg, slideNo){
     // choose / build overlays for THIS slide
     let overlays = null;
     if (id === selectedChar){
-      // 1) if we already stored per-slide overlays, use them
       const stored = coloredBySlide[String(slideNo)];
       if (Array.isArray(stored) && stored.length){
         overlays = await Promise.all(stored.map(loadImage));
-      }
-      // 2) else if legacy 4-frames exist from canvas, use them (best effort)
-      else if (Array.isArray(legacyFrames) && legacyFrames.length){
+      } else if (Array.isArray(legacyFrames) && legacyFrames.length){
         overlays = await Promise.all(legacyFrames.slice(0, baseFrames.length).map(loadImage));
-      }
-      // 3) else remask the single colored bitmap through THIS slide's masks
-      else if (legacySingle){
+      } else if (legacySingle){
         overlays = await buildOverlaysForSlideFromSingle(legacySingle, slideNo, id, cvs);
       }
     }
@@ -224,82 +227,3 @@ async function placeCharacter(cfg, slideNo){
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0,0,r.width,r.height);
       if (overlays){
-        const ov = overlays[ix % overlays.length];
-        ctx.drawImage(ov, 0, 0, r.width, r.height);
-      }
-      const base = baseFrames[ix % baseFrames.length];
-      ctx.drawImage(base, 0, 0, r.width, r.height);
-    }
-
-    let i=0, last = performance.now(), raf=0, stop=false;
-    const frameMs = 1000 / Math.max(1, fps);
-    draw(0);
-    function tick(ts){
-      if (stop) return;
-      if (ts - last >= frameMs){ last = ts; i=(i+1)%baseFrames.length; draw(i); }
-      raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-    loops.add(()=>{ stop=true; cancelAnimationFrame(raf); ro.disconnect(); });
-  }catch(e){
-    console.warn("[storyboard] character failed:", id, e);
-    ro.disconnect();
-  }
-}
-
-async function showSlide(i){
-  if (!manifest) return;
-  cur = Math.max(0, Math.min(i, manifest.slides.length-1));
-  const s = manifest.slides[cur];
-
-  // background
-  try {
-    const bg = await loadImage(s.background);
-    scene.src = bg.src;
-  } catch {
-    console.error("[storyboard] background failed:", s.background);
-    scene.removeAttribute("src");
-  }
-
-  clearLayers();
-
-  const slideNo =
-    slideNoFromPath(s.background) ??
-    (manifest.slides.indexOf(s) + 1);
-
-  // place declared characters if provided; otherwise none (background-only slide still works)
-  const chars = Array.isArray(s.characters) ? s.characters : [];
-  await Promise.allSettled(chars.map(c => placeCharacter({
-    frameCount: 4,
-    fps: 4,
-    z: 1,
-    ...c
-  }, slideNo)));
-
-  const url = new URL(location.href);
-  url.searchParams.set("story", storyId);
-  url.searchParams.set("slide", cur);
-  history.replaceState({}, "", url);
-
-  window.__slides = { index: cur, count: manifest.slides.length };
-  window.dispatchEvent(new Event("slidechange"));
-}
-
-function nextSlide(){ showSlide(cur+1); }
-function prevSlide(){ showSlide(cur-1); }
-Object.assign(window, { nextSlide, prevSlide, showSlide });
-
-(async function boot(){
-  manifest = await discoverManifest();
-  setTitle();
-  if (!manifest.slides?.length){
-    console.error("[storyboard] No slides discovered for", storyId);
-    return;
-  }
-  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
-
-  addEventListener("keydown", e=>{
-    if (e.key === "ArrowRight") nextSlide();
-    if (e.key === "ArrowLeft")  prevSlide();
-  });
-})();
