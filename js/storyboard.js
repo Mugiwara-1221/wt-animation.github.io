@@ -227,3 +227,106 @@ async function placeCharacter(cfg, slideNo){
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0,0,r.width,r.height);
       if (overlays){
+        const ov = overlays[ix % overlays.length];
+        ctx.drawImage(ov, 0, 0, r.width, r.height);
+      }
+      const base = baseFrames[ix % baseFrames.length];
+      ctx.drawImage(base, 0, 0, r.width, r.height);
+    }
+
+    let i=0, last = performance.now(), raf=0, stop=false;
+    const frameMs = 1000 / Math.max(1, fps);
+    draw(0);
+    function tick(ts){
+      if (stop) return;
+      if (ts - last >= frameMs){ last = ts; i=(i+1)%baseFrames.length; draw(i); }
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    loops.add(()=>{ stop=true; cancelAnimationFrame(raf); ro.disconnect(); });
+  }catch(e){
+    console.warn("[storyboard] character failed:", id, e);
+    ro.disconnect();
+  }
+}
+
+async function discoverManifest(){
+  const url = `stories/${storyId}/slides.json`;
+  try{
+    const r = await fetch(url, { cache:"no-store" });
+    if (r.ok){
+      const txt = await r.text();
+      try{ return JSON.parse(txt); }
+      catch{ console.warn("[slides.json] invalid JSON, falling back"); }
+    }
+  }catch{}
+
+  // auto-discover slide1.png..slideN.png
+  const slides = [];
+  for (let i=1;i<=24;i++){
+    const p = `stories/${storyId}/slide${i}.png`;
+    if (await urlExists(p)) slides.push({ background:p, characters:[] });
+    else if (slides.length) break;
+  }
+  return {
+    storyTitle: storyId.replace(/-/g," ").replace(/\b\w/g,s=>s.toUpperCase() ),
+    slides
+  };
+}
+
+async function showSlide(i){
+  if (!manifest) return;
+  cur = Math.max(0, Math.min(i, manifest.slides.length-1));
+  const s = manifest.slides[cur];
+
+  // background
+  try {
+    const bg = await loadImage(s.background);
+    scene.src = bg.src;
+  } catch {
+    console.error("[storyboard] background failed:", s.background);
+    scene.removeAttribute("src");
+  }
+
+  clearLayers();
+
+  const slideNo =
+    slideNoFromPath(s.background) ??
+    (manifest.slides.indexOf(s) + 1);
+
+  // place declared characters if provided; otherwise none (background-only slide still works)
+  const chars = Array.isArray(s.characters) ? s.characters : [];
+  await Promise.allSettled(chars.map(c => placeCharacter({
+    frameCount: 4,
+    fps: 4,
+    z: 1,
+    ...c
+  }, slideNo)));
+
+  const url = new URL(location.href);
+  url.searchParams.set("story", storyId);
+  url.searchParams.set("slide", cur);
+  history.replaceState({}, "", url);
+
+  window.__slides = { index: cur, count: manifest.slides.length };
+  window.dispatchEvent(new Event("slidechange"));
+}
+
+function nextSlide(){ showSlide(cur+1); }
+function prevSlide(){ showSlide(cur-1); }
+Object.assign(window, { nextSlide, prevSlide, showSlide });
+
+(async function boot(){
+  manifest = await discoverManifest();
+  setTitle();
+  if (!manifest.slides?.length){
+    console.error("[storyboard] No slides discovered for", storyId);
+    return;
+  }
+  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
+
+  addEventListener("keydown", e=>{
+    if (e.key === "ArrowRight") nextSlide();
+    if (e.key === "ArrowLeft")  prevSlide();
+  });
+})();
