@@ -10,15 +10,15 @@
         {
           "id": "owl",
           "x": 10, "y": 60, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame1/owl/owl",
+          "framesPath": "images/gifs/lion_and_the_mouse/slide1/owl_colored.gif",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame1/owl/owl_mask_"
         },
         {
           "id": "mouse",
           "x": 30, "y": 30, "w": 70,
-          "framesPath": "images/gifs/lion_and_the_mouse/slide1/mouse_colored.gif",
+          "framesPath": "images/frames/lion_and_the_mouse/frame1/mouse/mouse",
           "frameCount": 4,
+          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame1/mouse/mouse_mask_"
         }
       ]
     },
