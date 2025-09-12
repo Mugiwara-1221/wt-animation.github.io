@@ -320,7 +320,7 @@ async function findMaskSets(storyIdDash, charId){
   const base=`images/frames/${storyFolder}`; const out=[];
   let misses=0;
   for(let n=1;n<=20;n++){
-    const prefix=`${base}/frame${n}/${charId}/${charId}_mask_`;
+    const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
     if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; console.log(`${prefix}${n}.csv`) }
     else { misses++; if(misses>=2 && out.length) break; }
   }
