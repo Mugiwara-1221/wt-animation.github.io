@@ -16,6 +16,38 @@ export async function loadCSV(url) {
     );
 }
 
+// New helper: count mask value usage NEW CODE
+export function countMaskUsage(maskMatrix) {
+  const counts = new Map();  // maskValue -> count
+  const H = maskMatrix.length;
+  if (H === 0) return counts;
+  const W = maskMatrix[0].length;
+  for (let y = 0; y < H; y++) {
+    const row = maskMatrix[y];
+    for (let x = 0; x < W; x++) {
+      const val = row[x];
+      // skip transparent or special value if needed
+      if (val === -1 || val == null) continue;
+      counts.set(val, (counts.get(val) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+// Integration in your masking loop
+async function processMaskAndTrack(prefix, width, height) {
+  const csvMatrix = await loadCSV(prefix + ".csv");
+  const usage = countMaskUsage(csvMatrix);
+  console.log("Mask usage counts:", usage);
+
+  // Then create canvas or maskCanvas etc.
+  const maskCanvas = await matrixToMaskCanvas(csvMatrix, csvMatrix[0].length, csvMatrix.length, width, height);
+
+  return { maskCanvas, usage };
+}
+
+/*New code ends here*/
+
 export function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -317,6 +349,9 @@ export async function colorCharacterFrames({
 
       // Load mask CSV
       const mask = await loadCSV(`${character.maskCSVPrefix}${n}.csv`);
+      // NEW CODE
+      const usage = countMaskUsage(mask);
+      usageByMask[i] = usage;
 
       // Scale mask to match frame image size
       const scaledMask = scaleMask(mask, mask[0].length, mask.length, width, height);
