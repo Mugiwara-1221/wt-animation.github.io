@@ -121,7 +121,6 @@ export async function colorAFrameAdvanced({
   loadCSV(map1CSVURL), loadCSV(map2CSVURL), loadCSV(map3CSVURL), loadCSV(map4CSVURL),
 ]);
 
-
   const id1 = imageToImageData(img1); // source colors
   const id2 = imageToImageData(img2); // base (with outlines)
   const id3 = imageToImageData(img3); 
