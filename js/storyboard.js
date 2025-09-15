@@ -5,7 +5,6 @@ const qs            = new URLSearchParams(location.search);
 const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare" || "lion-mouse").replace(/_/g,"-");
 const initialSlide  = Math.max(0, +qs.get("slide") || 0);
 const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
-console.log(storyId);
 
 // storyIDs correct file path (masks)
 
@@ -19,7 +18,6 @@ function resolveStoryFolder(id) {
   return STORY_FOLDER_MAP.get(dash) || dash; // fallback to id if already matches
 }
 const storyFolder = resolveStoryFolder(storyId);
-console.log(storyFolder);
 
 const scene = document.getElementById("scene");
 let manifest = null;
@@ -271,6 +269,7 @@ async function placeCharacter(cfg, slideNo){
 
 async function discoverManifest(){
   const url = `stories/${storyId}/slides.json`;
+  console.log(url);
   try{
     const r = await fetch(url, { cache:"no-store" });
     if (r.ok){
