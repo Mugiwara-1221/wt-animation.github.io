@@ -105,7 +105,7 @@ h2 {
 .lion { top: 40%; left: 78%; }
 .mouse    { top: 10%; left: 28%; }
 .owl    { top: 15%; left: 35%; }
-.squirel1    { top: 15%; left: 35%; }
+.squirel    { top: 15%; left: 35%; }
 
 /* Tighter view on small screens */
 @media (max-width: 960px) {
