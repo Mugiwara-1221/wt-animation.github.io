@@ -268,7 +268,7 @@ async function placeCharacter(cfg, slideNo){
 }
 
 async function discoverManifest(){
-  const url = `stories/${storyId}/slides.json`;
+  /*const url = `stories/${storyId}/slides.json`;
   console.log(url);
   try{
     const r = await fetch(url, { cache:"no-store" });
@@ -277,7 +277,36 @@ async function discoverManifest(){
       try{ return JSON.parse(txt); }
       catch{ console.warn("[slides.json] invalid JSON, falling back"); }
     }
-  }catch{}
+  }catch{}*/
+  const url = `stories/${storyId}/slides.json`;
+  console.log("[loadSlidesJson] Fetching URL:", url);
+
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    console.log(`[loadSlidesJson] Response status: ${r.status} ${r.statusText}`);
+
+    if (!r.ok) {
+      throw new Error(`HTTP error! status: ${r.status}`);
+    }
+
+    const txt = await r.text();
+    console.log("[loadSlidesJson] Raw text:", txt);
+
+    try {
+      const parsed = JSON.parse(txt);
+      console.log("[loadSlidesJson] Parsed JSON OK");
+      return parsed;
+    } catch(parseError) {
+      console.warn("[loadSlidesJson] JSON parse error:", parseError.message);
+      console.warn("[loadSlidesJson] Unable to parse slides.json from:", txt);
+      // Optionally return a fallback or throw
+      throw new Error("slides.json is invalid JSON");
+    }
+  } catch (err) {
+    console.error("[loadSlidesJson] Fetch or other error:", err.message);
+    // Optionally rethrow or return a fallback
+    throw err;
+  }
 
   // auto-discover slide1.png..slideN.png
   const slides = [];
