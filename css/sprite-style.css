@@ -99,13 +99,21 @@ h2 {
 .bird1    { top: 10%; left: 28%; }
 .bird2    { top: 15%; left: 35%; }
 
-.butterfly     { top: 50%; left: 15%; }
-.deer { top: 65%; left: 50%; }
-.geese     { top: 28%; left: 60%; }
-.lion { top: 40%; left: 78%; }
-.mouse    { top: 10%; left: 28%; }
-.owl    { top: 15%; left: 35%; }
-.squirel1    { top: 15%; left: 35%; }
+.butterfly  { width: 200px; height: auto; }
+.deer       { width: 175px; height: auto; }
+.geese      { width: 160px; height: auto; }
+.lion       { width: 300px; height: auto; }
+.mouse      { width:  45px; height: auto; }
+.owl        { width: 175px; height: auto; }
+.squirrel1   { width:  100px; height: auto; }
+
+.butterfly  { top: 70%; left: 70%; }
+.deer       { top: 22%; left: 5%; }
+.geese      { top: 28%; left: 50%; }
+.lion       { top: 50%; left: 30%; }
+.mouse      { top: 52%; left: 45%; }
+.owl        { top: 15%; left: 30%; }
+.squirrel1   { top: 45%; left: 85%; }
 
 /* Tighter view on small screens */
 @media (max-width: 960px) {
