@@ -19,6 +19,7 @@ function resolveStoryFolder(id) {
   return STORY_FOLDER_MAP.get(dash) || dash; // fallback to id if already matches
 }
 const storyFolder = resolveStoryFolder(storyId);
+console.log(storyFolder);
 
 const scene = document.getElementById("scene");
 let manifest = null;
