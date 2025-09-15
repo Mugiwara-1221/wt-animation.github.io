@@ -268,16 +268,6 @@ async function placeCharacter(cfg, slideNo){
 }
 
 async function discoverManifest(){
-  /*const url = `stories/${storyId}/slides.json`;
-  console.log(url);
-  try{
-    const r = await fetch(url, { cache:"no-store" });
-    if (r.ok){
-      const txt = await r.text();
-      try{ return JSON.parse(txt); }
-      catch{ console.warn("[slides.json] invalid JSON, falling back"); }
-    }
-  }catch{}*/
   const url = `stories/${storyId}/slides.json`;
   console.log("[loadSlidesJson] Fetching URL:", url);
 
@@ -290,7 +280,7 @@ async function discoverManifest(){
     }
 
     const txt = await r.text();
-    console.log("[loadSlidesJson] Raw text:", txt);
+    //console.log("[loadSlidesJson] Raw text:", txt);
 
     try {
       const parsed = JSON.parse(txt);
