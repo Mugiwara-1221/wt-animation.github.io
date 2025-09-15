@@ -9,7 +9,7 @@
           "id": "owl",
           "x": 10, "y": 60, "w": 70,
           "framesPath": "images/gifs/lion_and_the_mouse/slide1/owl_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         },
         {
           "id": "mouse",
