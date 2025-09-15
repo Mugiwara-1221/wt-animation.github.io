@@ -281,7 +281,7 @@ async function discoverManifest(){
 
   // auto-discover slide1.png..slideN.png
   const slides = [];
-  for (let i=1;i<=24;i++){
+  for (let i=1;i<=4;i++){
     const p = `stories/${storyId}/slide${i}.png`;
     if (await urlExists(p)) slides.push({ background:p, characters:[] });
     else if (slides.length) break;
