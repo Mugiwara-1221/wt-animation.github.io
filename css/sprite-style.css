@@ -99,6 +99,14 @@ h2 {
 .bird1    { top: 10%; left: 28%; }
 .bird2    { top: 15%; left: 35%; }
 
+.butterfly     { top: 50%; left: 15%; }
+.deer { top: 65%; left: 50%; }
+.geese     { top: 28%; left: 60%; }
+.lion { top: 40%; left: 78%; }
+.mouse    { top: 10%; left: 28%; }
+.owl    { top: 15%; left: 35%; }
+.squirel1    { top: 15%; left: 35%; }
+
 /* Tighter view on small screens */
 @media (max-width: 960px) {
   :root{ --scene-max-w: 96vw; --scene-max-h: 72vh; }
