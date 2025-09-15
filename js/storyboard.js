@@ -5,6 +5,7 @@ const qs            = new URLSearchParams(location.search);
 const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare" || "lion-mouse").replace(/_/g,"-");
 const initialSlide  = Math.max(0, +qs.get("slide") || 0);
 const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
+console.log(storyID);
 
 // storyIDs correct file path (masks)
 
