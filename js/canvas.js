@@ -362,7 +362,7 @@ async function sendToStoryboard(){
         list.push(masked.toDataURL("image/png"));
 
         // <--- New download logic here:
-        downloadDataUrl(mctx, `${selectedChar}_slide${frame}_mask${i}.png`);
+        //downloadDataUrl(mctx, `${selectedChar}_slide${frame}_mask${i}.png`);
         // This will prompt the user to download this PNG
       }
       if(list.length) bySlide[frame]=list;
