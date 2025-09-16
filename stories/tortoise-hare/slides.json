@@ -36,8 +36,8 @@
         },
         {
           "id": "bird2",
-          "x": 5,
-          "y": 43,
+          "x": 100,
+          "y": 430,
           "w": 30,
           "h": 20,
           "framesPath": "images/gifs/tortise_and_the_hare/slide_1/bird2_colored.gif",
