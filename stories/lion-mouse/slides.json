@@ -62,7 +62,7 @@
         },
         {
           "id": "butterfly",
-          "x": 40, "y": 25, "w": 20,
+          "x": 80, "y": 60, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/butterfly_colored.gif",
           "frameCount": 4
         }
