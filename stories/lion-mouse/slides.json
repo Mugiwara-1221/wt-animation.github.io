@@ -25,13 +25,13 @@
       "characters": [
         {
           "id": "lion",
-          "x": 12, "y": 40, "w": 65,
+          "x": 12, "y": 35, "w": 50,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/lion_colored.gif",
           "frameCount": 4
         },
         {
           "id": "owl",
-          "x": 10, "y": 2, "w": 20,
+          "x": 15, "y": 1, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/owl_colored.gif",
           "frameCount": 4
         },
