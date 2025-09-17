@@ -31,7 +31,7 @@
         },
         {
           "id": "owl",
-          "x": 15, "y": 5, "w": 70,
+          "x": 5, "y": 10, "w": 30,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/owl_colored.gif",
           "frameCount": 4
         },
@@ -44,7 +44,7 @@
         },
         {
           "id": "deer",
-          "x": 5, "y": 20, "w": 20,
+          "x": 5, "y": 25, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/deer_colored.gif",
           "frameCount": 4
         },
