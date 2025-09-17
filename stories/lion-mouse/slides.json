@@ -37,7 +37,7 @@
         },
         {
           "id": "mouse",
-          "x": 25, "y": 55, "w": 30,
+          "x": 25, "y": 54, "w": 30,
           "framesPath": "images/frames/lion_and_the_mouse/frame6/mouse/mouse",
           "frameCount": 4,
           "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/mouse/mouse_mask_"
