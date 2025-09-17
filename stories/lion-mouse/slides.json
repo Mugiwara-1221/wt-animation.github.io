@@ -46,25 +46,25 @@
           "id": "deer",
           "x": 8, "y": 48, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/deer_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         },
         {
           "id": "geese",
           "x": 8, "y": 48, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/geese_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         },
         {
           "id": "squirrel",
           "x": 55, "y": 5, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/squirel_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         },
         {
           "id": "butterfly",
           "x": 8, "y": 48, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/butterfly_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         }
       ]
     },
