@@ -50,7 +50,7 @@
         },
         {
           "id": "geese",
-          "x": 8, "y": 48, "w": 20,
+          "x": 50, "y": 30, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/geese_colored.gif",
           "frameCount": 4
         },
@@ -62,7 +62,7 @@
         },
         {
           "id": "butterfly",
-          "x": 72, "y": 63, "w": 20,
+          "x": 72, "y": 65, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/butterfly_colored.gif",
           "frameCount": 4
         }
