@@ -50,7 +50,7 @@
         },
         {
           "id": "geese",
-          "x": 50, "y": 30, "w": 20,
+          "x": 45, "y": 20, "w": 20,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/geese_colored.gif",
           "frameCount": 4
         },
