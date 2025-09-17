@@ -21,6 +21,54 @@
       ]
     },
     {
+      "background": "stories/lion-mouse/slide6.png",
+      "characters": [
+        {
+          "id": "lion",
+          "x": 15, "y": 60, "w": 65,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/lion_colored.gif",
+          "frameCount": 4,
+        },
+        {
+          "id": "owl",
+          "x": 10, "y": 60, "w": 70,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/owl_colored.gif",
+          "frameCount": 4,
+        },
+        {
+          "id": "mouse",
+          "x": 30, "y": 30, "w": 70,
+          "framesPath": "images/frames/lion_and_the_mouse/frame6/mouse/mouse",
+          "frameCount": 4,
+          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/mouse/mouse_mask_"
+        },
+        {
+          "id": "deer",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/deer_colored.gif",
+          "frameCount": 4,
+        },
+        {
+          "id": "geese",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/geese_colored.gif",
+          "frameCount": 4,
+        },
+        {
+          "id": "squirrel",
+          "x": 55, "y": 5, "w": 20,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/squirel_colored.gif",
+          "frameCount": 4,
+        },
+        {
+          "id": "butterfly",
+          "x": 8, "y": 48, "w": 20,
+          "framesPath": "images/gifs/lion_and_the_mouse/slide6/butterfly_colored.gif",
+          "frameCount": 4,
+        }
+      ]
+    }
+    {
       "background": "stories/lion-mouse/slide2.png",
       "characters": [
         {
@@ -103,59 +151,5 @@
         }
       ]
     },
-    {
-      "background": "stories/lion-mouse/slide6.png",
-      "characters": [
-        {
-          "id": "lion",
-          "x": 15, "y": 60, "w": 65,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/lion/lion",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/lion/lion_mask_"
-        },
-        {
-          "id": "owl",
-          "x": 10, "y": 60, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/owl/owl",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/owl/owl_mask_"
-        },
-        {
-          "id": "mouse",
-          "x": 30, "y": 30, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/mouse/mouse",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/mouse/mouse_mask_"
-        },
-        {
-          "id": "deer",
-          "x": 8, "y": 48, "w": 20,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/deer/deer",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/deer/deer_mask_"
-        },
-        {
-          "id": "geese",
-          "x": 8, "y": 48, "w": 20,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/geese/geese",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/geese/geese_mask_"
-        },
-        {
-          "id": "squirrel",
-          "x": 55, "y": 5, "w": 20,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/squirrel/squirrel",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/squirrel/squirrel_mask_"
-        },
-        {
-          "id": "butterfly",
-          "x": 8, "y": 48, "w": 20,
-          "framesPath": "images/frames/lion_and_the_mouse/frame6/butterfly/butterfly",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame6/butterfly/butterfly_mask_"
-        }
-      ]
-    }
   ]
 }
