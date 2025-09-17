@@ -27,7 +27,7 @@
           "id": "lion",
           "x": 15, "y": 60, "w": 65,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/lion_colored.gif",
-          "frameCount": 4,
+          "frameCount": 4
         },
         {
           "id": "owl",
@@ -67,7 +67,7 @@
           "frameCount": 4,
         }
       ]
-    }
+    },
     {
       "background": "stories/lion-mouse/slide2.png",
       "characters": [
@@ -150,6 +150,6 @@
           "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame5/mouse/mouse_mask_"
         }
       ]
-    },
+    }
   ]
 }
