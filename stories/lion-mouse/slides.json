@@ -56,7 +56,7 @@
         },
         {
           "id": "squirrel",
-          "x": 82, "y": 34, "w": 15,
+          "x": 85, "y": 31, "w": 15,
           "framesPath": "images/gifs/lion_and_the_mouse/slide6/squirel_colored.gif",
           "frameCount": 4
         },
