@@ -319,7 +319,7 @@ async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
   let misses=0;
-  for(let n=1;n<=20;n++){
+  for(let n=1;n<=4;n++){
     const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
     if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; console.log(`${prefix}${n}.csv`) }
     else { misses++; if(misses>=2 && out.length) break; }
@@ -337,54 +337,127 @@ function downloadDataUrl(dataUrl, filename) {
 }
 
 /* ------- Send to storyboard ------- */
-async function sendToStoryboard(){
-  try{
-    const { x,y,width,height } = allowedArea;
-    const crop=document.createElement("canvas"); crop.width=width; crop.height=height;
-    crop.getContext("2d").drawImage(drawCanvas,x,y,width,height,0,0,width,height);
+async function sendToStoryboard() {
+  try {
+    const { x, y, width, height } = allowedArea;
 
-    const sets=await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
-    if(!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
+    // 1) crop paint layer to sprite box once
+    const crop = document.createElement("canvas");
+    crop.width = width; 
+    crop.height = height;
+    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    const bySlide={};
-    for(const { frame, prefix } of sets){
-      const list=[];
-      for(let i=1;i<=4;i++){
-        const csvURL=`${prefix}${i}.csv`;
-        if(!(await urlExists(csvURL))) continue;
-        const { mat,W,H }=await loadCSVMatrix(csvURL);
-        const maskCanvas=await matrixToMaskCanvas(mat,W,H,width,height);
-        const masked=document.createElement("canvas"); masked.width=width; masked.height=height;
-        const mctx=masked.getContext("2d");
-        mctx.drawImage(crop,0,0);
-        mctx.globalCompositeOperation="destination-in"; mctx.drawImage(maskCanvas,0,0);
-        mctx.globalCompositeOperation="source-over";
-        list.push(masked.toDataURL("image/png"));
+    // 2) discover all frame folders that actually have masks for this character
+    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+    if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
-        // <--- New download logic here:
-        //downloadDataUrl(mctx, `${selectedChar}_slide${frame}_mask${i}.png`);
-        // This will prompt the user to download this PNG
+    // 3) for each discovered frame folder, build up masked images per region ID
+    const bySlide = {};
+    for (const { frame, prefix } of sets) {
+      const list = [];
+
+      for (let i = 1; i <= 4; i++) {
+        const csvURL = `${prefix}${i}.csv`;
+        if (!(await urlExists(csvURL))) continue;
+
+        const { mat, W, H } = await loadCSVMatrix(csvURL);
+
+        // collect unique region IDs (ignore 0 = background)
+        const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
+
+        for (const regionId of uniqueIds) {
+          // --- Build binary mask for this region ---
+          const maskCanvas = document.createElement("canvas");
+          maskCanvas.width = W;
+          maskCanvas.height = H;
+          const ctx = maskCanvas.getContext("2d");
+          const imgData = ctx.createImageData(W, H);
+
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              if (mat[y][x] === regionId) {
+                const idx = (y * W + x) * 4;
+                imgData.data[idx + 0] = 255; // white
+                imgData.data[idx + 1] = 255;
+                imgData.data[idx + 2] = 255;
+                imgData.data[idx + 3] = 255;
+              }
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+
+          // scale mask up to crop size
+          const scaledMask = document.createElement("canvas");
+          scaledMask.width = width;
+          scaledMask.height = height;
+          scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
+
+          // --- Apply mask to crop ---
+          const masked = document.createElement("canvas");
+          masked.width = width;
+          masked.height = height;
+          const mctx = masked.getContext("2d");
+          mctx.drawImage(crop, 0, 0);
+          mctx.globalCompositeOperation = "destination-in";
+          mctx.drawImage(scaledMask, 0, 0);
+          mctx.globalCompositeOperation = "source-over";
+          const blob = await new Promise(res => masked.toBlob(res, "image/png"));
+          const url = URL.createObjectURL(blob);
+
+          list.push({
+            regionId,
+            img: url,
+            frame,
+            maskIndex: i
+          });
+
+          // optional download:
+          // downloadDataUrl(masked.toDataURL("image/png"),
+          //   `${selectedChar}_slide${frame}_mask${i}_region${regionId}.png`);
+        }
       }
-      if(list.length) bySlide[frame]=list;
-    }
 
+      if (list.length) bySlide[frame] = list;
+    }
+          // Convert bySlide (objects) -> image-only map
+    const imageOnlyBySlide = {};
     const storyFolder=resolveStoryFolder(selectedStory || "tortoise-hare");
-    localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(bySlide));
-
-    const firstFrame=Object.values(bySlide)[0];
-    if(firstFrame?.length){
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
-      localStorage.setItem("coloredCharacter", firstFrame[0]);
+    for (const [frame, regions] of Object.entries(bySlide)) {
+      imageOnlyBySlide[frame] = regions.map(r => r.img);
     }
+
+    // Save image-only frames for storyboard compatibility
+    localStorage.setItem(
+      `coloredFrames:${storyFolder}:${selectedChar}`,
+      JSON.stringify(imageOnlyBySlide)
+    );
+
+    // First frame (list of images only)
+    const firstFrame = Object.values(imageOnlyBySlide)[0];
+    if (firstFrame?.length) {
+      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
+      localStorage.setItem("coloredCharacter", firstFrame[0]); // <-- now it's a string again
+    }
+
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    const firstImg=firstFrame?.[0] || "";
+    // Submit first image
+    const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    try{ if(firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid); }catch(e){ console.warn("[submitDrawing]", e); }
 
-    const q = new URLSearchParams({ char:selectedChar, story:selectedStory });
-    if(sessionCode)   q.set("session", sessionCode);
-    if(selectedGrade) q.set("grade",   selectedGrade);
+    try {
+      if (firstImg) {
+        await submitDrawing(sessionCode, selectedChar, firstImg, uid);
+      }
+    } catch (e) {
+      console.warn("[submitDrawing]", e);
+    }
+
+    // Navigate
+    const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
+    if (sessionCode)   q.set("session", sessionCode);
+    if (selectedGrade) q.set("grade", selectedGrade);
+
     location.href = `storyboard.html?${q.toString()}`;
   }catch(err){
     console.error("[sendToStoryboard] failed:", err);
