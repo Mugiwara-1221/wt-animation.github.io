@@ -22,15 +22,15 @@ sessionEl.textContent = `Session: ${ctx.session}`;
 
 // ---- Default stories (fallback) ----
 const FALLBACK_STORIES = [
-  { id:"tortoise-hare",      title:"The Tortoise and the Hare",         grades:["TK-2"],                 thumb:"/stories/tortoise_and_the_hare/cover.png" },
-  { id:"fisherman",          title:"Fisherman",                          grades:["TK-2","G.3-4"],        thumb:"/stories/fisherman/cover.png" },
-  { id:"prince-pauper",      title:"Prince Pauper",                      grades:["G.3-4","G.5-8"],       thumb:"/stories/prince_pauper/cover.png" },
-  { id:"boy-who-cried-wolf", title:"The Boy Who Cried Wolf",             grades:["G.3-4"],               thumb:"/stories/boy_who_cried_wolf/cover.png" },
-  { id:"lion-mouse",         title:"The Lion and the Mouse",             grades:["TK-2","G.3-4"],        thumb:"/stories/lion_and_the_mouse/cover.png" },
-  { id:"little-ducks",       title:"Five Little Ducks",                  grades:["TK-2"],                thumb:"/stories/little_ducks/cover.png" },
-  { id:"old-mcdonald",       title:"Old McDonald",                       grades:["TK-2"],                thumb:"/stories/old_mcdonald/cover.png" },
-  { id:"frog-prince",        title:"The Frog Prince",                    grades:["G.3-4","G.5-8"],       thumb:"/stories/frog_prince/cover.png" },
-  { id:"goldilocks-bears",   title:"Goldilocks and the Three Bears",     grades:["TK-2","G.3-4"],        thumb:"/stories/goldilocks_three_bears/cover.png" }
+  { id:"tortoise-hare",      title:"The Tortoise and the Hare",         grades:["TK-2"],                 thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"fisherman",          title:"Fisherman",                          grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"prince-pauper",      title:"Prince Pauper",                      grades:["G.3-4","G.5-8"],       thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"boy-who-cried-wolf", title:"The Boy Who Cried Wolf",             grades:["G.3-4"],               thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"lion-mouse",         title:"The Lion and the Mouse",             grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/lion-mouse/background.png" },
+  { id:"little-ducks",       title:"Five Little Ducks",                  grades:["TK-2"],                thumb:"images/backgrounds/little-ducks/background.png" },
+  { id:"old-mcdonald",       title:"Old McDonald",                       grades:["TK-2"],                thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"frog-prince",        title:"The Frog Prince",                    grades:["G.3-4","G.5-8"],       thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"goldilocks-bears",   title:"Goldilocks and the Three Bears",     grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/tortoise-hare/background.png" }
 ];
 
 let stories = [...FALLBACK_STORIES];
@@ -53,7 +53,7 @@ async function tryLoadManifest() {
         id: s.id,
         title: s.title || toTitle(s.id),
         grades: Array.isArray(s.grades) ? s.grades : [],
-        thumb: s.thumb || `/stories/${s.id.replace(/-/g, "_")}/cover.png`
+        thumb: s.thumb || `/stories/${s.id.replace(/-/g, "_")}/background.png`
       }));
       console.info("[story-select] Using manifest:", url);
       return;
