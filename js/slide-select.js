@@ -26,7 +26,7 @@ const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare",      "tortoise-hare"],
   ["fisherman",          "fisherman"],
   ["prince-pauper",      "prince-pauper"],
-  ["boy-who-cried",      "boy-who-cried"],
+  ["boy-who-cried-wolf", "boy-who-cried-wolf"],
   ["lion-mouse",         "lion-mouse"],
   ["little-ducks",       "little-ducks"],
   ["old-mcdonald",       "old-mcdonald"],
@@ -75,7 +75,7 @@ function makeCard(index) {
   const candidates = [
     `/stories/${storyFolder}/slide${index}.png`,   // primary (your repo)
     `/stories/${storyFolder}/${index}.png`,        // fallback A (numeric at root)
-    `/stories/tortoise-hare/slide1.png`, `/stories/tortoise-hare/slide2.png`, `/stories/tortoise-hare/slide3.png`, `/stories/tortoise-hare/slide4.png`, `/stories/tortoise-hare/slide5.png`, `/stories/tortoise-hare/slide6.png`,
+    `/stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
   ];
 
   let ci = 0;
@@ -99,7 +99,7 @@ function makeCard(index) {
 
   const go = () => {
     const nextCtx = writeCtx({ ...ctx, slide: String(index) });
-    location.href = nextURL("sprite-select.html", nextCtx);
+    location.href = nextURL("sprite-select.html", nextCtx); // ✅ goes straight to character selection
   };
   card.addEventListener("click", go);
   card.addEventListener("keydown", e => {
