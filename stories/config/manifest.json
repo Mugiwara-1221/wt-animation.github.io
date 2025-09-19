@@ -1,5 +1,7 @@
 
 {
+  "_comment": "assigns grade IDs to stories on story-select.html",
+
   "stories": [
     { "id": "tortoise-hare",       "title": "The Tortoise and the Hare",     "grades": ["TK-2"],          "thumb": "/stories/tortoise_and_the_hare/cover.png" },
     { "id": "fisherman",           "title": "Fisherman",                     "grades": ["TK-2","G.3-4"],  "thumb": "/stories/fisherman/cover.png" },
