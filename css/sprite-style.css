@@ -115,6 +115,26 @@ h2 {
 .owl        { top: 15%; left: 30%; }
 .squirrel1   { top: 45%; left: 85%; }
 
+.fish1  { width: 200px; height: auto; }
+.fish2       { width: 175px; height: auto; }
+.flamingo      { width: 160px; height: auto; }
+.last_duck       { width: 300px; height: auto; }
+.lead_duck      { width:  45px; height: auto; }
+.look_back_duck        { width: 175px; height: auto; }
+.mama_duck   { width:  100px; height: auto; }
+.sleepy_duck   { width:  100px; height: auto; }
+.waving_duck   { width:  100px; height: auto; }
+
+.fish1  { top: 70%; left: 70%; }
+.fish2       { top: 22%; left: 5%; }
+.flamingo      { top: 28%; left: 50%; }
+.last_duck       { top: 50%; left: 30%; }
+.lead_duck      { top: 52%; left: 45%; }
+.look_back_duck        { top: 15%; left: 30%; }
+.mama_duck   { top: 45%; left: 85%; }
+.sleepy_duck   { top: 45%; left: 85%; }
+.waving_duck   { top: 45%; left: 85%; }
+
 /* Tighter view on small screens */
 @media (max-width: 960px) {
   :root{ --scene-max-w: 96vw; --scene-max-h: 72vh; }
