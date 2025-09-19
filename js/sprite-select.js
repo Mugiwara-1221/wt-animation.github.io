@@ -5,12 +5,12 @@
 
 import { readCtx, nextURL } from "./flow.js";
 
-// ---- Try to import Azure helpers (optional at runtime) ----
+// ---- import Azure helpers (optional at runtime) ----
 let Azure = null;
 try {
   Azure = await import("./azure-api.js");
 } catch {
-  // OK to proceed without Azure (GitHub Pages, local file, etc.)
+  //proceed without Azure (GitHub Pages, local file, etc.)
 }
 
 /************ Session / flow ctx ************/
