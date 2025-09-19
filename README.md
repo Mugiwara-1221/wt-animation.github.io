@@ -53,19 +53,25 @@ Edit
 windtree-animation-canvas
 
  ┃ images/
- 
- ┃ ┗ icons
-
+ ┃ ┗ frames
+ ┃ ┗ backgrounds
+ ┃ ┗ thumnails
  ┃ js/
-
  ┃ ┗ index.js
-
+ ┃ ┗ story-select.js
+ ┃ ┗ character-select.js
+ ┃ ┗ canvas.js
+ ┃ ┗ storyboard.js
  ┃ css/
-
- ┃ ┗ style.css
- 
+ ┃ ┗ index.css
+ ┃ ┗ story-select.css
+ ┃ ┗ character-select.css
+ ┃ ┗ canvas.css
+ ┃ ┗ storyboard.css
  ┣ index.html
-  
+ ┣ index.html
+ ┣ index.html
+ ┣ index.html
  ┣ README.md
  
  
