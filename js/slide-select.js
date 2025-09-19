@@ -21,20 +21,21 @@ backBtn.addEventListener("click", () => {
   location.href = nextURL("story-select.html", ctx);
 });
 
-// Map story ids (kebab) -> folder names (snake) if they differ
+// Map (kept for future flexibility; not strictly needed now)
 const STORY_FOLDER_MAP = new Map([
-  ["tortoise-hare",      "tortoise_and_the_hare"],
+  ["tortoise-hare",      "tortoise-hare"],
   ["fisherman",          "fisherman"],
-  ["prince-pauper",      "prince_pauper"],
-  ["boy-who-cried", "boy_who_cried"], //potential recheck
-  ["lion-mouse",         "lion_and_the_mouse"],
-  ["little-ducks",       "little_ducks"],
-  ["old-mcdonald",       "old_mcdonald"],
-  ["frog-prince",        "frog_prince"],
-  ["goldilocks-bears",   "goldilocks_three_bears"]
+  ["prince-pauper",      "prince-pauper"],
+  ["boy-who-cried",      "boy-who-cried"],
+  ["lion-mouse",         "lion-mouse"],
+  ["little-ducks",       "little-ducks"],
+  ["old-mcdonald",       "old-mcdonald"],
+  ["frog-prince",        "frog-prince"],
+  ["goldilocks-bears",   "goldilocks-bears"]
 ]);
 
-const storyFolder = STORY_FOLDER_MAP.get(storyId) || storyId.replace(/-/g, "_");
+// Use kebab-case folder names exactly as in your repo
+const storyFolder = STORY_FOLDER_MAP.get(storyId) || storyId;
 
 // Render six slides straight from the filesystem
 renderSlides(6);
@@ -45,8 +46,7 @@ function renderSlides(count) {
 
   const items = [];
   for (let i = 1; i <= count; i++) {
-    const src = `/stories/${storyFolder}/${i}.png`;
-    items.push(makeCard(i, src));
+    items.push(makeCard(i));
   }
 
   if (!items.length) {
@@ -56,7 +56,7 @@ function renderSlides(count) {
   items.forEach(el => grid.appendChild(el));
 }
 
-function makeCard(index, src) {
+function makeCard(index) {
   const card = document.createElement("div");
   card.className = "card";
   card.tabIndex = 0;
@@ -70,10 +70,25 @@ function makeCard(index, src) {
   img.alt = `Slide ${index}`;
   img.loading = "lazy";
   img.decoding = "async";
-  img.src = src;
+
+  // slide png locations + fallbacks
+  const candidates = [
+    `/stories/${storyFolder}/slide${index}.png`,   // primary (your repo)
+    `/stories/${storyFolder}/${index}.png`,        // fallback A (numeric at root)
+    `/stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
+  ];
+
+  let ci = 0;
+  img.src = candidates[ci];
   img.onerror = () => {
-    thumb.innerHTML = `<div style="font-size:2rem; opacity:.35;">${index}</div>`;
+    ci++;
+    if (ci < candidates.length) {
+      img.src = candidates[ci];
+    } else {
+      thumb.innerHTML = `<div style="font-size:2rem; opacity:.35;">${index}</div>`;
+    }
   };
+
   thumb.appendChild(img);
 
   const title = document.createElement("div");
