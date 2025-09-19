@@ -20,10 +20,24 @@ const ctx = readCtx();
 if (!ctx.session) { location.replace("index.html"); throw 0; }
 sessionEl.textContent = `Session: ${ctx.session}`;
 
+/* ---------- RESET grade on page load ----------
+   Always show all stories on refresh:
+   - Remove ?grade= from the URL if present
+   - Clear any persisted selectedGrade
+*/
+{
+  const url = new URL(location.href);
+  if (url.searchParams.has("grade")) {
+    url.searchParams.delete("grade");
+    history.replaceState({}, "", url);
+  }
+  localStorage.removeItem("selectedGrade");
+}
+
 // ---- Default stories (fallback) ----
 const FALLBACK_STORIES = [
-  { id:"tortoise-hare",      title:"The Tortoise and the Hare",         grades:["TK-2"],                 thumb:"images/backgrounds/tortoise-hare/background.png" },
-  { id:"fisherman",          title:"Fisherman",                          grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"tortoise-hare",      title:"The Tortoise and the Hare",          grades:["TK-2"],                thumb:"images/backgrounds/tortoise-hare/background.png" },
+  { id:"fisherman",          title:"The Fisherman",                      grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/tortoise-hare/background.png" },
   { id:"prince-pauper",      title:"Prince Pauper",                      grades:["G.3-4","G.5-8"],       thumb:"images/backgrounds/tortoise-hare/background.png" },
   { id:"boy-who-cried-wolf", title:"The Boy Who Cried Wolf",             grades:["G.3-4"],               thumb:"images/backgrounds/tortoise-hare/background.png" },
   { id:"lion-mouse",         title:"The Lion and the Mouse",             grades:["TK-2","G.3-4"],        thumb:"images/backgrounds/lion-mouse/background.png" },
@@ -65,11 +79,7 @@ async function tryLoadManifest() {
 }
 
 function bindFilters() {
-  // Restore last chosen grade
-  if (ctx.grade) {
-    const cb = checkboxes.find(c => c.value === ctx.grade);
-    if (cb) cb.checked = true;
-  }
+  // Do NOT auto-restore any grade; start with all stories visible.
 
   checkboxes.forEach(cb => {
     cb.addEventListener("change", () => {
@@ -125,7 +135,7 @@ function makeCard(s) {
   card.append(thumb, title);
 
   const go = () => {
-    const nextCtx = { ...readCtx(), story: s.id };
+    const nextCtx = { ...readCtx(), story: s.id };   // keep latest ctx
     writeCtx(nextCtx);
     location.href = nextURL("slide-select.html", nextCtx);
   };
