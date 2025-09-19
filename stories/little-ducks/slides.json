@@ -3,7 +3,7 @@
   "slideCount": 2,
   "slides": [
     {
-      "background": "stories/little-ducks/slide1.PNG",
+      "background": "stories/little-ducks/slide1.png",
       "characters": [
         {
           "id": "fish1",
@@ -62,7 +62,7 @@
       ]
     },
     {
-      "background": "stories/lion-mouse/slide2.png",
+      "background": "stories/little-ducks/slide2.png",
       "characters": [
         {
           "id": "lion",
