@@ -45,7 +45,7 @@ function renderSlides(count) {
 
   const items = [];
   for (let i = 1; i <= count; i++) {
-    const src = `/stories/${storyFolder}/slides/${i}.png`;
+    const src = `/stories/${storyFolder}/${i}.png`;
     items.push(makeCard(i, src));
   }
 
