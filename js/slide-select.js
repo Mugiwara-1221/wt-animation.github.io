@@ -1,72 +1,52 @@
 
-// js/slide-select.js — minimal, story-aware slide picker (1–6)
-
-// Assumes flow.js exposes readCtx(), writeCtx(), and nextURL()
+// js/slide-select.js — interactive slide picker (1–6) for the chosen story
 import { readCtx, writeCtx, nextURL } from "./flow.js";
 
-const NUM_SLIDES_DEFAULT = 6;
+const grid     = document.getElementById("grid");
+const emptyMsg = document.getElementById("emptyMsg");
+const sub      = document.getElementById("sub");
+const backBtn  = document.getElementById("backBtn");
 
-// Map dashed story IDs -> folder names (extend as you add stories)
-const STORY_FOLDER_MAP = new Map([
-  ["tortoise-hare", "tortoise_and_the_hare"],
-  ["lion-mouse",    "lion_and_the_mouse"],
-  // add more as needed:
-  // ["little-ducks", "little_ducks"],
-]);
+const ctx = readCtx();
+const storyId = (ctx.story || "").toLowerCase();
 
-function resolveStoryFolder(id) {
-  const dash = String(id || "").replace(/_/g, "-");
-  return STORY_FOLDER_MAP.get(dash) || dash;
-}
+if (!ctx.session) { location.replace("index.html"); throw 0; }
+if (!storyId)     { location.replace("story-select.html"); throw 0; }
 
-// ---------- Boot ----------
-const grid      = document.getElementById("grid");
-const emptyMsg  = document.getElementById("emptyMsg");
-const backBtn   = document.getElementById("backBtn");
-const storyTag  = document.getElementById("storyTag");
+// Show context: session + story
+sub.textContent = `Session: ${ctx.session}  •  Story: ${toTitle(storyId)}`;
 
-const qs        = new URLSearchParams(location.search);
-const ctx       = readCtx();
-const storyId   = (qs.get("story") || ctx.story || "").toLowerCase().replace(/_/g, "-");
-
-// Guard: need a story first
-if (!storyId) {
-  // go pick a story
-  location.replace(nextURL("story-select.html", ctx));
-  throw new Error("No story selected.");
-}
-
-// Show which story we're in
-storyTag.textContent = storyId;
-
-// Allow user to go back to story list
+// Back to stories
 backBtn.addEventListener("click", () => {
   location.href = nextURL("story-select.html", ctx);
 });
 
-// Try to read slide metadata if present (stories/<folder>/slides.json)
-const storyFolder = resolveStoryFolder(storyId);
-const slidesJsonURL = `/stories/${storyFolder}/slides.json`;
+// Map story ids (kebab) -> folder names (snake) if they differ
+const STORY_FOLDER_MAP = new Map([
+  ["tortoise-hare",      "tortoise_and_the_hare"],
+  ["fisherman",          "fisherman"],
+  ["prince-pauper",      "prince_pauper"],
+  ["boy-who-cried-wolf", "boy_who_cried_wolf"],
+  ["lion-mouse",         "lion_and_the_mouse"],
+  ["little-ducks",       "little_ducks"],
+  ["old-mcdonald",       "old_mcdonald"],
+  ["frog-prince",        "frog_prince"],
+  ["goldilocks-bears",   "goldilocks_three_bears"]
+]);
 
-let slideMeta = null;
-tryFetchJSON(slidesJsonURL).then(meta => {
-  slideMeta = Array.isArray(meta?.slides) ? meta.slides : null;
-  const count = Number.isInteger(meta?.count) ? meta.count : NUM_SLIDES_DEFAULT;
-  renderSlides(count, slideMeta);
-}).catch(() => {
-  renderSlides(NUM_SLIDES_DEFAULT, null);
-});
+const storyFolder = STORY_FOLDER_MAP.get(storyId) || storyId.replace(/-/g, "_");
 
-// ---------- Rendering ----------
-function renderSlides(count, meta) {
+// Render six slides straight from the filesystem
+renderSlides(6);
+
+function renderSlides(count) {
   grid.innerHTML = "";
   emptyMsg.hidden = true;
 
   const items = [];
   for (let i = 1; i <= count; i++) {
-    const title = meta?.[i - 1]?.title || `Slide ${i}`;
-    const src   = `/stories/${storyFolder}/slides/${i}.png`;
-    items.push(makeSlideCard(i, title, src));
+    const src = `/stories/${storyFolder}/slides/${i}.png`;
+    items.push(makeCard(i, src));
   }
 
   if (!items.length) {
@@ -76,58 +56,45 @@ function renderSlides(count, meta) {
   items.forEach(el => grid.appendChild(el));
 }
 
-function makeSlideCard(index, title, src) {
-  const card = el("div", { class: "card", role: "button", tabIndex: 0, "data-index": index, "aria-label": `Choose ${title}` });
+function makeCard(index, src) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `Choose Slide ${index}`);
 
-  const thumb = el("div", { class: "thumb" });
-  const img   = el("img", { alt: title, loading: "lazy", decoding: "async" });
+  const thumb = document.createElement("div");
+  thumb.className = "thumb";
 
-  // Load with graceful fallback if 404
+  const img = document.createElement("img");
+  img.alt = `Slide ${index}`;
+  img.loading = "lazy";
+  img.decoding = "async";
   img.src = src;
-  img.addEventListener("error", () => {
-    // fallback: simple number placeholder
-    thumb.innerHTML = `<div style="font-size:2.5rem; opacity:.35; user-select:none;">${index}</div>`;
-  });
-
+  img.onerror = () => {
+    thumb.innerHTML = `<div style="font-size:2rem; opacity:.35;">${index}</div>`;
+  };
   thumb.appendChild(img);
 
-  const meta = el("div", { class: "meta" });
-  meta.appendChild(el("div", { class: "title" }, title));
-  meta.appendChild(el("div", { class: "num" }, `#${index}`));
+  const title = document.createElement("div");
+  title.className = "title";
+  title.textContent = `Slide ${index}`;
 
-  card.append(thumb, meta);
+  card.append(thumb, title);
 
-  // Click/Enter triggers navigation to character select (slide-aware)
-  const go = () => selectSlide(index);
+  const go = () => {
+    const nextCtx = writeCtx({ ...ctx, slide: String(index) });
+    location.href = nextURL("sprite-select.html", nextCtx);
+  };
   card.addEventListener("click", go);
-  card.addEventListener("keydown", (e) => {
+  card.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
   });
 
   return card;
 }
 
-// ---------- Actions ----------
-function selectSlide(index) {
-  const nextCtx = { ...ctx, story: storyId, slide: index };
-  writeCtx(nextCtx);
-  location.href = nextURL("sprite-select.html", nextCtx);
-}
-
-// ---------- Utils ----------
-function el(tag, attrs = {}, text) {
-  const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === false || v == null) continue;
-    if (k in n) n[k] = v;
-    else n.setAttribute(k, v);
-  }
-  if (text != null) n.textContent = String(text);
-  return n;
-}
-
-async function tryFetchJSON(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load ${url}`);
-  return res.json();
+// Helpers
+function toTitle(id) {
+  return String(id).replace(/-/g," ").replace(/\b\w/g, m => m.toUpperCase());
 }
