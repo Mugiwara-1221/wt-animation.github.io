@@ -26,7 +26,7 @@ const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare",      "tortoise_and_the_hare"],
   ["fisherman",          "fisherman"],
   ["prince-pauper",      "prince_pauper"],
-  ["boy-who-cried-wolf", "boy_who_cried_wolf"],
+  ["boy-who-cried", "boy_who_cried"], //potential recheck
   ["lion-mouse",         "lion_and_the_mouse"],
   ["little-ducks",       "little_ducks"],
   ["old-mcdonald",       "old_mcdonald"],
