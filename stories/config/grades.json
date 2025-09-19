@@ -17,8 +17,8 @@
       "allowFreeDrawCharacter": false,
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
-    "3-4": {
-      "label": "3–4",
+    "G.3-4": {
+      "label": "G.3–4",
       "tools": {
         "brush": true,
         "eraser": true,
@@ -33,8 +33,8 @@
       "allowFreeDrawCharacter": false,
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
-    "5-8": {
-      "label": "5–8",
+    "G.5-8": {
+      "label": "G.5–8",
       "tools": {
         "brush": true,
         "eraser": true,
