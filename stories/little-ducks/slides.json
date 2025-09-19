@@ -4,7 +4,7 @@
   "slideCount": 6,
   "slides": [
     {
-      "background": "stories/little-ducks/slide1-master.png",
+      "background": "images/backgrounds/little-ducks/frame1.png",
       "characters": [
         {
           "id": "fish1",
