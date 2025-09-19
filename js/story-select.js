@@ -4,8 +4,8 @@ import { readCtx, writeCtx, nextURL } from "./flow.js";
 
 // Try common locations for the manifest (root & relative)
 const MANIFEST_CANDIDATES = [
-  "/stories/config/manifest.json",
-  "./stories/config/manifest.json",
+  //"/stories/config/manifest.json",
+  //"./stories/config/manifest.json",
   "stories/config/manifest.json"
 ];
 
