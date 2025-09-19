@@ -1,86 +1,95 @@
 
-// js/story-select.js — story chooser with grade filters
+// js/story-select.js — show all stories by default; filter by grade; use manifest if available
 import { readCtx, writeCtx, nextURL } from "./flow.js";
 
-const MANIFEST_URL = "/stories/config/manifest.json"; // manifest location
+// Try common locations for the manifest (root & relative)
+const MANIFEST_CANDIDATES = [
+  "/stories/config/manifest.json",
+  "./stories/config/manifest.json",
+  "stories/config/manifest.json"
+];
 
-const grid = document.getElementById("storyGrid");
-const emptyMsg = document.getElementById("emptyMsg");
-const sessionInfo = document.getElementById("sessionInfo");
-
-// -------------------- Session Guard --------------------
-const ctx = readCtx();
-if (!ctx.session) {
-  location.replace("index.html");
-  throw 0;
-}
-sessionInfo.textContent = `Session: ${ctx.session}`;
-
-// -------------------- Grade Filters --------------------
+// ---- DOM ----
+const grid       = document.getElementById("storyGrid");
+const emptyMsg   = document.getElementById("emptyMsg");
+const sessionEl  = document.getElementById("sessionInfo");
 const checkboxes = Array.from(document.querySelectorAll('input[name="grade"]'));
-let activeGrades = new Set();
 
-// restore last grade from ctx
-if (ctx.grade) {
-  const cb = checkboxes.find(c => c.value === ctx.grade);
-  if (cb) {
-    cb.checked = true;
-    activeGrades.add(ctx.grade);
+// ---- Session guard ----
+const ctx = readCtx();
+if (!ctx.session) { location.replace("index.html"); throw 0; }
+sessionEl.textContent = `Session: ${ctx.session}`;
+
+// ---- Default stories (fallback) ----
+const FALLBACK_STORIES = [
+  { id:"tortoise-hare",      title:"The Tortoise and the Hare",         grades:["TK-2"],                 thumb:"/stories/tortoise_and_the_hare/cover.png" },
+  { id:"fisherman",          title:"Fisherman",                          grades:["TK-2","G.3-4"],        thumb:"/stories/fisherman/cover.png" },
+  { id:"prince-pauper",      title:"Prince Pauper",                      grades:["G.3-4","G.5-8"],       thumb:"/stories/prince_pauper/cover.png" },
+  { id:"boy-who-cried-wolf", title:"The Boy Who Cried Wolf",             grades:["G.3-4"],               thumb:"/stories/boy_who_cried_wolf/cover.png" },
+  { id:"lion-mouse",         title:"The Lion and the Mouse",             grades:["TK-2","G.3-4"],        thumb:"/stories/lion_and_the_mouse/cover.png" },
+  { id:"little-ducks",       title:"Five Little Ducks",                  grades:["TK-2"],                thumb:"/stories/little_ducks/cover.png" },
+  { id:"old-mcdonald",       title:"Old McDonald",                       grades:["TK-2"],                thumb:"/stories/old_mcdonald/cover.png" },
+  { id:"frog-prince",        title:"The Frog Prince",                    grades:["G.3-4","G.5-8"],       thumb:"/stories/frog_prince/cover.png" },
+  { id:"goldilocks-bears",   title:"Goldilocks and the Three Bears",     grades:["TK-2","G.3-4"],        thumb:"/stories/goldilocks_three_bears/cover.png" }
+];
+
+let stories = [...FALLBACK_STORIES];
+
+// ---- Init ----
+await tryLoadManifest();     // silently overrides `stories` if found
+bindFilters();
+render();
+
+// ---------------- functions ----------------
+async function tryLoadManifest() {
+  for (const url of MANIFEST_CANDIDATES) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!Array.isArray(data?.stories)) continue;
+
+      stories = data.stories.map(s => ({
+        id: s.id,
+        title: s.title || toTitle(s.id),
+        grades: Array.isArray(s.grades) ? s.grades : [],
+        thumb: s.thumb || `/stories/${s.id.replace(/-/g, "_")}/cover.png`
+      }));
+      console.info("[story-select] Using manifest:", url);
+      return;
+    } catch (e) {
+      // try next path
+    }
   }
+  console.warn("[story-select] Manifest not found; using fallback list.");
 }
 
-// -------------------- Load Stories --------------------
-let stories = [];
-init();
-
-async function init() {
-  try {
-    const res = await fetch(MANIFEST_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error("manifest not found");
-    const data = await res.json();
-
-    stories = Array.isArray(data?.stories) ? data.stories.map(s => ({
-      id: s.id,
-      title: s.title || toTitle(s.id),
-      grades: Array.isArray(s.grades) ? s.grades : [],
-      thumb: s.thumb || autoThumb(s.id)
-    })) : [];
-  } catch (e) {
-    console.error("Failed to load manifest:", e);
-    stories = [];
-  }
-
-  bindFilters();
-  render();
-}
-
-// -------------------- Filters --------------------
 function bindFilters() {
+  // Restore last chosen grade
+  if (ctx.grade) {
+    const cb = checkboxes.find(c => c.value === ctx.grade);
+    if (cb) cb.checked = true;
+  }
+
   checkboxes.forEach(cb => {
     cb.addEventListener("change", () => {
-      if (cb.checked) activeGrades.add(cb.value);
-      else activeGrades.delete(cb.value);
-
-      // persist latest grade into ctx
-      const last = cb.checked ? cb.value : Array.from(activeGrades)[0] || null;
+      const selected = new Set(checkboxes.filter(x => x.checked).map(x => x.value));
+      const last = checkboxes.find(x => x.checked)?.value || null;
       writeCtx({ ...readCtx(), grade: last || undefined });
-
-      render();
+      render(selected);
     });
   });
 }
 
-function matchesGrades(story) {
-  if (activeGrades.size === 0) return true; // nothing selected = show all
-  return story.grades?.some(g => activeGrades.has(g));
-}
-
-// -------------------- Render --------------------
-function render() {
+function render(selected = new Set(checkboxes.filter(x => x.checked).map(x => x.value))) {
   grid.innerHTML = "";
   emptyMsg.hidden = true;
 
-  const visible = stories.filter(matchesGrades);
+  // No grades selected -> show all
+  const visible = (selected.size === 0)
+    ? stories
+    : stories.filter(s => s.grades?.some(g => selected.has(g)));
+
   if (visible.length === 0) {
     emptyMsg.hidden = false;
     return;
@@ -94,7 +103,7 @@ function render() {
 function makeCard(s) {
   const card = document.createElement("div");
   card.className = "card";
-  card.setAttribute("role", "button");
+  card.setAttribute("role","button");
   card.setAttribute("aria-label", `Choose ${s.title}`);
 
   const thumb = document.createElement("div");
@@ -128,10 +137,6 @@ function makeCard(s) {
   return card;
 }
 
-// -------------------- Helpers --------------------
 function toTitle(id) {
   return String(id).replace(/-/g, " ").replace(/\b\w/g, m => m.toUpperCase());
-}
-function autoThumb(id) {
-  return `/stories/${id.replace(/-/g, "_")}/cover.png`;
 }
