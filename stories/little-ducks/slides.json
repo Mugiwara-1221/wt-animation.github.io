@@ -7,18 +7,16 @@
       "background": "stories/little-ducks/slide1-master.png",
       "characters": [
         {
-          "id": "owl",
+          "id": "fish1",
           "x": 10, "y": 60, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame1/owl/owl",
+          "framesPath": "images/gifs/5_little_ducks/slide1/fish1.gif",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame1/owl/owl_mask_"
         },
         {
-          "id": "mouse",
+          "id": "fish2",
           "x": 30, "y": 30, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame1/mouse/mouse",
+          "framesPath": "images/gifs/5_little_ducks/slide1/fish2.gif",
           "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame1/mouse/mouse_mask_"
         }
       ]
     },
