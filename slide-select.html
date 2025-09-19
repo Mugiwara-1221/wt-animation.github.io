@@ -1,48 +1,34 @@
 
-<!-- story-selection page links w/manifest.json for grade ID assignment -->
+<!-- slide-select.html — choose one of 6 slides for the selected story -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Select a Story</title>
+  <title>Select a Slide</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root { --card-r:12px; --accent:#BADA55; --border:#d6dbef; }
     body { margin:0; font-family:system-ui,Arial; background:#eff4ff; color:#1d2330; }
     header { padding:20px 16px; text-align:center }
     h1 { margin:0 0 6px; font-size:clamp(22px,4vw,36px) }
-    #sessionInfo { opacity:.7 }
+    #sub { opacity:.7; font-size:.95rem; }
 
-    /* two-column layout (sidebar + grid) */
-    .layout {
-      display:grid;
-      grid-template-columns: 240px 1fr;
-      gap:16px;
-      max-width:1100px;
-      margin:0 auto 40px;
-      padding:0 20px 20px;
+    .bar {
+      max-width:1100px; margin:0 auto; padding:0 20px 12px;
+      display:flex; gap:8px; align-items:center; justify-content:space-between;
     }
-
-    /* sidebar with checkboxes, visually centered halfway down */
-    aside {
-      position:sticky;
-      top:20vh;
-      align-self:start;
-      background:#fff;
-      border:2px solid var(--border);
-      border-radius:12px;
-      padding:14px 12px;
-      box-shadow:0 4px 10px rgba(0,0,0,.05);
+    .btn {
+      background:#fff; border:2px solid var(--border); border-radius:10px;
+      padding:.55rem .8rem; cursor:pointer; font-weight:600;
+      box-shadow:0 3px 8px rgba(0,0,0,.05);
     }
-    .filter-title { font-weight:700; margin-bottom:6px; }
-    .check { display:flex; align-items:center; gap:8px; padding:6px 2px; cursor:pointer; }
-    .check input { width:1.05rem; height:1.05rem; }
+    .btn:hover { border-color:var(--accent); }
 
-    /* story grid/cards */
     .grid {
       display:grid;
       grid-template-columns:repeat(3,minmax(220px,1fr));
       gap:16px;
+      max-width:1100px; margin:0 auto 40px; padding:0 20px 20px;
     }
     .card {
       position:relative;
@@ -52,54 +38,34 @@
       overflow:hidden;
       border:2px solid transparent;
       cursor:pointer;
-      display:flex;
-      flex-direction:column;
+      display:flex; flex-direction:column;
       min-height:220px;
       transition:border-color .15s ease, transform .15s ease;
     }
     .card:hover { border-color:var(--accent); transform:translateY(-1px); }
-    .thumb {
-      position:relative;
-      aspect-ratio:4/3;
-      background:#dfe7ff;
-      display:flex; align-items:center; justify-content:center;
-      color:#445; font-size:18px;
-    }
+    .thumb { aspect-ratio:4/3; background:#dfe7ff; display:grid; place-items:center; color:#445 }
     .thumb img { width:100%; height:100%; object-fit:cover; display:block }
     .title { padding:12px 14px; font-weight:600; background:#fff }
     .empty { grid-column:1/-1; text-align:center; opacity:.6; padding:6px; }
 
-    @media (max-width:720px){
-      .layout{ grid-template-columns: 1fr; }
-      aside{ position:static; }
-      .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) }
-    }
+    @media (max-width:720px){ .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) } }
     @media (max-width:480px){ .grid{ grid-template-columns:1fr } }
   </style>
 </head>
 <body>
   <header>
-    <h1>Pick Your Story</h1>
-    <div id="sessionInfo"></div>
+    <h1>Select a Slide</h1>
+    <div id="sub"></div>
   </header>
 
-  <section class="layout">
-    <!-- Left: grade filters -->
-    <aside aria-label="Filter stories by grade">
-      <div class="filter-title">Filter by Grade</div>
-      <label class="check"><input type="checkbox" name="grade" value="TK-2"> <span>TK-2</span></label>
-      <label class="check"><input type="checkbox" name="grade" value="G.3-4"> <span>G.3-4</span></label>
-      <label class="check"><input type="checkbox" name="grade" value="G.5-8"> <span>G.5-8</span></label>
-    </aside>
+  <div class="bar">
+    <button id="backBtn" class="btn" type="button">← Back to Stories</button>
+    <div></div>
+  </div>
 
-    <!-- Right: stories grid -->
-    <main>
-      <div class="grid" id="storyGrid" aria-live="polite"></div>
-      <div id="emptyMsg" class="empty" hidden>No stories match your filter.</div>
-    </main>
-  </section>
+  <div id="grid" class="grid" aria-live="polite"></div>
+  <div id="emptyMsg" class="empty" hidden>No slides found.</div>
 
-  <!-- External logic -->
-  <script type="module" src="./js/story-select.js"></script>
+  <script type="module" src="./js/slide-select.js"></script>
 </body>
 </html>
