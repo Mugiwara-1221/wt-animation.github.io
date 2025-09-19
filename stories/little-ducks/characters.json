@@ -1,13 +1,15 @@
 
 {
-  "background": "images/backgrounds/lion-mouse/frame6.png",
+  "background": "images/backgrounds/5_little_ducks/frame1.png",
   "characters": [
-    { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/owl.png" },
-    { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/lion.png" },
-    { "id": "geese", "name": "Geese", "sprite": "images/sprites/lion-mouse/geese.png" },
-    { "id": "squirrel1", "name": "Squirrel", "sprite": "images/sprites/lion-mouse/squirrel1.png" },
-    { "id": "deer", "name": "Deer", "sprite": "images/sprites/lion-mouse/deer.png" },
-    { "id": "butterfly", "name": "Butterfly",  "sprite": "images/sprites/lion-mouse/butterfly.png" },
-    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/mouse.png" }
+    { "id": "fish1", "name": "Fish 1", "sprite": "images/sprites/5_little_ducks/fish1.png" },
+    { "id": "fish2", "name": "Fish 2", "sprite": "images/sprites/5_little_ducks/fish2.png" },
+    { "id": "flamingo", "name": "Flamingo", "sprite": "images/sprites/5_little_ducks/flamingo.png" },
+    { "id": "last_duck", "name": "Last Duck", "sprite": "images/sprites/5_little_ducks/last_duck.png" },
+    { "id": "lead_duck", "name": "Lead Duck", "sprite": "images/sprites/5_little_ducks/lead_duck.png" },
+    { "id": "look_back_duck", "name": "Look Back Duck",  "sprite": "images/sprites/5_little_ducks/look_back.png" },
+    { "id": "mama_duck", "name": "Mama Duck", "sprite": "images/sprites/5_little_ducks/mama_duck.png" }
+    { "id": "sleepy_duck", "name": "Sleepy Duck", "sprite": "images/sprites/5_little_ducks/sleep_duck.png" }
+    { "id": "waving_duck", "name": "Waving Duck", "sprite": "images/sprites/5_little_ducks/waving_duck.png" }
   ]
 }
