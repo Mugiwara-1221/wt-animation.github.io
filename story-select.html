@@ -1,4 +1,6 @@
 
+<!-- story-selection page links w/manifest.json for grade ID assignment -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,19 +8,42 @@
   <title>Select a Story</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root { --card-r:12px; --accent:#BADA55; }
-    body { margin:0; font-family:system-ui,Arial; background:#eff4ff }
+    :root { --card-r:12px; --accent:#BADA55; --border:#d6dbef; }
+    body { margin:0; font-family:system-ui,Arial; background:#eff4ff; color:#1d2330; }
     header { padding:20px 16px; text-align:center }
     h1 { margin:0 0 6px; font-size:clamp(22px,4vw,36px) }
     #sessionInfo { opacity:.7 }
 
+    /* two-column layout (sidebar + grid) */
+    .layout {
+      display:grid;
+      grid-template-columns: 240px 1fr;
+      gap:16px;
+      max-width:1100px;
+      margin:0 auto 40px;
+      padding:0 20px 20px;
+    }
+
+    /* sidebar with checkboxes, visually centered halfway down */
+    aside {
+      position:sticky;
+      top:20vh;
+      align-self:start;
+      background:#fff;
+      border:2px solid var(--border);
+      border-radius:12px;
+      padding:14px 12px;
+      box-shadow:0 4px 10px rgba(0,0,0,.05);
+    }
+    .filter-title { font-weight:700; margin-bottom:6px; }
+    .check { display:flex; align-items:center; gap:8px; padding:6px 2px; cursor:pointer; }
+    .check input { width:1.05rem; height:1.05rem; }
+
+    /* story grid/cards (kept from your original styles) */
     .grid {
       display:grid;
       grid-template-columns:repeat(3,minmax(220px,1fr));
       gap:16px;
-      padding:20px;
-      max-width:1100px;
-      margin:0 auto 40px;
     }
     .card {
       position:relative;
@@ -43,28 +68,14 @@
     }
     .thumb img { width:100%; height:100%; object-fit:cover; display:block }
     .title { padding:12px 14px; font-weight:600; background:#fff }
-
-    .card.disabled {
-      cursor:default; filter:grayscale(100%) opacity(.65); border-color:#e5e8f4;
-    }
-    .card.disabled:hover { border-color:#e5e8f4; transform:none; }
-    .card.disabled .thumb::after {
-      content:"";
-      position:absolute; inset:0;
-      background:rgba(0,0,0,.35);
-      color:#fff; display:flex; align-items:center; justify-content:center;
-      font-weight:800; letter-spacing:.06em;
-      text-shadow:0 1px 2px rgba(0,0,0,.35);
-    }
-
-    .ph {
-      width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center;
-      color:#667; font-size:16px; padding:10px; text-align:center;
-    }
+    .empty { grid-column:1/-1; text-align:center; opacity:.6; padding:6px; }
 
     @media (max-width:980px){ .grid{ grid-template-columns:repeat(3,minmax(220px,1fr)) } }
-    @media (max-width:720px){ .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) } }
+    @media (max-width:720px){
+      .layout{ grid-template-columns: 1fr; }
+      aside{ position:static; }
+      .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) }
+    }
     @media (max-width:480px){ .grid{ grid-template-columns:1fr } }
   </style>
 </head>
@@ -74,57 +85,23 @@
     <div id="sessionInfo"></div>
   </header>
 
-  <div class="grid" id="storyGrid" aria-live="polite"></div>
+  <section class="layout">
+    <!-- Left: grade filters -->
+    <aside aria-label="Filter stories by grade">
+      <div class="filter-title">Filter by Grade</div>
+      <label class="check"><input type="checkbox" name="grade" value="TK-2"> <span>TK-2</span></label>
+      <label class="check"><input type="checkbox" name="grade" value="G.3-4"> <span>G.3-4</span></label>
+      <label class="check"><input type="checkbox" name="grade" value="G.5-8"> <span>G.5-8</span></label>
+    </aside>
 
-  <script type="module">
-    import { readCtx, nextURL } from './js/flow.js';
+    <!-- Right: stories grid -->
+    <main>
+      <div class="grid" id="storyGrid" aria-live="polite"></div>
+      <div id="emptyMsg" class="empty" hidden>No stories match your filter.</div>
+    </main>
+  </section>
 
-    // Require a session
-    const ctx = readCtx();
-    if (!ctx.session) { location.replace('index.html'); throw 0; }
-    document.getElementById('sessionInfo').textContent = `Session: ${ctx.session}`;
-
-    // Stories list
-    const STORIES = [
-      { id:'tortoise-hare', name:'The Tortoise and the Hare', thumb:'images/story-thumbnails/tortoise-hare-thumb.png', ready:true },
-      { id:'Fisherman',  name:'Fisherman',  thumb:'images/story-thumbnails/Fisherman New.png', ready:true },
-      { id:'Prince Pauper',  name:'Prince Pauper',  thumb:'images/story-thumbnails/PrincePauperNewer.png', ready:true },
-      { id:'The Boy Who Cried',  name:'The Boy Who Cried Wolf',  thumb:'images/story-thumbnails/The Boy who Cried Wolf.png', ready:true },
-      { id:'lion-mouse',    name:'The Lion and the Mouse',    thumb:'images/story-thumbnails/lion-mouse-thumb.png',   ready:true },
-      { id:'littleducks',  name:'Five Little Ducks',  thumb:'images/story-thumbnails/littleducks.png', ready:true },
-      { id:'oldman',  name:'Old Man Had a Farm',  thumb:'images/story-thumbnails/oldman.png', ready:true },
-      { id:'princessfrog',  name:'The Frog Prince',  thumb:'images/story-thumbnails/princessfrog.PNG', ready:true },
-      { id:'goldilocks',  name:'Goldilocks and Three Bears',  thumb:'images/story-thumbnails/Goldilocksandthreebears.png', ready:true },
-      //{ id:'story-10', name:'Story 10', thumb:'', ready:false },
-      //{ id:'story-11', name:'Story 11', thumb:'', ready:false },
-      //{ id:'story-12', name:'Story 12', thumb:'', ready:false }
-    ];
-
-    const grid = document.getElementById('storyGrid');
-
-    function thumbHTML(s){
-      if (!s.thumb) return `<div class="ph">${s.name}</div>`;
-      return `<img src="${s.thumb}" alt="${s.name}"
-                   onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${s.name}'}))">`;
-    }
-
-    for (const s of STORIES) {
-      const card = document.createElement('div');
-      card.className = 'card' + (s.ready ? '' : ' disabled');
-      card.setAttribute('role','button');
-      card.setAttribute('aria-label', s.name + (s.ready ? '' : ' (coming soon)'));
-      card.innerHTML = `
-        <div class="thumb">${thumbHTML(s)}</div>
-        <div class="title">${s.name}</div>
-      `;
-      if (s.ready) {
-        card.addEventListener('click', () => {
-          localStorage.setItem('selectedStory', s.id);
-          location.href = nextURL('grade-select.html', { ...ctx, story:s.id });
-        });
-      }
-      grid.appendChild(card);
-    }
-  </script>
+  <!-- move all logic to an external module -->
+  <script type="module" src="./js/story-select.js"></script>
 </body>
 </html>
