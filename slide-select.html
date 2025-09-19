@@ -1,55 +1,105 @@
 
-<!-- slide-select.html — choose a slide (1–6) after story selection -->
+<!-- story-selection page links w/manifest.json for grade ID assignment -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>Select a Story</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Select a Slide</title>
-
-  <!-- (optional) your shared styles -->
-  <link rel="stylesheet" href="css/sprite-style.css" />
-
   <style>
-    /* Minimal baseline styles so this works out of the box */
-    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b0b0c; color:#f5f5f7; }
-    header { display:flex; align-items:center; gap:.75rem; padding:1rem; border-bottom:1px solid #2a2a2e; }
-    header h1 { font-size:1.1rem; margin:0; opacity:.9; }
-    header .spacer { flex:1; }
-    button, .btn { background:#1f1f23; border:1px solid #2a2a2e; color:#f5f5f7; padding:.55rem .8rem; border-radius:.75rem; cursor:pointer; }
-    button:hover, .btn:hover { background:#27272c; }
-    main { padding:1rem; max-width:1200px; margin:0 auto; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:1rem; }
-    .card { background:#141417; border:1px solid #232327; border-radius:1rem; overflow:hidden; display:flex; flex-direction:column; }
-    .thumb { aspect-ratio: 4 / 3; background:#0f0f12; display:grid; place-items:center; }
-    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .meta { padding:.75rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
-    .meta .title { font-weight:600; }
-    .meta .num { opacity:.7; font-variant-numeric: tabular-nums; }
-    .empty { opacity:.6; font-size:.9rem; }
-    footer { padding:1rem; opacity:.7; font-size:.85rem; }
+    :root { --card-r:12px; --accent:#BADA55; --border:#d6dbef; }
+    body { margin:0; font-family:system-ui,Arial; background:#eff4ff; color:#1d2330; }
+    header { padding:20px 16px; text-align:center }
+    h1 { margin:0 0 6px; font-size:clamp(22px,4vw,36px) }
+    #sessionInfo { opacity:.7 }
+
+    /* two-column layout (sidebar + grid) */
+    .layout {
+      display:grid;
+      grid-template-columns: 240px 1fr;
+      gap:16px;
+      max-width:1100px;
+      margin:0 auto 40px;
+      padding:0 20px 20px;
+    }
+
+    /* sidebar with checkboxes, visually centered halfway down */
+    aside {
+      position:sticky;
+      top:20vh;
+      align-self:start;
+      background:#fff;
+      border:2px solid var(--border);
+      border-radius:12px;
+      padding:14px 12px;
+      box-shadow:0 4px 10px rgba(0,0,0,.05);
+    }
+    .filter-title { font-weight:700; margin-bottom:6px; }
+    .check { display:flex; align-items:center; gap:8px; padding:6px 2px; cursor:pointer; }
+    .check input { width:1.05rem; height:1.05rem; }
+
+    /* story grid/cards */
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(220px,1fr));
+      gap:16px;
+    }
+    .card {
+      position:relative;
+      background:#fff;
+      border-radius:var(--card-r);
+      box-shadow:0 4px 10px rgba(0,0,0,.06);
+      overflow:hidden;
+      border:2px solid transparent;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      min-height:220px;
+      transition:border-color .15s ease, transform .15s ease;
+    }
+    .card:hover { border-color:var(--accent); transform:translateY(-1px); }
+    .thumb {
+      position:relative;
+      aspect-ratio:4/3;
+      background:#dfe7ff;
+      display:flex; align-items:center; justify-content:center;
+      color:#445; font-size:18px;
+    }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block }
+    .title { padding:12px 14px; font-weight:600; background:#fff }
+    .empty { grid-column:1/-1; text-align:center; opacity:.6; padding:6px; }
+
+    @media (max-width:720px){
+      .layout{ grid-template-columns: 1fr; }
+      aside{ position:static; }
+      .grid{ grid-template-columns:repeat(2,minmax(220px,1fr)) }
+    }
+    @media (max-width:480px){ .grid{ grid-template-columns:1fr } }
   </style>
 </head>
 <body>
   <header>
-    <button id="backBtn" title="Back to stories">← Back</button>
-    <h1>Select a Slide</h1>
-    <div class="spacer"></div>
-    <div id="storyTag"></div>
+    <h1>Pick Your Story</h1>
+    <div id="sessionInfo"></div>
   </header>
 
-  <main>
-    <div id="grid" class="grid" aria-live="polite"></div>
-    <p id="emptyMsg" class="empty" hidden>No slides found.</p>
-  </main>
+  <section class="layout">
+    <!-- Left: grade filters -->
+    <aside aria-label="Filter stories by grade">
+      <div class="filter-title">Filter by Grade</div>
+      <label class="check"><input type="checkbox" name="grade" value="TK-2"> <span>TK-2</span></label>
+      <label class="check"><input type="checkbox" name="grade" value="G.3-4"> <span>G.3-4</span></label>
+      <label class="check"><input type="checkbox" name="grade" value="G.5-8"> <span>G.5-8</span></label>
+    </aside>
 
-  <footer>
-    Tip: we’ll auto-detect slide images at <code>/stories/&lt;story_folder&gt;/slides/1.png…6.png</code>.  
-    If a file is missing, you’ll still see a numbered placeholder.
-  </footer>
+    <!-- Right: stories grid -->
+    <main>
+      <div class="grid" id="storyGrid" aria-live="polite"></div>
+      <div id="emptyMsg" class="empty" hidden>No stories match your filter.</div>
+    </main>
+  </section>
 
-  <!-- Runtime (ESM) -->
-  <script type="module" src="js/slide-select.js"></script>
-  <noscript>Please enable JavaScript to choose a slide.</noscript>
+  <!-- External logic -->
+  <script type="module" src="./js/story-select.js"></script>
 </body>
 </html>
