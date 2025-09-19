@@ -1,0 +1,14 @@
+
+{
+  "stories": [
+    { "id": "tortoise-hare",       "title": "The Tortoise and the Hare",     "grades": ["TK-2"],          "thumb": "/stories/tortoise_and_the_hare/cover.png" },
+    { "id": "fisherman",           "title": "Fisherman",                     "grades": ["TK-2","G.3-4"],  "thumb": "/stories/fisherman/cover.png" },
+    { "id": "prince-pauper",       "title": "Prince Pauper",                 "grades": ["G.3-4","G.5-8"], "thumb": "/stories/prince_pauper/cover.png" },
+    { "id": "boy-who-cried-wolf",  "title": "The Boy Who Cried Wolf",        "grades": ["G.3-4"],         "thumb": "/stories/boy_who_cried_wolf/cover.png" },
+    { "id": "lion-mouse",          "title": "The Lion and the Mouse",        "grades": ["TK-2","G.3-4"],  "thumb": "/stories/lion_and_the_mouse/cover.png" },
+    { "id": "little-ducks",        "title": "Five Little Ducks",             "grades": ["TK-2"],          "thumb": "/stories/little_ducks/cover.png" },
+    { "id": "old-mcdonald",        "title": "Old McDonald",                  "grades": ["TK-2"],          "thumb": "/stories/old_man_had_a_farm/cover.png" },
+    { "id": "frog-prince",         "title": "The Frog Prince",               "grades": ["G.3-4","G.5-8"], "thumb": "/stories/frog_prince/cover.png" },
+    { "id": "goldilocks-bears",    "title": "Goldilocks and the Three Bears","grades": ["TK-2","G.3-4"],  "thumb": "/stories/goldilocks_three_bears/cover.png" }
+  ]
+}
