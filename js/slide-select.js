@@ -71,11 +71,11 @@ function makeCard(index) {
   img.loading = "lazy";
   img.decoding = "async";
 
-  // slide png locations + fallbacks
+  // slide png locations + fallback
   const candidates = [
     `/stories/${storyFolder}/slide${index}.png`,   // primary (your repo)
     `/stories/${storyFolder}/${index}.png`,        // fallback A (numeric at root)
-    `/stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
+    `/stories/tortoise-hare/slide1.png`, `/stories/tortoise-hare/slide2.png`, `/stories/tortoise-hare/slide3.png`, `/stories/tortoise-hare/slide4.png`, `/stories/tortoise-hare/slide5.png`, `/stories/tortoise-hare/slide6.png`,
   ];
 
   let ci = 0;
