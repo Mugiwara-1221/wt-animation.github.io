@@ -37,7 +37,7 @@
 
     // Fetch characters.json for this story
     async function loadManifest() {
-      console.log(storyId);
+      //console.log(storyId);
       const url = `stories/${storyId}/characters.json`;
       try {
         const res = await fetch(url, { cache: 'no-store' });
