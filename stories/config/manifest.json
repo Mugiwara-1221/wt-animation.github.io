@@ -5,8 +5,8 @@
   "stories": [
     { "id": "tortoise-hare",       "title": "The Tortoise and the Hare",     "grades": ["G.3-4"],         "thumb": "images/story-thumbnails/tortoise-hare-thumb.png" },
     { "id": "fisherman",           "title": "Fisherman",                     "grades": ["G.3-4","G.5-8"], "thumb": "images/story-thumbnails/fisherman-thumb.png" },
-    { "id": "prince-pauper",       "title": "Prince Pauper",                 "grades": ["G.3-4","G.5-8"], "thumb": "images/story-thumbnails/prince-prauper-thumb.png" },
-    { "id": "boy-who-cried-wolf",  "title": "The Boy Who Cried Wolf",        "grades": ["G.3-4"],         "thumb": "images/story-thumbnails/boy-who-cried-thumb.png" },
+    { "id": "prince-pauper",       "title": "Prince Pauper",                 "grades": ["G.3-4","G.5-8"], "thumb": "images/story-thumbnails/prince-pauper-thumb.png" },
+    { "id": "boy-who-cried-wolf",  "title": "The Boy Who Cried Wolf",        "grades": ["G.3-4"],         "thumb": "images/story-thumbnails/boy-who-cried-wolf-thumb.png" },
     { "id": "lion-mouse",          "title": "The Lion and the Mouse",        "grades": ["G.5-8"],         "thumb": "images/story-thumbnails/lion-mouse-thumb.png" },
     { "id": "little-ducks",        "title": "Five Little Ducks",             "grades": ["TK-2"],          "thumb": "images/story-thumbnails/little-ducks-thumb.png" },
     { "id": "old-mcdonald",        "title": "Old McDonald",                  "grades": ["TK-2"],          "thumb": "images/story-thumbnails/old-mcdonald-thumb.png" },
