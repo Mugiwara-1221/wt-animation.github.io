@@ -69,11 +69,6 @@ h2 {
   width: 18%;
 }
 
-@keyframes walk {
-  from { background-position: 0 0; }
-  to { background-position: -400px 0; }
-}
-
 /* Hover/lock styling */
 .character.hovered:not(.locked),
 .character:not(.locked):hover {
@@ -100,13 +95,8 @@ h2 {
 
 .hare     { top: 50%; left: 15% }
 .tortoise {
-  position: absolute; /* Needed to use top/left positioning */
   top: 65%;
   left: 50%;
-  width: 100px;
-  height: 100px;
-  background: url('/images/sprites/tortoise-hare/tortoise.png') no-repeat;
-  animation: walk 1s steps(4) infinite;
 }
 
 .bear     { top: 28%; left: 60%; }
