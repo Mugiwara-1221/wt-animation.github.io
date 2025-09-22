@@ -32,7 +32,7 @@
     const ctx        = readCtx();
     const container  = document.getElementById('characters');
     const sceneImg   = document.getElementById('scene');
-    const storyId    = ctx.story; // e.g. "lion-mouse"
+    const storyId    = ctx.story; // e.g. "tortoise-hare"
 
     // Ensure absolutely-positioned children are relative to the scene wrapper
     container.style.position = 'relative';
@@ -56,7 +56,7 @@
       sceneImg.onerror = () => setBackground(rest);
     }
 
-    // Simple auto-layout used only when a character has NO x/y/w specified
+    // Auto-place ONLY those without authored positions
     function autoPlace(imgs) {
       const n = imgs.length;
       if (!n) return;
@@ -81,63 +81,61 @@
       });
     }
 
-    // Helper: parse numbers even if they come as strings; return NaN if missing
+    // Helper: numeric-or-NaN parser
     const num = v => (v === null || v === undefined || v === '') ? NaN : Number(v);
 
     (async () => {
       const manifest = await loadManifest();
 
-      // Background
+      // Background first
       setBackground([
         manifest.background,
         `images/backgrounds/${storyId}/background.png`,
-        'images/backgrounds/tortoise-hare/background.png'
+        //'images/backgrounds/tortoise-hare/background.png'
       ].filter(Boolean));
 
-      // Optional grade filter (safe if missing)
+      // Optional grade filter — safe if not present
       let allowed = null;
       try {
         const caps = await getGradeCaps?.(ctx.grade || 'k-2');
-        if (caps?.allowedCharacters?.length) {
-          allowed = new Set(caps.allowedCharacters);
-        }
+        if (caps?.allowedCharacters?.length) allowed = new Set(caps.allowedCharacters);
       } catch {}
 
       // Inject characters
       const frag = document.createDocumentFragment();
-      const needAuto = [];
+      const needsAuto = [];
 
       for (const c of (manifest.characters || [])) {
         if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
         const img = document.createElement('img');
         img.className      = `character ${c.id}`;
-        img.dataset.char   = c.id;
+        img.dataset.char   = c.id;               // e.g., "squirrel1"
         img.dataset.sprite = c.sprite || '';
         img.alt            = c.name || c.id;
         img.draggable      = false;
         img.src            = c.sprite || `images/${c.id}.png`;
         img.style.position = 'absolute';
 
-        // ✅ Accept numeric or numeric-like strings from characters.json
-        const x = num(c.x), y = num(c.y), w = num(c.w), z = num(c.z);
+        // Accept numeric-like strings from JSON
+        const X = num(c.x), Y = num(c.y), W = num(c.w), Z = num(c.z);
+        let hadAny = false;
 
-        let hadPos = false;
-        if (!Number.isNaN(x)) { img.style.left   = `${x}%`; hadPos = true; }
-        if (!Number.isNaN(y)) { img.style.top    = `${y}%`; hadPos = true; }
-        if (!Number.isNaN(w)) { img.style.width  = `${w}%`; hadPos = true; }
-        if (!Number.isNaN(z)) { img.style.zIndex = String(z); }
+        if (!Number.isNaN(X)) { img.style.left   = `${X}%`; hadAny = true; }
+        if (!Number.isNaN(Y)) { img.style.top    = `${Y}%`; hadAny = true; }
+        if (!Number.isNaN(W)) { img.style.width  = `${W}%`; hadAny = true; }
+        if (!Number.isNaN(Z)) { img.style.zIndex = String(Z); }
 
+        if (!hadAny) needsAuto.push(img);
         frag.appendChild(img);
-        if (!hadPos) needAuto.push(img);
       }
 
       container.appendChild(frag);
 
-      // Only auto-place characters that had no authoring positions
-      autoPlace(needAuto);
+      // Auto-place only those lacking positions
+      autoPlace(needsAuto);
 
-      // Wire click/hover after sprites exist
+      // Hook up hit-testing + navigation after sprites exist
       await import('./js/sprite-select.js');
     })();
   </script>
