@@ -1,4 +1,3 @@
-
 <!-- sprite-select (character selection, story-aware) -->
 <!DOCTYPE html>
 <html lang="en">
@@ -90,8 +89,7 @@
       // Background first
       setBackground([
         manifest.background,
-        `images/backgrounds/${storyId}/background.png`,
-        //'images/backgrounds/tortoise-hare/background.png'
+        `images/backgrounds/${storyId}/background.png`
       ].filter(Boolean));
 
       // Optional grade filter — safe if not present
@@ -106,11 +104,14 @@
       const needsAuto = [];
 
       for (const c of (manifest.characters || [])) {
+        // 🚧 TEMP FILTER: only show Mama Duck for now
+        if (c.id !== "mama_duck") continue;
+
         if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
         const img = document.createElement('img');
         img.className      = `character ${c.id}`;
-        img.dataset.char   = c.id;               // e.g., "squirrel1"
+        img.dataset.char   = c.id;               
         img.dataset.sprite = c.sprite || '';
         img.alt            = c.name || c.id;
         img.draggable      = false;
