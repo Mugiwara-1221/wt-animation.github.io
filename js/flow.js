@@ -8,8 +8,8 @@ export function readCtx() {
     session: qs.get("session") || localStorage.getItem("sessionCode") || "",
     story:   qs.get("story")   || localStorage.getItem("selectedStory") || "",
     grade:   qs.get("grade")   || localStorage.getItem("selectedGrade") || "",
-    slide:   qs.get("slide")   || localStorage.getItem("selectedSlide") || "", // future use
-    char:    qs.get("char")    || ""                                         // transient
+    slide:   qs.get("slide")   || localStorage.getItem("selectedSlide") || "",
+    char:    qs.get("char")    || ""
   };
 
   // Persist any URL-provided values so they survive navigation.
@@ -35,13 +35,17 @@ export function writeCtx(partial) {
 }
 
 // Build a URL to another page, including known context and any extras.
-export function nextURL(page, ctx, extra = {}) {
+// NOTE: grade is NOT included unless extra.includeGrade === true
+export function nextURL(page, ctx = {}, extra = {}) {
   const u = new URL(page, location.href);
   if (ctx.session) u.searchParams.set("session", ctx.session);
   if (ctx.story)   u.searchParams.set("story", ctx.story);
-  if (ctx.grade)   u.searchParams.set("grade", ctx.grade);
   if (ctx.slide)   u.searchParams.set("slide", ctx.slide);
 
+  if (extra.includeGrade && ctx.grade) {
+    u.searchParams.set("grade", ctx.grade);
+  }
   if (extra.char)  u.searchParams.set("char", extra.char);
+
   return u.toString();
 }
