@@ -365,7 +365,7 @@ async function sendToStoryboard() {
         // collect unique region IDs (ignore 0 = background)
         const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
 
-        for (const regionId of uniqueIds) {
+        //for (const regionId of uniqueIds) {
           // --- Build binary mask for this region ---
           const maskCanvas = document.createElement("canvas");
           maskCanvas.width = W;
@@ -383,7 +383,7 @@ async function sendToStoryboard() {
                 imgData.data[idx + 3] = 255;
               }
             }
-          }
+          //}
           ctx.putImageData(imgData, 0, 0);
 
           // scale mask up to crop size
