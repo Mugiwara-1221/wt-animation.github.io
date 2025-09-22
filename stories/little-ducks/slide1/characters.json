@@ -1,5 +1,5 @@
 {
-  "background": "images/backgrounds/little-ducks/background1.PNG",
+  "background": "images/backgrounds/little-ducks/background1.png",
   "characters": [
     { "id": "fish1",         "name": "Fish 1",        "sprite": "images/sprites/5_little_ducks/fish1.png" },
     { "id": "fish2",         "name": "Fish 2",        "sprite": "images/sprites/5_little_ducks/fish2.png" },
