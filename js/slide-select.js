@@ -71,11 +71,12 @@ function makeCard(index) {
   img.loading = "lazy";
   img.decoding = "async";
 
-  // slide png locations + fallback
+  // Use RELATIVE paths so GitHub Pages subpaths work
   const candidates = [
-    `/stories/${storyId}/slide${index}.png`,   // primary (your repo)
-    `./stories/${storyFolder}/slide${index}.png`,        // fallback A (numeric at root)
-    `/stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
+    `stories/${storyFolder}/slide${index}.png`,   // primary (your repo)
+    `./stories/${storyFolder}/slide${index}.png`, // explicit relative
+    `stories/${storyFolder}/${index}.png`,        // fallback A (numeric at root)
+    `stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
   ];
 
   let ci = 0;
@@ -85,7 +86,7 @@ function makeCard(index) {
     if (ci < candidates.length) {
       img.src = candidates[ci];
     } else {
-      thumb.innerHTML = `<div style="font-size:2rem; opacity:.35;">${index}</div>`;
+      thumb.innerHTML = `<div style="font-size:8rem; opacity:.35;">${index}</div>`;
     }
   };
 
@@ -99,7 +100,7 @@ function makeCard(index) {
 
   const go = () => {
     const nextCtx = writeCtx({ ...ctx, slide: String(index) });
-    location.href = nextURL("sprite-select.html", nextCtx); // ✅ goes straight to character selection
+    location.href = nextURL("sprite-select.html", nextCtx);
   };
   card.addEventListener("click", go);
   card.addEventListener("keydown", e => {
