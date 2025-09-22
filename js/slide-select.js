@@ -1,6 +1,6 @@
 
 // js/slide-select.js — interactive slide picker (1–6) for the chosen story
-// import { readCtx, writeCtx, nextURL } from "./flow.js";
+import { readCtx, writeCtx, nextURL } from "./flow.js";
 
 const grid     = document.getElementById("grid");
 const emptyMsg = document.getElementById("emptyMsg");
