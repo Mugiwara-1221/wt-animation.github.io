@@ -94,7 +94,7 @@ function makeCard(index) {
 
   const title = document.createElement("div");
   title.className = "title";
-  title.textContent = `Slide ${index}`;
+  title.textContent = `Page ${index}`;
 
   card.append(thumb, title);
 
