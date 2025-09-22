@@ -77,7 +77,7 @@
 
   <!-- Route guard & pass-through context -->
   <script type="module">
-    import { readCtx, nextURL } from './js/flow.js';
+    //import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
