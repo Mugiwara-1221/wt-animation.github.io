@@ -73,6 +73,7 @@ function makeCard(index) {
 
   // slide png locations + fallback
   const candidates = [
+    `/stories/${storyID}/slide${index}.png`,   // primary (your repo)
     `/stories/${storyFolder}/slide${index}.png`,   // primary (your repo)
     `/stories/${storyFolder}/${index}.png`,        // fallback A (numeric at root)
     `/stories/${storyFolder}/slides/${index}.png`  // fallback B (in /slides/)
