@@ -129,7 +129,7 @@ function makeCard(s) {
   thumb.appendChild(img);
 
   const title = document.createElement("div");
-  title.className = "title";
+  title.className = `title story-${s.id}`;
   title.textContent = s.title;
 
   card.append(thumb, title);
