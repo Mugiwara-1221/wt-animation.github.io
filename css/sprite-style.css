@@ -97,11 +97,15 @@ h2 {
   to { background-position: -400px 0; }
 }
 
-.hare     { top: 50%; left: 15%; }
-.tortoise { top: 65%; 
-           left: 50%;
-           animation: walk 1s steps(4) infinite;
-          }
+.tortoise {
+  position: absolute; /* Needed to use top/left positioning */
+  top: 65%;
+  left: 50%;
+  width: 100px; /* Set width of one frame */
+  height: 100px; /* Set height of one frame */
+  animation: walk 1s steps(4) infinite;
+}
+.hare     { top: 50%; left: 15% }
 .bear     { top: 28%; left: 60%; }
 .squirrel { top: 40%; left: 78%; }
 .bird1    { top: 10%; left: 28%; }
