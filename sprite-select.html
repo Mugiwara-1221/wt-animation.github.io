@@ -27,13 +27,15 @@
   <!-- Runtime: load manifest & characters -->
   <script type="module">
     import { readCtx } from './js/flow.js';
-    // (grade caps optional; safely ignored if not present)
     // import { getGradeCaps } from './js/grade-config.js';
 
     const ctx        = readCtx();
     const container  = document.getElementById('characters');
     const sceneImg   = document.getElementById('scene');
     const storyId    = ctx.story; // e.g. "lion-mouse"
+
+    // Ensure absolutely-positioned children are relative to the scene wrapper
+    container.style.position = 'relative';
 
     async function loadManifest() {
       const url = `stories/${storyId}/characters.json`;
@@ -57,6 +59,7 @@
     // Simple auto-layout used only when a character has NO x/y/w specified
     function autoPlace(imgs) {
       const n = imgs.length;
+      if (!n) return;
       const cols = Math.min(4, n);
       const rows = Math.ceil(n / cols);
 
@@ -77,6 +80,9 @@
         img.style.width = `${w}%`;
       });
     }
+
+    // Helper: parse numbers even if they come as strings; return NaN if missing
+    const num = v => (v === null || v === undefined || v === '') ? NaN : Number(v);
 
     (async () => {
       const manifest = await loadManifest();
@@ -99,13 +105,10 @@
 
       // Inject characters
       const frag = document.createDocumentFragment();
-      const positioned = [];
+      const needAuto = [];
 
       for (const c of (manifest.characters || [])) {
-        if (allowed && allowed.size && !allowed.has(c.id)) {
-          // If using caps, skip only non-allowed ids.
-          continue;
-        }
+        if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
         const img = document.createElement('img');
         img.className      = `character ${c.id}`;
@@ -114,24 +117,25 @@
         img.alt            = c.name || c.id;
         img.draggable      = false;
         img.src            = c.sprite || `images/${c.id}.png`;
-
-        // ✅ Re-enable authoring positions from characters.json
-        let hadPos = false;
         img.style.position = 'absolute';
-        if (typeof c.x === 'number') { img.style.left   = `${c.x}%`; hadPos = true; }
-        if (typeof c.y === 'number') { img.style.top    = `${c.y}%`; hadPos = true; }
-        if (typeof c.w === 'number') { img.style.width  = `${c.w}%`; hadPos = true; }
-        if (typeof c.z === 'number') { img.style.zIndex = String(c.z); }
+
+        // ✅ Accept numeric or numeric-like strings from characters.json
+        const x = num(c.x), y = num(c.y), w = num(c.w), z = num(c.z);
+
+        let hadPos = false;
+        if (!Number.isNaN(x)) { img.style.left   = `${x}%`; hadPos = true; }
+        if (!Number.isNaN(y)) { img.style.top    = `${y}%`; hadPos = true; }
+        if (!Number.isNaN(w)) { img.style.width  = `${w}%`; hadPos = true; }
+        if (!Number.isNaN(z)) { img.style.zIndex = String(z); }
 
         frag.appendChild(img);
-        positioned.push({ el: img, hadPos });
+        if (!hadPos) needAuto.push(img);
       }
 
       container.appendChild(frag);
 
-      // Only auto-place those that had no x/y/w
-      const toAuto = positioned.filter(p => !p.hadPos).map(p => p.el);
-      if (toAuto.length) autoPlace(toAuto);
+      // Only auto-place characters that had no authoring positions
+      autoPlace(needAuto);
 
       // Wire click/hover after sprites exist
       await import('./js/sprite-select.js');
