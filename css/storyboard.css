@@ -63,6 +63,16 @@ h2 {
    to IMG elements to avoid fighting with the canvas sizing.
    ────────────────────────────────────────────────────────────── */
 
+@keyframes walk {
+  from { background-position: 0 0; }
+  to { background-position: -400px 0; }
+}
+
+@keyframes moveRight {
+  from { left: 0%; }
+  to { left: 80%; }
+}
+
 img.character {
   position: relative;
   user-select: none;
@@ -79,7 +89,12 @@ img.character.bird2    { width: 200px; height: auto; }
 
 /* Reuse exact positions so they line up with the background */
 img.character.hare     { top: -10px; left: 20px; }
-img.character.tortoise { top: 0px;   left: 20px; }
+img.character.tortoise { position: absolute;
+                        top: 0px;   
+                        left: 20px; 
+                        animation: walk 1s steps(4) infinite, moveRight 5s linear infinite;
+                       }
+
 img.character.bear     { top: -50px; left: -170px; }
 img.character.squirrel { top: 80px;  left: -20px; }
 img.character.bird1    { top: 60px;  left: 97px; }
