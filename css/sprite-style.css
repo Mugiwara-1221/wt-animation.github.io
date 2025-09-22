@@ -69,6 +69,20 @@ h2 {
   width: 18%;
 }
 
+@keyframes walk {
+  from { background-position: 0 0; }
+  to { background-position: -400px 0; }
+}
+
+.tortoise {
+  position: absolute; /* Needed to use top/left positioning */
+  top: 65%;
+  left: 50%;
+  width: 100px; /* Set width of one frame */
+  height: 100px; /* Set height of one frame */
+  animation: walk 1s steps(4) infinite;
+}
+
 /* Hover/lock styling */
 .character.hovered:not(.locked),
 .character:not(.locked):hover {
@@ -92,19 +106,7 @@ h2 {
 
 /* Default positions that matched your original Tortoise & Hare layout.
    Any story can override with percent-based x/y/w in characters.json. */
-@keyframes walk {
-  from { background-position: 0 0; }
-  to { background-position: -400px 0; }
-}
 
-.tortoise {
-  position: absolute; /* Needed to use top/left positioning */
-  top: 65%;
-  left: 50%;
-  width: 100px; /* Set width of one frame */
-  height: 100px; /* Set height of one frame */
-  animation: walk 1s steps(4) infinite;
-}
 .hare     { top: 50%; left: 15% }
 .bear     { top: 28%; left: 60%; }
 .squirrel { top: 40%; left: 78%; }
