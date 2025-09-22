@@ -92,8 +92,17 @@ h2 {
 
 /* Default positions that matched your original Tortoise & Hare layout.
    Any story can override with percent-based x/y/w in characters.json. */
+@keyframes walk {
+  from { background-position: 0 0; }
+  to { background-position: -400px 0; }
+}
+
 .hare     { top: 50%; left: 15%; }
-.tortoise { top: 65%; left: 50%; }
+.tortoise { top: 65%; 
+           left: 50%;
+           background: url('sprite-sheet.png') no-repeat;
+           animation: walk 1s steps(4) infinite;
+          }
 .bear     { top: 28%; left: 60%; }
 .squirrel { top: 40%; left: 78%; }
 .bird1    { top: 10%; left: 28%; }
