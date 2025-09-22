@@ -108,7 +108,7 @@
 
       for (const c of (manifest.characters || [])) {
         // 🚧 FILTER: skip characters not in SHOW_ONLY (unless SHOW_ONLY is empty)
-        if (SHOW_ONLY.length && !SHOW_ONLY.includes(c.id)) continue;
+        //if (SHOW_ONLY.length && !SHOW_ONLY.includes(c.id)) continue;
 
         if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
