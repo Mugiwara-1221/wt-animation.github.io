@@ -103,7 +103,7 @@ h2 {
   position: absolute; /* Needed to use top/left positioning */
   top: 65%;
   left: 50%;
-  background: url('images/sprites/tortoise-hare/tortoise.png') no-repeat;
+  background: url('/images/sprites/tortoise-hare/tortoise.png') no-repeat;
   animation: walk 1s steps(4) infinite;
 }
 
