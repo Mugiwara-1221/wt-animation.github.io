@@ -13,8 +13,51 @@
   <button class="toggleNavLeft" aria-label="Toggle tools panel"></button>
 
   <!-- Sidebar Tools Panel -->
-  <nav id="navLeft" aria-label="Drawing tools">
-    <!-- ... (unchanged tools markup) ... -->
+  <!-- start open so tools are visible -->
+  <nav id="navLeft" class="open" aria-label="Drawing tools">
+    <div class="nav-content">
+      <span>Brush Type</span>
+      <select class="brush-type-select" aria-label="Brush type">
+        <option value="basic" selected>Basic</option>
+        <option value="soft">Soft</option>
+        <option value="marker">Marker</option>
+        <option value="water">Watercolor</option>
+      </select>
+    </div>
+
+    <div class="nav-content">
+      <span>Brush Size</span>
+      <input type="range" class="brush-size-slider" min="1" max="100" value="18" aria-label="Brush size" />
+    </div>
+
+    <div class="nav-content">
+      <span>Opacity</span>
+      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity" />
+    </div>
+
+    <div class="nav-content">
+      <span>Color</span>
+      <input class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
+    </div>
+
+    <div class="nav-content">
+      <button onclick="setTool('draw')">Brush</button>
+      <button onclick="setTool('erase')">Eraser</button>
+      <button onclick="undo()">Undo</button>
+      <button onclick="redo()">Redo</button>
+      <button onclick="clearCanvas()">Clear</button>
+      <button onclick="toggleSaveOptions()" aria-expanded="false" aria-controls="saveOptions">Save ▼</button>
+      <div id="saveOptions" class="save-options hidden" role="menu">
+        <button onclick="downloadImage()" role="menuitem">Download Image</button>
+        <button onclick="sendToStoryboard()" role="menuitem">Send to Storyboard</button>
+      </div>
+    </div>
+
+    <div class="nav-content">
+      <span>Zoom</span>
+      <button onclick="zoomIn()">+</button>
+      <button onclick="zoomOut()">-</button>
+    </div>
   </nav>
 
   <!-- Canvas Layers -->
@@ -36,14 +79,11 @@
   <!-- Route guard & pass-through context -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
-
     const ctx = readCtx();
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
-    if (!ctx.slide)   { location.replace(nextURL('slide-select.html', ctx)); throw 0; }  // ✅ require slide
-    if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; } // ✅ require character
-
-    // Hand off to canvas.js
+    // 🚫 no grade gate here
+    if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
     window.__flowCtx = ctx;
   </script>
 
