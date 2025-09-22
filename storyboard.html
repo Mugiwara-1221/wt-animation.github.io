@@ -34,7 +34,7 @@
 
   <!-- Route guard: require session + story; grade optional but recommended -->
   <script type="module">
-    import { readCtx, nextURL } from './js/flow.js';
+    //import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.session) location.replace('index.html');
     if (!ctx.story)   location.replace(nextURL('story-select.html', ctx));
