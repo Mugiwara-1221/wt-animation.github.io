@@ -44,9 +44,10 @@
 
     async function loadManifest() {
       // Try slide-specific manifest first, then fall back to legacy path
-      const candidates = [
-        `stories/${storyId}/slides/${slide}/characters.json`,
-        `stories/${storyId}/characters.json`
+     const candidates = [
+        `stories/${storyId}/slide${slide}/characters.json`,     
+        `stories/${storyId}/slides/${slide}/characters.json`,   
+        `stories/${storyId}/characters.json`                    
       ];
       for (const url of candidates) {
         try {
