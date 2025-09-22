@@ -65,7 +65,7 @@ h2 {
 
 @keyframes walk {
   from { background-position: 0 0; }
-  to { background-position: -400px 0; }
+  to { background-position: -300px 0; }
 }
 
 @keyframes moveRight {
@@ -74,7 +74,7 @@ h2 {
 }
 
 img.character {
-  position: relative;
+  position: absolute;
   user-select: none;
   pointer-events: none;
 }
