@@ -373,7 +373,7 @@ async function sendToStoryboard() {
           const ctx = maskCanvas.getContext("2d");
           const imgData = ctx.createImageData(W, H);
 
-          for (let y = 0; y < H; y++) {
+          /*for (let y = 0; y < H; y++) {
             for (let x = 0; x < W; x++) {
               if (mat[y][x] === regionId) {
                 const idx = (y * W + x) * 4;
@@ -383,7 +383,7 @@ async function sendToStoryboard() {
                 imgData.data[idx + 3] = 255;
               }
             }
-          //}
+          }*/
           ctx.putImageData(imgData, 0, 0);
 
           // scale mask up to crop size
