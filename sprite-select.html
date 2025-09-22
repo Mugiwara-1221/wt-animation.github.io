@@ -23,7 +23,7 @@
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
   </script>
 
-  <!-- Runtime: load manifest & characters -->
+  <!-- Runtime: load manifest & characters (slide-aware, flat backgrounds) -->
   <script type="module">
     import { readCtx } from './js/flow.js';
     // import { getGradeCaps } from './js/grade-config.js';
@@ -31,24 +31,31 @@
     const ctx        = readCtx();
     const container  = document.getElementById('characters');
     const sceneImg   = document.getElementById('scene');
-    const storyId    = ctx.story; // e.g. "tortoise-hare"
 
-    // 🚧 TEMP: Only show these characters (leave empty [] to show all)
-    const SHOW_ONLY = ["mama_duck"];
+    const storyId    = ctx.story;                                // e.g. "little-ducks"
+    const q          = new URLSearchParams(location.search);
+    const slide      = Number(q.get('slide')) || Number(ctx.slide) || 1;
+
+    // DEV: show only some characters while building; leave [] for all
+    const SHOW_ONLY = []; // e.g., ["mama_duck"]
 
     // Ensure absolutely-positioned children are relative to the scene wrapper
     container.style.position = 'relative';
 
     async function loadManifest() {
-      const url = `stories/${storyId}/characters.json`;
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        return await res.json();
-      } catch (err) {
-        console.warn('No characters.json for', storyId, err);
-        return { background:'', characters:[] };
+      // Try slide-specific manifest first, then fall back to legacy path
+      const candidates = [
+        `stories/${storyId}/slides/${slide}/characters.json`,
+        `stories/${storyId}/characters.json`
+      ];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) return await res.json();
+        } catch {}
       }
+      console.warn('No characters.json for', storyId, 'slide', slide);
+      return { background:'', characters:[] };
     }
 
     function setBackground(paths) {
@@ -89,11 +96,20 @@
     (async () => {
       const manifest = await loadManifest();
 
-      // Background first
-      setBackground([
-        manifest.background,
-        `images/backgrounds/${storyId}/background.png`
-      ].filter(Boolean));
+      // Backgrounds live in a FLAT folder:
+      //   images/backgrounds/<storyId>/background1.png
+      //   images/backgrounds/<storyId>/background2.png
+      //   ...
+      // Tries numbered names first, then background.png
+      const bgBase = `images/backgrounds/${storyId}`;
+      const bgCandidates = [
+        manifest.background,                        // explicit override from JSON (optional)
+        `${bgBase}/background${slide}.png`,         // background1.png, background2.png, ...
+        `${bgBase}/background-${slide}.png`,        // also accept background-1.png
+        `${bgBase}/background_${slide}.png`,        // also accept background_1.png
+        `${bgBase}/background.png`                  // final fallback
+      ].filter(Boolean);
+      setBackground(bgCandidates);
 
       // Optional grade filter — safe if not present
       let allowed = null;
@@ -107,18 +123,21 @@
       const needsAuto = [];
 
       for (const c of (manifest.characters || [])) {
-        // 🚧 FILTER: skip characters not in SHOW_ONLY (unless SHOW_ONLY is empty)
+        // Filter for dev
         if (SHOW_ONLY.length && !SHOW_ONLY.includes(c.id)) continue;
-
         if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
         const img = document.createElement('img');
         img.className      = `character ${c.id}`;
-        img.dataset.char   = c.id;               
+        img.dataset.char   = c.id;               // e.g., "mama_duck"
         img.dataset.sprite = c.sprite || '';
         img.alt            = c.name || c.id;
         img.draggable      = false;
-        img.src            = c.sprite || `images/${c.id}.png`;
+
+        // Optional cache-buster via "v" in JSON (dev convenience)
+        const v = (c.v != null) ? `?v=${c.v}` : "";
+        img.src = (c.sprite || `images/${c.id}.png`) + v;
+
         img.style.position = 'absolute';
 
         // Accept numeric-like strings from JSON
