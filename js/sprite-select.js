@@ -80,7 +80,7 @@ function wire(img) {
   const onMove = (e) => {
     const off = hit.get(img);
     if (!off) return;
-    const over = isOverInk(img, off, e);
+    //const over = isOverInk(img, off, e);
     img.classList.toggle("hovered", over && !img.classList.contains("locked"));
   };
   const onLeave = () => img.classList.remove("hovered");
