@@ -74,9 +74,9 @@ function makeCard(index) {
   // Use RELATIVE paths so GitHub Pages subpaths work
   const candidates = [
     `stories/${storyFolder}/slide${index}_with_characters.png`,   // primary (your repo)
-    `./stories/${storyFolder}/slide${index}_with_characters.png`, // explicit relative
-    `stories/${storyFolder}/${index}_with_characters.png`,        // fallback A (numeric at root)
-    `stories/${storyFolder}/slides/${index}_with_characters.png`  // fallback B (in /slides/)
+    //`./stories/${storyFolder}/slide${index}_with_characters.png`, // explicit relative
+    //`stories/${storyFolder}/${index}_with_characters.png`,        // fallback A (numeric at root)
+    //`stories/${storyFolder}/slides/${index}_with_characters.png`  // fallback B (in /slides/)
   ];
 
   let ci = 0;
