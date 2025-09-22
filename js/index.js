@@ -1,9 +1,6 @@
 
 // js/index.js
 // Session page controller (browser-safe)
-// - Creates/joins a session
-// - Persists session to localStorage
-// - Navigates to story-select.html via flow.js
 
 import { nextURL } from './flow.js';
 
@@ -14,7 +11,6 @@ const joinId             = document.getElementById('joinCodeId');
 const sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
 const joinError          = document.getElementById('joinError');
 
-// Stable device token for lock ownership later
 function getDeviceToken() {
   let token = localStorage.getItem('deviceToken');
   if (!token) {
@@ -25,17 +21,13 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
-// Local fallback 6-digit code
 const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
-// --- Create a new session ---
 createBtn?.addEventListener('click', async () => {
   try {
     const sessionCode = makeCode();
     localStorage.setItem('sessionCode', sessionCode);
     sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
-
-    // Forward to story selection with the session in the URL
     const url = nextURL('story-select.html', { session: sessionCode });
     location.href = url;
   } catch (e) {
@@ -43,14 +35,12 @@ createBtn?.addEventListener('click', async () => {
   }
 });
 
-// --- Join an existing session ---
 joinBtn?.addEventListener('click', async () => {
   joinError.textContent = '';
 
   const code   = (joinInput?.value || '').trim();
   const idCode = (joinId?.value    || '').trim();
 
-  // Accepts 6 digits or ABC-123 style codes
   const sixDigitOk = /^\d{6}$/.test(code);
   const dashedOk   = /^[A-Za-z]{3}-\d{3}$/.test(code) || code.includes('-');
 
@@ -64,11 +54,9 @@ joinBtn?.addEventListener('click', async () => {
   }
 
   try {
-    // Local acceptance; wire Azure validation here later if needed
     localStorage.setItem('sessionCode', code);
     localStorage.setItem('memberId', idCode);
     localStorage.setItem('deviceToken', deviceToken);
-
     const url = nextURL('story-select.html', { session: code });
     location.href = url;
   } catch (e) {
