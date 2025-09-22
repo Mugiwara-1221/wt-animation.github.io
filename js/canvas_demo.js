@@ -319,7 +319,7 @@ async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
   let misses=0;
-  for(let n=1;n<=4;n++){
+  for(let n=1;n<2;n++){  //CHANGED
     const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
     if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; console.log(`${prefix}${n}.csv`) }
     else { misses++; if(misses>=2 && out.length) break; }
@@ -356,7 +356,7 @@ async function sendToStoryboard() {
     for (const { frame, prefix } of sets) {
       const list = [];
 
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i < 2; i++) {  // Changed to only one image
         const csvURL = `${prefix}${i}.csv`;
         if (!(await urlExists(csvURL))) continue;
 
