@@ -7,7 +7,7 @@ export function readCtx() {
   const ctx = {
     session: qs.get("session") || localStorage.getItem("sessionCode") || "",
     story:   qs.get("story")   || localStorage.getItem("selectedStory") || "",
-    //grade:   qs.get("grade")   || localStorage.getItem("selectedGrade") || "",
+    grade:   qs.get("grade")   || localStorage.getItem("selectedGrade") || "",
     slide:   qs.get("slide")   || localStorage.getItem("selectedSlide") || "",
     char:    qs.get("char")    || ""
   };
@@ -15,7 +15,7 @@ export function readCtx() {
   // Persist any URL-provided values so they survive navigation.
   if (qs.get("session")) localStorage.setItem("sessionCode", ctx.session);
   if (qs.get("story"))   localStorage.setItem("selectedStory", ctx.story);
-  //if (qs.get("grade"))   localStorage.setItem("selectedGrade", ctx.grade);
+  if (qs.get("grade"))   localStorage.setItem("selectedGrade", ctx.grade);
   if (qs.get("slide"))   localStorage.setItem("selectedSlide", ctx.slide);
 
   return ctx;
@@ -28,7 +28,7 @@ export function writeCtx(partial) {
 
   if (next.session != null) localStorage.setItem("sessionCode", next.session);
   if (next.story   != null) localStorage.setItem("selectedStory", next.story);
-  //if (next.grade   != null) localStorage.setItem("selectedGrade", next.grade);
+  if (next.grade   != null) localStorage.setItem("selectedGrade", next.grade);
   if (next.slide   != null) localStorage.setItem("selectedSlide", next.slide);
 
   return next;
@@ -40,7 +40,7 @@ export function nextURL(page, ctx = {}, extra = {}) {
   const u = new URL(page, location.href);
   if (ctx.session) u.searchParams.set("session", ctx.session);
   if (ctx.story)   u.searchParams.set("story", ctx.story);
-  //if (ctx.slide)   u.searchParams.set("slide", ctx.slide);
+  if (ctx.slide)   u.searchParams.set("slide", ctx.slide);
 
   if (extra.includeGrade && ctx.grade) {
     u.searchParams.set("grade", ctx.grade);
