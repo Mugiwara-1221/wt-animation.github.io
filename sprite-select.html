@@ -17,18 +17,26 @@
     <!-- Characters injected by JS -->
   </div>
 
-  <!-- Guard: must have story & grade (but don't block rendering later) -->
+  <!-- Guard: must have story & slide (grade no longer required) -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
+
     const ctx = readCtx();
     if (!ctx.story) location.replace(nextURL('story-select.html', ctx));
-    //if (!ctx.grade) location.replace(nextURL('grade-select.html', ctx));
+    if (!ctx.slide) location.replace(nextURL('slide-select.html', ctx));
+
+    // Scene preview (relative path so it works on GH Pages)
+    const sceneEl = document.getElementById('scene');
+    if (sceneEl && ctx.story && ctx.slide) {
+      sceneEl.src = `stories/${ctx.story}/slide${ctx.slide}.png`;
+      sceneEl.alt = `Scene slide ${ctx.slide}`;
+    }
   </script>
 
   <!-- Runtime: load manifest & characters -->
   <script type="module">
-    //import { readCtx, nextURL } from './js/flow.js';
-    //import { getGradeCaps } from './js/grade-config.js';
+    import { readCtx } from './js/flow.js';
+    import { getGradeCaps } from './js/grade-config.js';
 
     const ctx        = readCtx();
     const container  = document.getElementById('characters');
@@ -37,7 +45,6 @@
 
     // Fetch characters.json for this story
     async function loadManifest() {
-      //console.log(storyId);
       const url = `stories/${storyId}/characters.json`;
       try {
         const res = await fetch(url, { cache: 'no-store' });
@@ -59,7 +66,6 @@
 
     // Auto-layout if a story provides no positions (x/y/w)
     function autoPlace(imgs) {
-      // 2 rows grid; tweak as desired
       const n = imgs.length;
       const cols = Math.min(4, n);
       const rows = Math.ceil(n / cols);
@@ -71,7 +77,7 @@
         const cellW = (100 - (cols + 1) * gap) / cols;
         const cellH = (100 - (rows + 1) * gap) / rows;
 
-        const w = Math.min(22, cellW); // keep sprites reasonably sized
+        const w = Math.min(22, cellW);
         const x = gap + c * (cellW + gap) + (cellW - w) / 2;
         const y = gap + r * (cellH + gap);
 
@@ -105,29 +111,21 @@
       const injected = [];
 
       for (const c of (manifest.characters || [])) {
-        // If grade caps provided, only filter if there is an exact id match.
-        // If nothing matches for this story, show all.
+        // Only filter if we actually have an allow-list
         if (allowed && allowed.size && !allowed.has(c.id)) {
-          // skip only if at least one id in this manifest is allowed
-          // we'll check after build
+          continue;
         }
 
         const img = document.createElement('img');
         img.className      = `character ${c.id}`;
-        img.dataset.char   = c.id;               // story-scoped id (e.g., "squirrel1")
+        img.dataset.char   = c.id;               // story-scoped id
         img.dataset.sprite = c.sprite || '';     // pass direct sprite URL to canvas
         img.alt            = c.name || c.id;
         img.draggable      = false;
         img.src            = c.sprite || `images/${c.id}.png`;
 
-        // Position overrides (optional, percent-based)
-        //if (typeof c.x === 'number') img.style.left   = `${c.x}%`;
-        //if (typeof c.y === 'number') img.style.top    = `${c.y}%`;
-        //if (typeof c.w === 'number') img.style.width  = `${c.w}%`;
-        //if (typeof c.z === 'number') img.style.zIndex = String(c.z);
-
         frag.appendChild(img);
-        //injected.push({ id: c.id, el: img, hadXYW: (c.x!=null || c.y!=null || c.w!=null) });
+        injected.push({ el: img, hadXYW: (c.x!=null || c.y!=null || c.w!=null) });
       }
 
       container.appendChild(frag);
