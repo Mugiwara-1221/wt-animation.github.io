@@ -90,8 +90,8 @@ img.character.bird2    { width: 200px; height: auto; }
 /* Reuse exact positions so they line up with the background */
 img.character.hare     { top: -10px; left: 20px; }
 img.character.tortoise { position: absolute;
-                        top: 0px;   
-                        left: 20px; 
+                        /*top: 0px;   
+                        left: 20px; */
                         animation: walk 1s steps(4) infinite, moveRight 5s linear infinite;
                        }
 
