@@ -142,6 +142,7 @@ async function getMasksForSlide(charId, slideNo){
   const prefix = `images/frames/${storyFolder}/frame${slideNo}/${charId}/${charId}_mask_`;
   /* const prefix = `images/frames/${storyId}/frame${slideNo}/${charId}/${charId}_mask_`;       edited 9/12/25' */
   const key = `${prefix}|4`;
+  console.log(prefix, charId);
   if (maskMatCache.has(key)) return maskMatCache.get(key);
 
   const mats = await Promise.all(
