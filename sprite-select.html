@@ -33,6 +33,9 @@
     const sceneImg   = document.getElementById('scene');
     const storyId    = ctx.story; // e.g. "tortoise-hare"
 
+    // 🚧 TEMP: Only show these characters (leave empty [] to show all)
+    const SHOW_ONLY = ["mama_duck", "tortoise"];
+
     // Ensure absolutely-positioned children are relative to the scene wrapper
     container.style.position = 'relative';
 
@@ -104,8 +107,8 @@
       const needsAuto = [];
 
       for (const c of (manifest.characters || [])) {
-        // 🚧 TEMP FILTER: only show Mama Duck for now
-        if (c.id !== "mama_duck") continue;
+        // 🚧 FILTER: skip characters not in SHOW_ONLY (unless SHOW_ONLY is empty)
+        if (SHOW_ONLY.length && !SHOW_ONLY.includes(c.id)) continue;
 
         if (allowed && allowed.size && !allowed.has(c.id)) continue;
 
