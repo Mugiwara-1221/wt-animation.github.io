@@ -365,19 +365,15 @@ function downloadDataUrl(dataUrl, filename) {
 /* ------- Send to storyboard ------- */
 async function sendToStoryboard() {
   try {
-      let baseData = null;
-    try {
-      const baseImg = await loadImage(baseFrameURL);
-      const baseCanvas = document.createElement("canvas");
-      baseCanvas.width = baseImg.width;
-      baseCanvas.height = baseImg.height;
-      const baseCtx = baseCanvas.getContext("2d");
-      baseCtx.drawImage(baseImg, 0, 0);
-      baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
-      document.body.appendChild(baseCanvas); // Debug: show base outline
-    } catch (e) {
-      console.warn("Base image failed to load:", baseFrameURL, e);
-    }
+    let baseData = null;
+    const baseImg = await loadImage(baseFrameURL);
+    const baseCanvas = document.createElement("canvas");
+    baseCanvas.width = baseImg.width;
+    baseCanvas.height = baseImg.height;
+    const baseCtx = baseCanvas.getContext("2d");
+    baseCtx.drawImage(baseImg, 0, 0);
+    baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
+    document.body.appendChild(baseCanvas); // Debug: show base outline
   
     // 2️⃣ Crop paint layer
     const cropCanvas = document.createElement("canvas");
