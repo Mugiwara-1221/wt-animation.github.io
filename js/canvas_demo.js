@@ -513,6 +513,7 @@ async function sendToStoryboard() {
     console.error("[sendToStoryboard] failed:", err);
     alert("Send to Storyboard failed. See console for details.");
   }
+  }
 }
 
 /* ---------- Expose for buttons ---------- */
