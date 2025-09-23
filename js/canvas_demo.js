@@ -57,6 +57,7 @@ function loadImageCached(src){
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
+  ["little-ducks", "5_little_ducks"],
 ]);
 
 /* Full-window canvases; sprite sits in a centered box */
@@ -112,23 +113,50 @@ async function resolveSpriteURL() {
     const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
     if (hit?.sprite) return hit.sprite;
   } catch (e) { console.warn("[resolveSpriteURL] manifest load failed:", e); }
+
+  // NEW: try story-scoped outlines first, then legacy flat
+  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+  const candidates = [
+    `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
+    `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
+    `images/outline/${selectedChar}_transparent.png`,
+    `images/outline/${selectedChar}-transparent.png`,
+  ];
+  for (const u of candidates) {
+    if (await urlExists(u)) return u;
+  }
+
+  // Last resort (should rarely hit)
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
 /* Outline choice for a slide */
 async function resolveOutlineURLForSlide(slide1) {
-  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+  const storyDash   = selectedStory || "tortoise-hare";
+  const storyFolder = resolveStoryFolder(storyDash); // uses STORY_FOLDER_MAP
+
+  // 1) Frame-specific overlay (if you have per-frame PNGs)
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
 
+  // 2) Explicit outline URL passed in (query string)
   if (outlineParam) return outlineParam;
 
-  const storyScoped = `images/outline/${selectedStory || "tortoise-hare"}/${selectedChar}-transparent.png`;
-  if (await urlExists(storyScoped)) return storyScoped;
+  // 3) STORY-SCOPED OUTLINES — try your underscore pattern first
+  const tries = [
+    // your repo’s pattern:
+    `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
+    // also accept dash pattern just in case:
+    `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
+    // legacy flat location:
+    `images/outline/${selectedChar}_transparent.png`,
+    `images/outline/${selectedChar}-transparent.png`,
+  ];
+  for (const url of tries) {
+    if (await urlExists(url)) return url;
+  }
 
-  const legacy = `images/outline/${selectedChar}-transparent.png`;
-  if (await urlExists(legacy)) return legacy;
-
+  // 4) Final fallback: sprite URL (colored sprite if nothing else found)
   return await resolveSpriteURL();
 }
 
