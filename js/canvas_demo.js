@@ -1,8 +1,6 @@
 
 "use strict";
 
-import { countMaskUsage, getBlockBBox, irregularTo100, grid100ToIrregular } from './color-map-advanced.js';
-
 /* ---------- Optional Azure submit (safe if not present) ---------- */
 let submitDrawing = async () => {};
 try {
@@ -59,6 +57,7 @@ function loadImageCached(src){
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
+  ["little-ducks", "5_little_ducks"],
 ]);
 
 /* Full-window canvases; sprite sits in a centered box */
@@ -114,23 +113,48 @@ async function resolveSpriteURL() {
     const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
     if (hit?.sprite) return hit.sprite;
   } catch (e) { console.warn("[resolveSpriteURL] manifest load failed:", e); }
+
+  // NEW: try story-scoped outlines first, then legacy flat
+  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+  const candidates = [
+    `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
+    `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
+    `images/outline/${selectedChar}_transparent.png`,
+    `images/outline/${selectedChar}-transparent.png`,
+  ];
+  for (const u of candidates) {
+    if (await urlExists(u)) return u;
+  }
+
+  // Last resort (should rarely hit)
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
 /* Outline choice for a slide */
+
 async function resolveOutlineURLForSlide(slide1) {
-  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+  const storyDash   = selectedStory || "tortoise-hare";
+  const storyFolder = resolveStoryFolder(storyDash);
+
+  // 1) ?outline=... override
+  if (outlineParam) return outlineParam;
+
+  // 2) Prefer STORY-SCOPED OUTLINES first (your real paths)
+  const tries = [
+    `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
+    `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
+    `images/outline/${selectedChar}_transparent.png`,
+    `images/outline/${selectedChar}-transparent.png`,
+  ];
+  for (const url of tries) {
+    if (await urlExists(url)) return url;
+  }
+
+  // 3) If you also have per-frame overlays, allow them as a fallback
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
 
-  if (outlineParam) return outlineParam;
-
-  const storyScoped = `images/outline/${selectedStory || "tortoise-hare"}/${selectedChar}-transparent.png`;
-  if (await urlExists(storyScoped)) return storyScoped;
-
-  const legacy = `images/outline/${selectedChar}-transparent.png`;
-  if (await urlExists(legacy)) return legacy;
-
+  // 4) Last resort: colored sprite / other fallbacks
   return await resolveSpriteURL();
 }
 
@@ -321,7 +345,7 @@ async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
   let misses=0;
-  for(let n=1;n<=4;n++){
+  for(let n=1;n<2;n++){  //CHANGED
     const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
     if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; console.log(`${prefix}${n}.csv`) }
     else { misses++; if(misses>=2 && out.length) break; }
@@ -338,335 +362,114 @@ function downloadDataUrl(dataUrl, filename) {
   document.body.removeChild(a);
 }
 
-function scaleMask(mask, srcW, srcH, targetW, targetH) {
-  const scaled = [];
-  for (let y = 0; y < targetH; y++) {
-    const row = [];
-    for (let x = 0; x < targetW; x++) {
-      const srcX = Math.floor(x * srcW / targetW);
-      const srcY = Math.floor(y * srcH / targetH);
-      row.push(mask[srcY][srcX]);
-    }
-    scaled.push(row);
-  }
-  return scaled;
-}
-
-function loadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function renderMaskToCanvas(mask, W, H) {
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d");
-  const imgData = ctx.createImageData(W, H);
-
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const bid = mask[y][x];
-      const idx = (y * W + x) * 4;
-      if (bid > 0) {
-        imgData.data[idx] = (bid * 50) % 255; // R
-        imgData.data[idx + 1] = (bid * 80) % 255; // G
-        imgData.data[idx + 2] = (bid * 110) % 255; // B
-        imgData.data[idx + 3] = 255;
-      }
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  document.body.appendChild(canvas);
-}
-
 /* ------- Send to storyboard ------- */
-async function sendToStoryboard(baseFrameURL) {
-  const { x: cropX, y: cropY, width: cropW, height: cropH } = allowedArea;
-
-  // 1️⃣ Load base outline image for fallback
-  let baseData = null;
+async function sendToStoryboard() {
   try {
-    const baseImg = await loadImage(baseFrameURL);
-    const baseCanvas = document.createElement("canvas");
-    baseCanvas.width = baseImg.width;
-    baseCanvas.height = baseImg.height;
-    const baseCtx = baseCanvas.getContext("2d");
-    baseCtx.drawImage(baseImg, 0, 0);
-    baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
-    document.body.appendChild(baseCanvas); // Debug: show base outline
-  } catch (e) {
-    console.warn("Base image failed to load:", baseFrameURL, e);
-  }
+    const { x, y, width, height } = allowedArea;
 
-  // 2️⃣ Crop paint layer
-  const cropCanvas = document.createElement("canvas");
-  cropCanvas.width = cropW;
-  cropCanvas.height = cropH;
-  const cropCtx = cropCanvas.getContext("2d");
-  cropCtx.drawImage(drawCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-  const cropData = cropCtx.getImageData(0, 0, cropW, cropH).data;
-  document.body.appendChild(cropCanvas); // Debug: show painted crop
+    // Crop the paint layer to the sprite box
+    const crop = document.createElement("canvas");
+    crop.width = width;
+    crop.height = height;
+    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // 🐢 If character is "tortoise", save locally and redirect
-  if (selectedChar === "tortoise") {
-    const merged = document.createElement("canvas");
-    merged.width = cropCanvas.width;
-    merged.height = cropCanvas.height;
-    const mctx = merged.getContext("2d");
-
-    // 1️⃣ Draw the paint layer first
-    mctx.drawImage(cropCanvas, 0, 0);
-
-    // 2️⃣ Draw the outline on top so black lines are preserved
-    const baseImg = await loadImage(baseFrameURL); // outline image
-    mctx.drawImage(baseImg, 0, 0, merged.width, merged.height);
-
-    // 3️⃣ Export the merged result
-    const dataUrl = merged.toDataURL("image/png");
-
-    localStorage.setItem("coloredCharacter", dataUrl);
-    localStorage.setItem("coloredCharacterFrames", JSON.stringify([dataUrl]));
-    localStorage.setItem("selectedCharacter", selectedChar);
-
-    const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode)   q.set("session", sessionCode);
-    if (selectedGrade) q.set("grade", selectedGrade);
-
-    location.href = `storyboard.html?${q.toString()}`;
-    return;
-  } else {
-    // 3️⃣ Load masks
+    // Find mask sets for the selected character
     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
-    if (!sets.length) throw new Error(`No masks found for "${selectedChar}"`);
+    if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
     const bySlide = {};
-    const usageBySlide = {};
-
     for (const { frame, prefix } of sets) {
       const list = [];
-      usageBySlide[frame] = {};
 
-      const masks = [];
-      let fullW = null, fullH = null;
-      for (let i = 1; i <= 4; i++) {
-        const csvURL = `${prefix}${i}.csv`;
-        if (!(await urlExists(csvURL))) {
-          masks.push(null);
-          continue;
-        }
-        const { mat, W, H } = await loadCSVMatrix(csvURL);
-        if (!fullW) { fullW = W; fullH = H; }
-        usageBySlide[frame][i] = countMaskUsage(mat);
-        masks.push({ mat, W, H });
-      }
+      const csvURL = `${prefix}1.csv`;
+      if (!(await urlExists(csvURL))) continue;
 
-      const mask1 = masks[0];
-      const mask2 = masks[1];
-      if (!mask1 || !mask2) continue;
+      const { mat, W, H } = await loadCSVMatrix(csvURL);
+      const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
 
-      // Debug: render mask1 & mask2
-      renderMaskToCanvas(mask1.mat, mask1.W, mask1.H, "Mask1");
-      renderMaskToCanvas(mask2.mat, mask2.W, mask2.H, "Mask2");
+      for (const regionId of uniqueIds) {
+        const maskCanvas = document.createElement("canvas");
+        maskCanvas.width = W;
+        maskCanvas.height = H;
+        const ctx = maskCanvas.getContext("2d");
+        const imgData = ctx.createImageData(W, H);
 
-      const { mat: mat2, W: targetW, H: targetH } = mask2;
-      const blockIDs = new Set();
-      for (let yy = 0; yy < targetH; yy++) {
-        for (let xx = 0; xx < targetW; xx++) {
-          const bid = mat2[yy][xx];
-          if (bid > 0) blockIDs.add(bid);
-        }
-      }
-
-      const bboxes = masks.map(mask =>
-        mask ? Object.fromEntries(
-          [...blockIDs].map(bid => {
-            try { return [bid, getBlockBBox(mask.mat, bid)]; }
-            catch { return [bid, null]; }
-          })
-        ) : null
-      );
-
-      const outCanvas = document.createElement("canvas");
-      outCanvas.width = targetW;
-      outCanvas.height = targetH;
-      const outCtx = outCanvas.getContext("2d");
-      const outData = outCtx.createImageData(targetW, targetH);
-
-      let outOfBoundsCount = 0;
-      let sampleLogs = 0;
-
-      for (let yy = 0; yy < targetH; yy++) {
-        for (let xx = 0; xx < targetW; xx++) {
-          const bid = mat2[yy][xx];
-          const dIdx = (yy * targetW + xx) * 4;
-
-          if (bid <= 0) {
-            if (baseData) {
-              const baseIdx = (yy * targetW + xx) * 4;
-              outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
-            }
-            continue;
-          }
-
-          const b1 = bboxes[0]?.[bid];
-          const b2 = bboxes[1]?.[bid];
-          if (!b1 || !b2) {
-            if (baseData) {
-              const baseIdx = (yy * targetW + xx) * 4;
-              outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
-            }
-            continue;
-          }
-
-          const [ny, nx] = irregularTo100(yy, xx, b2.xmin, b2.xmax, b2.ymin, b2.ymax);
-          const [sy, sx] = grid100ToIrregular(ny, nx, b1.xmin, b1.xmax, b1.ymin, b1.ymax);
-
-          const adjSy = sy - cropY;
-          const adjSx = sx - cropX;
-
-          if (adjSy >= 0 && adjSy < cropH && adjSx >= 0 && adjSx < cropW) {
-            const sIdx = (adjSy * cropW + adjSx) * 4;
-            outData.data[dIdx]     = cropData[sIdx];
-            outData.data[dIdx + 1] = cropData[sIdx + 1];
-            outData.data[dIdx + 2] = cropData[sIdx + 2];
-            outData.data[dIdx + 3] = 255;
-
-            if (sampleLogs < 10) {
-              console.log(`Map (${xx},${yy}) -> src (${sx},${sy}) adj (${adjSx},${adjSy})`);
-              sampleLogs++;
-            }
-          } else {
-            outOfBoundsCount++;
-            if (baseData) {
-              const baseIdx = (yy * targetW + xx) * 4;
-              outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
+        for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+            if (mat[y][x] === regionId) {
+              const idx = (y * W + x) * 4;
+              imgData.data[idx + 0] = 255;
+              imgData.data[idx + 1] = 255;
+              imgData.data[idx + 2] = 255;
+              imgData.data[idx + 3] = 255;
             }
           }
         }
-      }
+        ctx.putImageData(imgData, 0, 0);
 
-      console.warn(`Frame ${frame}: ${outOfBoundsCount} pixels out of bounds`);
+        const scaledMask = document.createElement("canvas");
+        scaledMask.width = width;
+        scaledMask.height = height;
+        scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
 
-      outCtx.putImageData(outData, 0, 0);
-      document.body.appendChild(outCanvas); // Debug: show mapped output
+        const masked = document.createElement("canvas");
+        masked.width = width;
+        masked.height = height;
+        const mctx = masked.getContext("2d");
+        mctx.drawImage(crop, 0, 0);
+        mctx.globalCompositeOperation = "destination-in";
+        mctx.drawImage(scaledMask, 0, 0);
+        mctx.globalCompositeOperation = "source-over";
 
-      // Per-block export (still base64 for consistency)
-      for (const bid of blockIDs) {
-        const regionCanvas = document.createElement("canvas");
-        regionCanvas.width = targetW;
-        regionCanvas.height = targetH;
-        const rCtx = regionCanvas.getContext("2d");
-        const rData = rCtx.createImageData(targetW, targetH);
+        const blob = await new Promise(res => masked.toBlob(res, "image/png"));
+        const url = URL.createObjectURL(blob);
 
-        for (let yy = 0; yy < targetH; yy++) {
-          for (let xx = 0; xx < targetW; xx++) {
-            if (mat2[yy][xx] !== bid) continue;
-            const idx = (yy * targetW + xx) * 4;
-            rData.data.set(outData.data.slice(idx, idx + 4), idx);
-          }
-        }
-
-        rCtx.putImageData(rData, 0, 0);
-        const url = regionCanvas.toDataURL("image/png");
-        list.push({ regionId: bid, img: url, frame, maskIndex: 2 });
+        list.push({ regionId, img: url, frame, maskIndex: 1 });
       }
 
       if (list.length) bySlide[frame] = list;
     }
 
-    return { bySlide, usageBySlide };
-  }
-}
-
-async function runStoryboardFlow() {
-  try {
-    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-    const frame1 = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
-
-    // 1️⃣ Run the mapping & color transfer
-    const result = await sendToStoryboard(frame1);
-
-    // 🐢 If result is undefined (e.g. for tortoise), use localStorage directly
-    if (selectedChar === "tortoise" || !result?.bySlide) {
-      const firstImg = localStorage.getItem("coloredCharacter");
-      //console.log(firstImg);
-      const firstFrame = [firstImg];
-
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
-      localStorage.setItem("selectedCharacter", selectedChar);
-
-      const uid = localStorage.getItem("deviceToken") || crypto.randomUUID?.() || String(Date.now());
-      try {
-        if (firstImg) {
-          await submitDrawing(sessionCode, selectedChar, firstImg, uid);
-        }
-      } catch (e) {
-        console.warn("[submitDrawing]", e);
-      }
-
-      const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-      if (sessionCode)   q.set("session", sessionCode);
-      if (selectedGrade) q.set("grade", selectedGrade);
-
-      location.href = `storyboard.html?${q.toString()}`;
-      return;
-    }
-
-    // 🐇 Otherwise, continue with full masking flow
-    const { bySlide, usageBySlide } = result;
-
     const imageOnlyBySlide = {};
-    for (const [frameKey, regions] of Object.entries(bySlide)) {
-      imageOnlyBySlide[frameKey] = regions.map(r => r.img);
+    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+    for (const [frame, regions] of Object.entries(bySlide)) {
+      imageOnlyBySlide[frame] = regions.map(r => r.img);
     }
 
-    localStorage.setItem(
-      `coloredFrames:${storyFolder}:${selectedChar}`,
-      JSON.stringify(imageOnlyBySlide)
-    );
+    localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(imageOnlyBySlide));
 
-    localStorage.setItem(
-      `maskUsage:${storyFolder}:${selectedChar}`,
-      JSON.stringify(usageBySlide)
-    );
-
-    const firstFrame = Object.values(imageOnlyBySlide)[0] || [];
-    if (firstFrame.length > 0) {
+    const firstFrame = Object.values(imageOnlyBySlide)[0];
+    if (firstFrame?.length) {
       localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
       localStorage.setItem("coloredCharacter", firstFrame[0]);
     }
 
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    const firstImg = firstFrame[0] || "";
-    const uid = localStorage.getItem("deviceToken") || crypto.randomUUID?.() || String(Date.now());
-    try {
-      if (firstImg) {
+    const firstImg = firstFrame?.[0] || "";
+    const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
+
+    if (firstImg) {
+      try {
         await submitDrawing(sessionCode, selectedChar, firstImg, uid);
+      } catch (e) {
+        console.warn("[submitDrawing]", e);
       }
-    } catch (e) {
-      console.warn("[submitDrawing]", e);
     }
 
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode)   q.set("session", sessionCode);
+    if (sessionCode) q.set("session", sessionCode);
     if (selectedGrade) q.set("grade", selectedGrade);
 
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
-    console.error("❌ runStoryboardFlow failed:", err);
-    alert(`Error: ${err.message}`);
+    console.error("[sendToStoryboard] failed:", err);
+    alert("Send to Storyboard failed. See console for details.");
   }
 }
 
 /* ---------- Expose for buttons ---------- */
-Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, runStoryboardFlow, sendToStoryboard, zoomIn, zoomOut });
+Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
 
 /* ---------- Slider fill cosmetics ---------- */
 function updateSliderFill(slider){
