@@ -362,6 +362,16 @@ function downloadDataUrl(dataUrl, filename) {
   document.body.removeChild(a);
 }
 
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 /* ------- Send to storyboard ------- */
 async function sendToStoryboard() {
   try {
