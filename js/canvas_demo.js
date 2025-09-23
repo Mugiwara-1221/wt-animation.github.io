@@ -365,6 +365,57 @@ function downloadDataUrl(dataUrl, filename) {
 /* ------- Send to storyboard ------- */
 async function sendToStoryboard() {
   try {
+      let baseData = null;
+    try {
+      const baseImg = await loadImage(baseFrameURL);
+      const baseCanvas = document.createElement("canvas");
+      baseCanvas.width = baseImg.width;
+      baseCanvas.height = baseImg.height;
+      const baseCtx = baseCanvas.getContext("2d");
+      baseCtx.drawImage(baseImg, 0, 0);
+      baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
+      document.body.appendChild(baseCanvas); // Debug: show base outline
+    } catch (e) {
+      console.warn("Base image failed to load:", baseFrameURL, e);
+    }
+  
+    // 2️⃣ Crop paint layer
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = cropW;
+    cropCanvas.height = cropH;
+    const cropCtx = cropCanvas.getContext("2d");
+    cropCtx.drawImage(drawCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    const cropData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    document.body.appendChild(cropCanvas); // Debug: show painted crop
+  
+      // 🐢 If character is "tortoise", save locally and redirect
+    if (selectedChar === "tortoise") {
+      const merged = document.createElement("canvas");
+      merged.width = cropCanvas.width;
+      merged.height = cropCanvas.height;
+      const mctx = merged.getContext("2d");
+  
+      // 1️⃣ Draw the paint layer first
+      mctx.drawImage(cropCanvas, 0, 0);
+  
+      // 2️⃣ Draw the outline on top so black lines are preserved
+      const baseImg = await loadImage(baseFrameURL); // outline image
+      mctx.drawImage(baseImg, 0, 0, merged.width, merged.height);
+  
+      // 3️⃣ Export the merged result
+      const dataUrl = merged.toDataURL("image/png");
+  
+      localStorage.setItem("coloredCharacter", dataUrl);
+      localStorage.setItem("coloredCharacterFrames", JSON.stringify([dataUrl]));
+      localStorage.setItem("selectedCharacter", selectedChar);
+  
+      const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
+      if (sessionCode)   q.set("session", sessionCode);
+      if (selectedGrade) q.set("grade", selectedGrade);
+  
+      location.href = `storyboard.html?${q.toString()}`;
+      return;
+    } else {
     const { x, y, width, height } = allowedArea;
 
     // Crop the paint layer to the sprite box
