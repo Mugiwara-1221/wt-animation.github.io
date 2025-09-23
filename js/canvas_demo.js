@@ -412,71 +412,71 @@ async function sendToStoryboard() {
       location.href = `storyboard.html?${q.toString()}`;
       return;
     } else {
-    const { x, y, width, height } = allowedArea;
+      const { x, y, width, height } = allowedArea;
 
-    // Crop the paint layer to the sprite box
-    const crop = document.createElement("canvas");
-    crop.width = width;
-    crop.height = height;
-    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
+      // Crop the paint layer to the sprite box
+      const crop = document.createElement("canvas");
+      crop.width = width;
+      crop.height = height;
+      crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // Find mask sets for the selected character
-    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
-    if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
+      // Find mask sets for the selected character
+      const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+      if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
-    const bySlide = {};
-    for (const { frame, prefix } of sets) {
-      const list = [];
+      const bySlide = {};
+      for (const { frame, prefix } of sets) {
+        const list = [];
 
-      const csvURL = `${prefix}1.csv`;
-      if (!(await urlExists(csvURL))) continue;
+        const csvURL = `${prefix}1.csv`;
+        if (!(await urlExists(csvURL))) continue;
 
-      const { mat, W, H } = await loadCSVMatrix(csvURL);
-      const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
+        const { mat, W, H } = await loadCSVMatrix(csvURL);
+        const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
 
-      for (const regionId of uniqueIds) {
-        const maskCanvas = document.createElement("canvas");
-        maskCanvas.width = W;
-        maskCanvas.height = H;
-        const ctx = maskCanvas.getContext("2d");
-        const imgData = ctx.createImageData(W, H);
+        for (const regionId of uniqueIds) {
+          const maskCanvas = document.createElement("canvas");
+          maskCanvas.width = W;
+          maskCanvas.height = H;
+          const ctx = maskCanvas.getContext("2d");
+          const imgData = ctx.createImageData(W, H);
 
-        for (let y = 0; y < H; y++) {
-          for (let x = 0; x < W; x++) {
-            if (mat[y][x] === regionId) {
-              const idx = (y * W + x) * 4;
-              imgData.data[idx + 0] = 255;
-              imgData.data[idx + 1] = 255;
-              imgData.data[idx + 2] = 255;
-              imgData.data[idx + 3] = 255;
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              if (mat[y][x] === regionId) {
+                const idx = (y * W + x) * 4;
+                imgData.data[idx + 0] = 255;
+                imgData.data[idx + 1] = 255;
+                imgData.data[idx + 2] = 255;
+                imgData.data[idx + 3] = 255;
+              }
             }
           }
+          ctx.putImageData(imgData, 0, 0);
+
+          const scaledMask = document.createElement("canvas");
+          scaledMask.width = width;
+          scaledMask.height = height;
+          scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
+
+          const masked = document.createElement("canvas");
+          masked.width = width;
+          masked.height = height;
+          const mctx = masked.getContext("2d");
+          mctx.drawImage(crop, 0, 0);
+          mctx.globalCompositeOperation = "destination-in";
+          mctx.drawImage(scaledMask, 0, 0);
+          mctx.globalCompositeOperation = "source-over";
+
+          const blob = await new Promise(res => masked.toBlob(res, "image/png"));
+          const url = URL.createObjectURL(blob);
+
+          list.push({ regionId, img: url, frame, maskIndex: 1 });
         }
-        ctx.putImageData(imgData, 0, 0);
 
-        const scaledMask = document.createElement("canvas");
-        scaledMask.width = width;
-        scaledMask.height = height;
-        scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
-
-        const masked = document.createElement("canvas");
-        masked.width = width;
-        masked.height = height;
-        const mctx = masked.getContext("2d");
-        mctx.drawImage(crop, 0, 0);
-        mctx.globalCompositeOperation = "destination-in";
-        mctx.drawImage(scaledMask, 0, 0);
-        mctx.globalCompositeOperation = "source-over";
-
-        const blob = await new Promise(res => masked.toBlob(res, "image/png"));
-        const url = URL.createObjectURL(blob);
-
-        list.push({ regionId, img: url, frame, maskIndex: 1 });
+        if (list.length) bySlide[frame] = list;
       }
-
-      if (list.length) bySlide[frame] = list;
     }
-
     const imageOnlyBySlide = {};
     const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
     for (const [frame, regions] of Object.entries(bySlide)) {
@@ -510,10 +510,9 @@ async function sendToStoryboard() {
 
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
-    console.error("[sendToStoryboard] failed:", err);
-    alert("Send to Storyboard failed. See console for details.");
-  }
-  }
+      console.error("[sendToStoryboard] failed:", err);
+      alert("Send to Storyboard failed. See console for details.");
+    }
 }
 
 /* ---------- Expose for buttons ---------- */
