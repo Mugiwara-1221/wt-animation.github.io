@@ -425,7 +425,7 @@ async function sendToStoryboard() {
       location.href = `storyboard.html?${q.toString()}`;
       return;
     } else {
-      //const { x, y, width, height } = allowedArea;
+      const { x, y, width, height } = allowedArea;
 
       // Crop the paint layer to the sprite box
       const crop = document.createElement("canvas");
