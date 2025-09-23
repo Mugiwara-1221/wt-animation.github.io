@@ -377,6 +377,8 @@ async function sendToStoryboard() {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
   const baseFrameURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
   const { x: cropX, y: cropY, width: cropW, height: cropH } = allowedArea;
+  const bySlide = {};
+  
   try {
     let baseData = null;
     const baseImg = await loadImage(baseFrameURL);
@@ -437,7 +439,6 @@ async function sendToStoryboard() {
       const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
       if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
 
-      const bySlide = {};
       for (const { frame, prefix } of sets) {
         const list = [];
 
