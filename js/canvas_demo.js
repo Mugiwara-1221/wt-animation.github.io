@@ -376,6 +376,7 @@ function loadImage(url) {
 async function sendToStoryboard() {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
   const baseFrameURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
+  const { x: cropX, y: cropY, width: cropW, height: cropH } = allowedArea;
   try {
     let baseData = null;
     const baseImg = await loadImage(baseFrameURL);
@@ -424,7 +425,7 @@ async function sendToStoryboard() {
       location.href = `storyboard.html?${q.toString()}`;
       return;
     } else {
-      const { x, y, width, height } = allowedArea;
+      //const { x, y, width, height } = allowedArea;
 
       // Crop the paint layer to the sprite box
       const crop = document.createElement("canvas");
