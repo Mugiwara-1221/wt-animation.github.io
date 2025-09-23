@@ -1,0 +1,166 @@
+
+/* Sprite Selection Page Styles */
+
+:root{
+  --scene-max-w: 92vw;  /* width clamp vs viewport */
+  --scene-max-h: 78vh;  /* height clamp vs viewport */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: linear-gradient(to bottom, #4d8ad5, #89b1e1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h2 {
+  margin: 20px 12px 8px;
+  color: #b8c941;
+  font-size: clamp(24px, 4vw, 52px);
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 2px 2px #151515;
+  letter-spacing: 1px;
+}
+
+.scene-wrapper {
+  position: relative;
+  display: inline-block;
+  border: 4px solid #ffffff;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  /* Uniform size for ALL stories */
+  max-width: var(--scene-max-w);
+  max-height: var(--scene-max-h);
+  overflow: hidden;
+}
+
+/* Background image for the selection scene (story-specific) */
+#scene {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Characters (injected) */
+.character {
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+  image-rendering: crisp-edges; /* fallback for Firefox */
+  transform-origin: center;
+
+  /* Reasonable defaults if a story doesn't provide x/y/w */
+  top: 0;
+  left: 0;
+  width: 18%;
+}
+
+@keyframes walk {
+  from { background-position: 0 0; }
+  to { background-position: -400px 0; }
+}
+
+@keyframes moveRight {
+  from { left: 0%; }
+  to { left: 80%; }
+}
+/* Hover/lock styling */
+.character.hovered:not(.locked),
+.character:not(.locked):hover {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+}
+
+.character.locked {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+/* Default sizes (used only if a story's characters.json doesn't override w/x/y) */
+.hare     { width: 300px; height: auto; }
+/*.tortoise { width: 280px; height: auto; }*/
+/*.bear     { width: 145px; height: auto; }*/
+.squirrel { width:  85px; height: auto; }
+.bird1    { width:  45px; height: auto; }
+.bird2    { width:  60px; height: auto; }
+
+/* Default positions that matched your original Tortoise & Hare layout.
+   Any story can override with percent-based x/y/w in characters.json. */
+
+.hare     { top: 50%; left: 15% }
+.tortoise {
+  position: absolute;
+  top: 65%;
+  left: 0%;
+  width: 100px;
+  height: 100px;
+  /*background: url('/images/sprites/tortoise-hare/tortoise.png') no-repeat;*/
+  animation: walk 1s steps(4) infinite, moveRight 5s linear infinite;
+}
+
+.bear     { top: 28%; left: 60%; }
+.squirrel { top: 40%; left: 78%; }
+.bird1    { top: 10%; left: 28%; }
+.bird2    { top: 15%; left: 35%; }
+
+.butterfly  { width: 200px; height: auto; }
+.deer       { width: 175px; height: auto; }
+.geese      { width: 160px; height: auto; }
+.lion       { width: 300px; height: auto; }
+.mouse      { width:  45px; height: auto; }
+.owl        { width: 175px; height: auto; }
+.squirrel1   { width:  100px; height: auto; }
+
+.butterfly  { top: 70%; left: 70%; }
+.deer       { top: 22%; left: 5%; }
+.geese      { top: 28%; left: 50%; }
+.lion       { top: 50%; left: 30%; }
+.mouse      { top: 52%; left: 45%; }
+.owl        { top: 15%; left: 30%; }
+.squirrel1   { top: 45%; left: 85%; }
+
+.fish1  { width: 200px; height: auto; }
+.fish2       { width: 175px; height: auto; }
+.flamingo      { width: 160px; height: auto; }
+.last_duck       { width: 300px; height: auto; }
+.lead_duck      { width:  45px; height: auto; }
+.look_back_duck        { width: 175px; height: auto; }
+.mama_duck   { width:  100px; height: auto; }
+.sleepy_duck   { width:  100px; height: auto; }
+.waving_duck   { width:  100px; height: auto; }
+
+.fish1  { top: 40%; left: 50%; }
+.fish2       { top: 40%; left: 60%; }
+.flamingo      { top: 28%; left: 50%; }
+.last_duck       { top: 50%; left: 30%; }
+.lead_duck      { top: 52%; left: 45%; }
+.look_back_duck        { top: 15%; left: 30%; }
+.mama_duck   { top: 5%; left: 5%; }
+.sleepy_duck   { top: 45%; left: 85%; }
+.waving_duck   { top: 45%; left: 85%; }
+
+/* Tighter view on small screens */
+@media (max-width: 960px) {
+  :root{ --scene-max-w: 96vw; --scene-max-h: 72vh; }
+}
+
+/* Keyboard-accessible focus (if you add tabindex later) */
+.character:focus-visible {
+  outline: 3px solid #BADA55;
+  outline-offset: 3px;
+}
