@@ -131,32 +131,34 @@ async function resolveSpriteURL() {
 }
 
 /* Outline choice for a slide */
+// REPLACE your existing resolveOutlineURLForSlide with this:
 async function resolveOutlineURLForSlide(slide1) {
   const storyDash   = selectedStory || "tortoise-hare";
   const storyFolder = resolveStoryFolder(storyDash); // uses STORY_FOLDER_MAP
 
-  // 1) Frame-specific overlay (if you have per-frame PNGs)
+  // 1) Per-frame overlay (if your story uses frame images)
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
 
-  // 2) Explicit outline URL passed in (query string)
+  // 2) Explicit override via ?outline=… (keeps your existing behavior)
   if (outlineParam) return outlineParam;
 
-  // 3) STORY-SCOPED OUTLINES — try your underscore pattern first
-  const tries = [
-    // your repo’s pattern:
+  // 3) STORY-SCOPED OUTLINES — try your repo's underscore form first
+  const candidates = [
+    // your actual structure: images/outline/5_little_ducks/mama_duck_transparent.png
     `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
-    // also accept dash pattern just in case:
+    // also allow a dash form, just in case:
     `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
-    // legacy flat location:
+    // legacy flat fallbacks:
     `images/outline/${selectedChar}_transparent.png`,
     `images/outline/${selectedChar}-transparent.png`,
   ];
-  for (const url of tries) {
+
+  for (const url of candidates) {
     if (await urlExists(url)) return url;
   }
 
-  // 4) Final fallback: sprite URL (colored sprite if nothing else found)
+  // 4) Last resort: fall back to the colored sprite resolver
   return await resolveSpriteURL();
 }
 
