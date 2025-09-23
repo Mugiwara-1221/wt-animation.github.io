@@ -374,6 +374,7 @@ function loadImage(url) {
 
 /* ------- Send to storyboard ------- */
 async function sendToStoryboard() {
+  const baseFrameURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
   try {
     let baseData = null;
     const baseImg = await loadImage(baseFrameURL);
