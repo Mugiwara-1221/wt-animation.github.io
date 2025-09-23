@@ -127,6 +127,26 @@ function mountGif(host, cfg){
   loops.add(stop);
 }
 
+/* ----------------- NEW: Mount a static image (PNG, JPG, JPEG, WEBP, etc.) ----------------- */
+function mountStaticImage(host, cfg){
+  const { id, x, y, w, h, z=1 } = cfg;
+  const img = document.createElement("img");
+  img.src = cfg.framesPath;           // static image file
+  img.alt = id || "";
+  img.className = `character ${id||""}`;
+  Object.assign(img.style, {
+    position: "absolute",
+    left: pct(x), top: pct(y),
+    width: pct(w),
+    height: (h != null ? pct(h) : "auto"),
+    zIndex: String(z),
+    pointerEvents: "none"
+  });
+  host.appendChild(img);
+  const stop = () => { try { img.remove(); } catch {} };
+  loops.add(stop);
+}
+
 /* ----------------- PNG stack (existing behavior) ----------------- */
 async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
@@ -202,6 +222,12 @@ async function placeCharacter(cfg, slideNo){
   const src = (cfg.framesPath || "").trim();
   if (src && /\.gif(\?.*)?$/i.test(src)){
     mountGif(host, cfg);
+    return;
+  }
+
+  // If framesPath is a static image (PNG, JPG, JPEG, WEBP, SVG, etc.), mount it and return
+  if (src && /\d*\.(png|jpe?g|webp|svg|bmp|tiff?)(\?.*)?$/i.test(src)){
+    mountStaticImage(host, cfg);
     return;
   }
 

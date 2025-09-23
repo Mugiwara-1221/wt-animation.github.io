@@ -12,9 +12,8 @@
           "y": 50,
           "w": 60,
           "h": 60,
-          "framesPath": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_"
+          "framesPath": "images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise1.png",
+          "frameCount": 4        
         },
         {
           "id": "hare",
@@ -22,7 +21,7 @@
           "y": 23,
           "w": 50,
           "h": 50,
-          "framesPath": "images/gifs/tortise_and_the_hare/slide_1/haree_colored.gif",
+          "framesPath": "images/frames/tortoise_and_the_hare/frame1/hare/hare1.png",
           "frameCount": 4
         },
         {
@@ -31,7 +30,7 @@
           "y": 0,
           "w": 30,
           "h": 30,
-          "framesPath": "images/gifs/tortise_and_the_hare/slide_1/bird11_colored.gif",
+          "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird1/bird11.png",
           "frameCount": 4
         },
         {
@@ -40,7 +39,7 @@
           "y": 43,
           "w": 30,
           "h": 20,
-          "framesPath": "images/gifs/tortise_and_the_hare/slide_1/bird2_colored.gif",
+          "framesPath": "images/frames/tortoise_and_the_hare/frame1/bird2/bird2.png",
           "frameCount": 4
         }
       ]
