@@ -131,34 +131,30 @@ async function resolveSpriteURL() {
 }
 
 /* Outline choice for a slide */
-// REPLACE your existing resolveOutlineURLForSlide with this:
+
 async function resolveOutlineURLForSlide(slide1) {
   const storyDash   = selectedStory || "tortoise-hare";
-  const storyFolder = resolveStoryFolder(storyDash); // uses STORY_FOLDER_MAP
+  const storyFolder = resolveStoryFolder(storyDash);
 
-  // 1) Per-frame overlay (if your story uses frame images)
-  const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
-  if (await urlExists(frame1)) return frame1;
-
-  // 2) Explicit override via ?outline=… (keeps your existing behavior)
+  // 1) ?outline=... override
   if (outlineParam) return outlineParam;
 
-  // 3) STORY-SCOPED OUTLINES — try your repo's underscore form first
-  const candidates = [
-    // your actual structure: images/outline/5_little_ducks/mama_duck_transparent.png
+  // 2) Prefer STORY-SCOPED OUTLINES first (your real paths)
+  const tries = [
     `images/outline/${storyFolder}/${selectedChar}_transparent.png`,
-    // also allow a dash form, just in case:
     `images/outline/${storyFolder}/${selectedChar}-transparent.png`,
-    // legacy flat fallbacks:
     `images/outline/${selectedChar}_transparent.png`,
     `images/outline/${selectedChar}-transparent.png`,
   ];
-
-  for (const url of candidates) {
+  for (const url of tries) {
     if (await urlExists(url)) return url;
   }
 
-  // 4) Last resort: fall back to the colored sprite resolver
+  // 3) If you also have per-frame overlays, allow them as a fallback
+  const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
+  if (await urlExists(frame1)) return frame1;
+
+  // 4) Last resort: colored sprite / other fallbacks
   return await resolveSpriteURL();
 }
 
