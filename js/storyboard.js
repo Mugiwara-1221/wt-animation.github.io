@@ -11,7 +11,7 @@ const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
-  ["little-ducks",    "5_little_ducks"],
+  ["little-ducks",    "five-little-ducks"],
 ]);
 
 function resolveStoryFolder(id) {
@@ -148,12 +148,30 @@ function mountStaticImage(host, cfg){
 }
 
 /* ----------------- PNG stack (existing behavior) ----------------- */
-async function getFrames(prefix, count){
+async function getFrames(prefix, count) {
+  // 🐢 Special case: if this is the tortoise, use the locally stored image
+  const parts = prefix.split("/");
+  console.log(parts);
+  const tortoiseIndex = parts[5];
+  if (tortoiseIndex == "tortoise" && selectedChar === "tortoise") {
+    const stored = localStorage.getItem("coloredCharacter");
+    if (stored) {
+      // Wrap in an array so the return type matches other characters
+      const img = await loadImage(stored);
+      return [img];
+    }
+  }
+
+  // 🐇 Default: load multiple frames from files
   const key = `${prefix}|${count}`;
   if (framesCache.has(key)) return framesCache.get(key);
+
   const images = await Promise.all(
-    Array.from({length:count},(_,i)=>loadImage(`${prefix}${i+1}.png`))
+    Array.from({ length: count }, (_, i) =>
+      loadImage(`${prefix}${i + 1}.png`)
+    )
   );
+
   framesCache.set(key, images);
   return images;
 }
@@ -174,16 +192,20 @@ async function getMasksForSlide(charId, slideNo){
   return out;
 }
 
-async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs){
+async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs) {
   const r = cvs.getBoundingClientRect();
   const base = await loadImage(coloredImg);
   const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
 
   const overlays = [];
-  for (let i=0;i<4;i++){
-    const bmpKey = `${prefix}${i+1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+
+  // 🐢 If tortoise, only build one overlay
+  const frameCount = charId.toLowerCase() === "tortoise" ? 1 : 4;
+
+  for (let i = 0; i < frameCount; i++) {
+    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
     let bmp = maskBmpCache.get(bmpKey);
-    if (!bmp){
+    if (!bmp) {
       bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
       maskBmpCache.set(bmpKey, bmp);
     }
@@ -193,13 +215,21 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
     off.height = Math.round(r.height);
     const cx = off.getContext("2d");
     cx.imageSmoothingEnabled = false;
+
+    // Draw base character
     cx.drawImage(base, 0, 0, off.width, off.height);
+
+    // Apply mask
     cx.globalCompositeOperation = "destination-in";
     cx.drawImage(bmp, 0, 0);
+
+    // Reset blend mode
     cx.globalCompositeOperation = "source-over";
 
+    // Save overlay
     overlays.push(await loadImage(off.toDataURL()));
   }
+
   return overlays;
 }
 
