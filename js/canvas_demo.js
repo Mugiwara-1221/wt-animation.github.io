@@ -189,7 +189,7 @@ let opacity     = 1.0;
 let prevX = null, prevY = null;
 let zoomLevel = 1;
 
-/* ===== Toolboard wiring (NEW) ===== */
+/* ===== Toolboard wiring ===== */
 const colorInput    = document.querySelector(".pick-color");
 const colorTool     = document.querySelector(".color-tool");
 const swatchEl      = document.querySelector(".color-tool .swatch");
@@ -446,10 +446,35 @@ async function findMaskSets(storyIdDash, charId){
   return out;
 }
 
+/* ------- Download image (robust) ------- */
+function downloadImage(){
+  try{
+    const merged=document.createElement("canvas");
+    merged.width=drawCanvas.width;
+    merged.height=drawCanvas.height;
+    const m=merged.getContext("2d");
+    m.fillStyle="white";
+    m.fillRect(0,0,merged.width,merged.height);
+    m.drawImage(drawCanvas,0,0);
+    m.drawImage(spriteCanvas,0,0); // outline layer
+    const a=document.createElement("a");
+    a.download="my_drawing.png";
+    a.href=merged.toDataURL("image/png");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }catch(err){
+    console.error("[downloadImage]", err);
+    alert("Couldn’t create the download image. See console for details.");
+  }finally{
+    saveOptions?.classList.add("hidden");
+    saveBtn?.setAttribute("aria-expanded","false");
+  }
+}
+
 /* ------- Send to storyboard (uses masks to clip) ------- */
 async function sendToStoryboard() {
   try {
-    // crop paint layer to sprite box
     const { x, y, width, height } = allowedArea;
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
@@ -600,8 +625,16 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
   else { schedulePreview(); }
 })();
 
-/* Expose only the two actions used by onclicks in HTML */
+/* Expose for inline onclicks */
 Object.assign(window, { downloadImage, sendToStoryboard });
+
+/* Also bind by ID (makes it work even if inline handlers are blocked by CSP) */
+document.getElementById("btnDownload")?.addEventListener("click", (e)=>{
+  e.preventDefault(); e.stopPropagation(); downloadImage();
+});
+document.getElementById("btnStoryboard")?.addEventListener("click", (e)=>{
+  e.preventDefault(); e.stopPropagation(); sendToStoryboard();
+});
 
 /* ---------- Slider cosmetics (optional) ---------- */
 /*function updateSliderFill(slider)
