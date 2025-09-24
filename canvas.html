@@ -9,11 +9,108 @@
   <link rel="stylesheet" href="css/canvas.css" />
 </head>
 <body>
-  <!-- Left navigation toggle button -->
+  <!-- NEW: compact left painting toolbox (only UI change) -->
+  <aside id="toolbox" aria-label="Paint tools">
+    <!-- Color button -> opens simple color popup -->
+    <button id="colorBtn" class="tool" aria-label="Color">
+      <span class="swatch" id="colorSwatch" style="background:#2ad0ff"></span>
+    </button>
+
+    <!-- Smudge icon (uses draw tool path; UI-only toggle) -->
+    <button id="smudgeBtn" class="tool" aria-label="Smudge">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M6 18c5-4 8-7 11-12l1 1c-3 5-6 8-11 12l-1-1zm2 3c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"/></svg>
+    </button>
+
+    <!-- Eraser -->
+    <button id="eraserBtn" class="tool" aria-label="Eraser">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M16 3 21 8 10 19H5L3 17l11-11zM5 19h9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+
+    <!-- Brush (selected by default) -->
+    <button id="brushBtn" class="tool active" aria-label="Brush">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M3 17c2 0 3-1 4-2l10-10 3 3-10 10c-1 1-2 2-2 4-2 0-3 0-5-2z"/></svg>
+    </button>
+
+    <!-- Vertical sliders (show whenever a paint tool is active) -->
+    <div id="sliders" class="panel show">
+      <label class="vslider">
+        <input id="sizeSlider" type="range" min="1" max="100" value="18" orient="vertical" />
+        <span>Size</span>
+      </label>
+      <label class="vslider">
+        <input id="opacitySlider" type="range" min="1" max="100" value="100" orient="vertical" />
+        <span>Opacity</span>
+      </label>
+    </div>
+
+    <!-- Brush popup (shown only when brush is selected) -->
+    <div id="brushPopup" class="popup" role="menu" aria-label="Brush menu">
+      <button data-brush="paintbrush" role="menuitem">
+        <span class="stroke stroke-a"></span> Paintbrush
+      </button>
+      <button data-brush="pencil" role="menuitem">
+        <span class="stroke stroke-b"></span> Pencil
+      </button>
+      <button data-brush="marker" role="menuitem">
+        <span class="stroke stroke-c"></span> Marker
+      </button>
+    </div>
+
+    <!-- Simple color popup -->
+    <div id="colorPopup" class="popup">
+      <div class="popup-head">Colors</div>
+      <input id="colorInput" type="color" value="#2ad0ff" />
+    </div>
+  </aside>
+
+  <!-- Canvas Layers (unchanged) -->
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="drawCanvas"></canvas>
+  <canvas id="spriteCanvas"></canvas>
+
+  <!-- Mini Live Preview (top-right) -->
+  <div id="previewHUD" class="preview-hud">
+    <canvas id="previewCanvas" width="320" height="200"></canvas>
+  </div>
+
+  <!-- Floating slide nav (bottom-right) -->
+  <div class="nav-floating" aria-label="Slide navigation">
+    <button id="prevAppBtn" aria-label="Previous scene">◀</button>
+    <button id="nextAppBtn" aria-label="Next scene">▶</button>
+  </div>
+
+  <!-- Route guard & pass-through context -->
+  <script type="module">
+    import { readCtx, nextURL } from './js/flow.js';
+    const ctx = readCtx();
+    if (!ctx.session) { location.replace('index.html'); throw 0; }
+    if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
+    if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
+    window.__flowCtx = ctx;
+  </script>
+
+  <script type="module" src="js/azure-api.js"></script>
+  <script type="module" src="js/canvas_demo.js"></script>
+</body>
+</html>
+
+
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Animation Canvas</title>
+  <link rel="stylesheet" href="css/canvas.css" />
+</head>
+<body>
+  <!-- Left navigation toggle button --
   <button class="toggleNavLeft" aria-label="Toggle tools panel"></button>
 
   <!-- Sidebar Tools Panel -->
-  <!-- start open so tools are visible -->
+  <!-- start open so tools are visible --
   <nav id="navLeft" class="open" aria-label="Drawing tools">
     <div class="nav-content">
       <span>Brush Type</span>
@@ -60,29 +157,29 @@
     </div>
   </nav>
 
-  <!-- Canvas Layers -->
+  <!-- Canvas Layers --
   <canvas id="bgCanvas"></canvas>
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
-  <!-- Mini Live Preview (top-right) -->
+  <!-- Mini Live Preview (top-right) --
   <div id="previewHUD" class="preview-hud">
     <canvas id="previewCanvas" width="320" height="200"></canvas>
   </div>
 
-  <!-- Floating slide nav (bottom-right) -->
+  <!-- Floating slide nav (bottom-right) --
   <div class="nav-floating" aria-label="Slide navigation">
     <button id="prevAppBtn" aria-label="Previous scene">◀</button>
     <button id="nextAppBtn" aria-label="Next scene">▶</button>
   </div>
 
-  <!-- Route guard & pass-through context -->
+  <!-- Route guard & pass-through context --
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
-    // 🚫 no grade gate here
+    // no grade gate here
     if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
     window.__flowCtx = ctx;
   </script>
@@ -91,3 +188,4 @@
   <script type="module" src="js/canvas_demo.js"></script>
 </body>
 </html>
+-->
