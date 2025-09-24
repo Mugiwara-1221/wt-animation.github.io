@@ -4,7 +4,7 @@
   --panel-card: #303336;         /* popover bg */
   --panel-border: #222;
   --accent :#4da3ff;
-  --shadow:0 12px 30px rgba(0,0,0,.25);
+  --shadow:0 12px 30px rgba(77, 138, 213, 1);
 }
 
 body{ 
