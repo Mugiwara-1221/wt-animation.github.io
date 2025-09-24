@@ -9,61 +9,62 @@
   <link rel="stylesheet" href="css/canvas.css" />
 </head>
 <body>
-  <!-- NEW: compact left painting toolbox (only UI change) -->
-  <aside id="toolbox" aria-label="Paint tools">
-    <!-- Color button -> opens simple color popup -->
-    <button id="colorBtn" class="tool" aria-label="Color">
-      <span class="swatch" id="colorSwatch" style="background:#2ad0ff"></span>
+  <!-- Slim left toolbox -->
+  <nav id="toolbox" aria-label="Painting tools">
+    <!-- Color swatch (opens picker immediately) -->
+    <button id="colorBtn" class="tool tool-swatch" aria-label="Pick color">
+      <span class="swatch" id="swatch"></span>
     </button>
 
-    <!-- Smudge icon (uses draw tool path; UI-only toggle) -->
-    <button id="smudgeBtn" class="tool" aria-label="Smudge">
-      <svg viewBox="0 0 24 24" class="ico"><path d="M6 18c5-4 8-7 11-12l1 1c-3 5-6 8-11 12l-1-1zm2 3c-1 0-2-1-2-2s1-2 2-2 2 1 2 2-1 2-2 2z"/></svg>
+    <!-- Smudge (uses current brush settings; your draw engine remains unchanged) -->
+    <button id="smudgeBtn" class="tool" aria-label="Smudge" data-tool="draw">
+      <span class="ico ico-smudge"></span>
     </button>
 
     <!-- Eraser -->
-    <button id="eraserBtn" class="tool" aria-label="Eraser">
-      <svg viewBox="0 0 24 24" class="ico"><path d="M16 3 21 8 10 19H5L3 17l11-11zM5 19h9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    <button id="eraserBtn" class="tool" aria-label="Eraser" data-tool="erase">
+      <span class="ico ico-eraser"></span>
     </button>
 
-    <!-- Brush (selected by default) -->
-    <button id="brushBtn" class="tool active" aria-label="Brush">
-      <svg viewBox="0 0 24 24" class="ico"><path d="M3 17c2 0 3-1 4-2l10-10 3 3-10 10c-1 1-2 2-2 4-2 0-3 0-5-2z"/></svg>
+    <!-- Brush (opens brush picker) -->
+    <button id="brushBtn" class="tool" aria-label="Brush" data-tool="draw">
+      <span class="ico ico-brush"></span>
     </button>
 
-    <!-- Vertical sliders (show whenever a paint tool is active) -->
-    <div id="sliders" class="panel show">
-      <label class="vslider">
-        <input id="sizeSlider" type="range" min="1" max="100" value="18" orient="vertical" />
-        <span>Size</span>
-      </label>
-      <label class="vslider">
-        <input id="opacitySlider" type="range" min="1" max="100" value="100" orient="vertical" />
-        <span>Opacity</span>
-      </label>
+    <!-- Vertical sliders -->
+    <div class="vslider">
+      <input type="range" class="brush-size-slider" min="1" max="100" value="18" aria-label="Brush size" orient="vertical">
+      <label>Size</label>
+    </div>
+    <div class="vslider">
+      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity" orient="vertical">
+      <label>Opacity</label>
     </div>
 
-    <!-- Brush popup (shown only when brush is selected) -->
-    <div id="brushPopup" class="popup" role="menu" aria-label="Brush menu">
-      <button data-brush="paintbrush" role="menuitem">
-        <span class="stroke stroke-a"></span> Paintbrush
-      </button>
-      <button data-brush="pencil" role="menuitem">
-        <span class="stroke stroke-b"></span> Pencil
-      </button>
-      <button data-brush="marker" role="menuitem">
-        <span class="stroke stroke-c"></span> Marker
-      </button>
+    <!-- Save menu (Download / Send to Storyboard) -->
+    <div class="save-wrap">
+      <button id="saveBtn" class="tool tool-save" aria-expanded="false" aria-controls="saveOptions">Save ▾</button>
+      <div id="saveOptions" class="save-options hidden" role="menu">
+        <button onclick="downloadImage()" role="menuitem">Download Image</button>
+        <button onclick="sendToStoryboard()" role="menuitem">Send to Storyboard</button>
+      </div>
     </div>
+  </nav>
 
-    <!-- Simple color popup -->
-    <div id="colorPopup" class="popup">
-      <div class="popup-head">Colors</div>
-      <input id="colorInput" type="color" value="#2ad0ff" />
-    </div>
-  </aside>
+  <!-- Floating popovers (brush list & color preview + native picker) -->
+  <div id="brushPopover" class="popover hidden" role="dialog" aria-label="Brushes">
+    <button class="brush-row" data-brush="basic"><span class="stroke stroke-paint"></span> Paintbrush</button>
+    <button class="brush-row" data-brush="soft"><span class="stroke stroke-pencil"></span> Pencil</button>
+    <button class="brush-row" data-brush="marker"><span class="stroke stroke-marker"></span> Marker</button>
+  </div>
 
-  <!-- Canvas Layers (unchanged) -->
+  <div id="colorPopover" class="popover hidden" role="dialog" aria-label="Colors">
+    <div class="color-preview" id="colorPreview"></div>
+    <!-- Keep the same class so your existing JS hooks keep working -->
+    <input id="colorInput" class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
+  </div>
+
+  <!-- Canvas Layers -->
   <canvas id="bgCanvas"></canvas>
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
@@ -93,6 +94,7 @@
   <script type="module" src="js/canvas_demo.js"></script>
 </body>
 </html>
+
 
 
 
