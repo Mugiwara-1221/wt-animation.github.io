@@ -11,7 +11,7 @@
         { "id": "fish2", "x": 72, "y": 40, "w": 25,
           "framesPath": "images/gifs/5_little_ducks/slide1/fish2.gif",
           "frameCount": 4 },
-        { "id": "flamingo", "x": 20, "y": 30, "w": 28,
+        { "id": "flamingo", "x": 30, "y": 20, "w": 28,
           "framesPath": "images/gifs/5_little_ducks/slide1/flamingo.gif",
           "frameCount": 4 },
         { "id": "last_duck", "x": 30, "y": 60, "w": 30,
