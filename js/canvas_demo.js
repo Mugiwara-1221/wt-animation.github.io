@@ -512,8 +512,8 @@ async function sendToStoryboard() {
 }
 
 /* ---------- Slider cosmetics (optional) ---------- */
-function updateSliderFill(slider)
-  //if(!slider)
+/*function updateSliderFill(slider)
+  if(!slider)*/
 
 
 
