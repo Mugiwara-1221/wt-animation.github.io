@@ -11,7 +11,7 @@ const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
-  ["little-ducks",    "five-little-ducks"],
+  ["little-ducks",    "5_little_ducks"],
 ]);
 
 function resolveStoryFolder(id) {
