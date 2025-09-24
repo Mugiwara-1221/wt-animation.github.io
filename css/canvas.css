@@ -48,7 +48,7 @@ body{
   align-items:center; 
   gap:16px; padding:12px 8px; 
   z-index:200;
-  box-shadow: 8px 0 24px rgba(0,0,0,.2);
+  box-shadow: 8px 0 24px rgba(77, 138, 213, 1);
 }
 
 /* Color tool */
