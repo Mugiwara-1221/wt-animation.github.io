@@ -288,6 +288,25 @@ ctx.lineJoin = "round";
 ctx.lineCap  = "round";
 ctx.imageSmoothingEnabled = true;
 
+/* per-slide autosave/restore */
+function persistCurrentAppearance(){
+  if(!appearances.length) return;
+  const slide1=appearances[appearCursor]+1;
+  const crop=document.createElement("canvas"); crop.width=allowedArea.width; crop.height=allowedArea.height;
+  crop.getContext("2d").drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,allowedArea.width,allowedArea.height);
+  localStorage.setItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1), crop.toDataURL("image/png"));
+}
+function restoreCurrentAppearance(){
+  ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  if(!appearances.length) return;
+  const slide1=appearances[appearCursor]+1;
+  const dataURL=localStorage.getItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1));
+  if(!dataURL) return;
+  const img=new Image();
+  img.onload=()=>{ ctx.drawImage(img,0,0,img.width,img.height, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height); schedulePreview(); };
+  img.src=dataURL;
+}
+
 /* History */
 let history = [], redoStack = [];
 function saveHistory(){ history.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); if (history.length>40) history.shift(); redoStack=[]; }
