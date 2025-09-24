@@ -16,9 +16,9 @@
       "snapInsideLines": true,
       "allowFreeDrawCharacter": false,
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
-    }
-    "1-2": {
-      "label": "1–2",
+    },
+    "G.1-2": {
+      "label": "G.1–2",
       "tools": {
         "brush": true,
         "eraser": false,
