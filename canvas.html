@@ -9,60 +9,37 @@
   <link rel="stylesheet" href="css/canvas.css" />
 </head>
 <body>
-  <!-- Slim left toolbox -->
-  <nav id="toolbox" aria-label="Painting tools">
-    <!-- Color swatch (opens picker immediately) -->
-    <button id="colorBtn" class="tool tool-swatch" aria-label="Pick color">
-      <span class="swatch" id="swatch"></span>
-    </button>
 
-    <!-- Smudge (uses current brush settings; your draw engine remains unchanged) -->
-    <button id="smudgeBtn" class="tool" aria-label="Smudge" data-tool="draw">
-      <span class="ico ico-smudge"></span>
-    </button>
+  <!-- Compact left painting toolbox -->
+  <aside class="paintbar" aria-label="Painting tools">
+    <!-- Color square (opens native color picker immediately) -->
+    <button class="tool-btn color-btn" id="pbColorBtn" aria-label="Pick color"></button>
+    <input id="pbColorInput" type="color" value="#2ad0ff" aria-label="Pick color" />
 
-    <!-- Eraser -->
-    <button id="eraserBtn" class="tool" aria-label="Eraser" data-tool="erase">
-      <span class="ico ico-eraser"></span>
-    </button>
+    <!-- Smudge, Eraser, Brush -->
+    <button class="tool-btn" data-tool="smudge" id="pbSmudge" aria-label="Smudge"></button>
+    <button class="tool-btn" data-tool="erase"  id="pbEraser" aria-label="Eraser"></button>
+    <button class="tool-btn" data-tool="draw"   id="pbBrush"  aria-label="Brush"></button>
 
-    <!-- Brush (opens brush picker) -->
-    <button id="brushBtn" class="tool" aria-label="Brush" data-tool="draw">
-      <span class="ico ico-brush"></span>
-    </button>
-
-    <!-- Vertical sliders -->
+    <!-- Vertical sliders (always available; we just highlight brush/eraser/smudge) -->
     <div class="vslider">
-      <input type="range" class="brush-size-slider" min="1" max="100" value="18" aria-label="Brush size" orient="vertical">
-      <label>Size</label>
+      <input id="pbSize" type="range" min="1" max="100" value="18" aria-label="Brush size" orient="vertical">
+      <label for="pbSize">Size</label>
     </div>
     <div class="vslider">
-      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity" orient="vertical">
-      <label>Opacity</label>
+      <input id="pbOpacity" type="range" min="0" max="1" step="0.01" value="1" aria-label="Opacity" orient="vertical">
+      <label for="pbOpacity">Opacity</label>
     </div>
 
-    <!-- Save menu (Download / Send to Storyboard) -->
+    <!-- Save menu -->
     <div class="save-wrap">
-      <button id="saveBtn" class="tool tool-save" aria-expanded="false" aria-controls="saveOptions">Save ▾</button>
-      <div id="saveOptions" class="save-options hidden" role="menu">
-        <button onclick="downloadImage()" role="menuitem">Download Image</button>
-        <button onclick="sendToStoryboard()" role="menuitem">Send to Storyboard</button>
+      <button id="pbSave" class="tool-btn save-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pbSaveMenu"></button>
+      <div id="pbSaveMenu" class="save-menu" role="menu">
+        <button role="menuitem" id="pbDownload">Download Image</button>
+        <button role="menuitem" id="pbStoryboard">Send to Storyboard</button>
       </div>
     </div>
-  </nav>
-
-  <!-- Floating popovers (brush list & color preview + native picker) -->
-  <div id="brushPopover" class="popover hidden" role="dialog" aria-label="Brushes">
-    <button class="brush-row" data-brush="basic"><span class="stroke stroke-paint"></span> Paintbrush</button>
-    <button class="brush-row" data-brush="soft"><span class="stroke stroke-pencil"></span> Pencil</button>
-    <button class="brush-row" data-brush="marker"><span class="stroke stroke-marker"></span> Marker</button>
-  </div>
-
-  <div id="colorPopover" class="popover hidden" role="dialog" aria-label="Colors">
-    <div class="color-preview" id="colorPreview"></div>
-    <!-- Keep the same class so your existing JS hooks keep working -->
-    <input id="colorInput" class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
-  </div>
+  </aside>
 
   <!-- Canvas Layers -->
   <canvas id="bgCanvas"></canvas>
@@ -90,6 +67,7 @@
     window.__flowCtx = ctx;
   </script>
 
+  <!-- Canvas logic (unchanged) -->
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="js/canvas_demo.js"></script>
 </body>
