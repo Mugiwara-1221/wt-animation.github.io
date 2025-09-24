@@ -1,97 +1,130 @@
 
 :root{
-  --accent:#BADA55;
-  --panel:#1f1f1f;
-  --panel2:#2a2a2a;
-  --border:#3a3a3a;
-  --glow:rgba(0,0,0,.25);
-  --popover:#3a3a3a;
-  --text:#ffffff;
+  --drawing-color:#000000;
+  --panel-bg:#1d1d1f;
+  --panel-border:#111;
+  --panel-shadow:rgba(0,0,0,.25);
+  --accent:#8bb9ff;
+  --btn:#2a2a2c;
+  --btnHover:#343437;
+  --btnActive:#3c70ff;
 }
 
-/* Page / canvases (unchanged behaviour) */
-body{ margin:0; padding:0; overflow:hidden; width:100vw; height:100vh; font-family:system-ui,Arial,sans-serif; background:#fff; }
-#bgCanvas,#drawCanvas,#spriteCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+/* Page */
+body{
+  margin:0; padding:0; overflow:hidden;
+  width:100vw; height:100vh;
+  font-family:Inter, system-ui, Arial, sans-serif;
+  background:#fff;
+}
+
+/* ---------- Canvas Layers ---------- */
+#bgCanvas, #drawCanvas, #spriteCanvas{
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none;
+}
 #bgCanvas{ z-index:1; }
 #drawCanvas{ z-index:10; pointer-events:auto; }
 #spriteCanvas{ z-index:20; }
 
-/* ---------- Slim toolbox ---------- */
-#toolbox{
-  position:fixed; left:0; top:0; bottom:0; width:104px; background:#171717; z-index:120;
-  display:flex; flex-direction:column; align-items:center; gap:12px; padding:12px 0;
-  box-shadow:2px 0 14px var(--glow);
-}
-.tool{
-  width:68px; height:68px; background:var(--panel); border:1.5px solid var(--border);
-  border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition:transform .1s ease, box-shadow .1s ease, border-color .1s ease;
-}
-.tool:focus, .tool.active{ outline:none; border-color:#6aa3ff; box-shadow:0 0 0 3px rgba(106,163,255,.25) inset; }
-.tool:hover{ transform:translateY(-1px); }
-
-.tool-swatch { padding:0; }
-.tool-swatch .swatch{
-  width:52px; height:52px; border-radius:8px; border:3px solid rgba(255,255,255,.75); box-shadow:0 2px 8px rgba(0,0,0,.35) inset;
+/* ---------- NEW compact left painting toolbox ---------- */
+.paintbar{
+  position:fixed; left:0; top:0; bottom:0; width:96px;
+  background:#18181a;
+  border-right:1px solid #0f0f10;
+  box-shadow: 8px 0 24px rgba(0,0,0,.25) inset;
+  z-index:120;                  /* sits above canvases, below preview */
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  padding:16px 10px;
 }
 
-/* Simple icons (CSS-only) */
-.ico{ width:34px; height:34px; position:relative; filter:drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
-.ico-smudge::before{ content:""; position:absolute; inset:0; border-left:4px solid #fff; border-bottom:4px solid #fff; transform:rotate(45deg) translate(-2px,4px); border-radius:6px; }
-.ico-eraser::before{ content:""; position:absolute; left:4px; top:10px; width:26px; height:18px; background:#fff; transform:skew(-15deg); border-radius:3px; }
-.ico-brush::before{ content:""; position:absolute; left:8px; top:4px; width:8px; height:24px; background:#fff; border-radius:4px; }
-.ico-brush::after{ content:""; position:absolute; left:20px; bottom:6px; width:18px; height:8px; background:#fff; border-radius:8px; }
+/* Color square + hidden native input (clicking the square opens picker) */
+#pbColorInput{ position:absolute; left:-9999px; top:-9999px; }
+.color-btn{
+  width:56px; height:56px; border-radius:10px; border:3px solid #d7ead7;
+  box-shadow:0 2px 8px rgba(0,0,0,.35) inset, 0 1px 0 rgba(255,255,255,.06);
+  background:#2ad0ff;           /* JS keeps this in sync with current color */
+}
+.color-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* Tool buttons (smudge/eraser/brush + save) */
+.tool-btn{
+  width:56px; height:56px; border-radius:12px;
+  background:var(--btn);
+  border:1px solid #2b2b2e;
+  display:grid; place-items:center;
+  cursor:pointer;
+  transition:transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.tool-btn:hover{ background:var(--btnHover); }
+.tool-btn.active{
+  box-shadow:0 0 0 3px rgba(60,112,255,.35);
+  border-color:var(--btnActive);
+}
+
+/* SVG icons via masks (no external assets required) */
+.tool-btn::before{
+  content:"";
+  display:block; width:26px; height:26px;
+  background:white;
+  mask-size:contain; -webkit-mask-size:contain;
+  mask-repeat:no-repeat; -webkit-mask-repeat:no-repeat;
+  mask-position:center; -webkit-mask-position:center;
+  opacity:.95;
+}
+#pbSmudge::before{ mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M13.5 2a1.5 1.5 0 0 1 1.4.98l.54 1.45a2 2 0 0 0 1.22 1.2l1.47.54a1.5 1.5 0 0 1 0 2.78l-1.47.54a2 2 0 0 0-1.22 1.2l-.54 1.45a1.5 1.5 0 0 1-2.8 0l-.53-1.45a2 2 0 0 0-1.22-1.2l-1.47-.54a1.5 1.5 0 0 1 0-2.78l1.47-.54a2 2 0 0 0 1.22-1.2l.53-1.45A1.5 1.5 0 0 1 13.5 2zM5 20h14a1 1 0 0 1 0 2H5a1 1 0 1 1 0-2z"/></svg>'); }
+#pbEraser::before{ mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M16.24 3.56a2 2 0 0 1 2.83 0l1.37 1.37a2 2 0 0 1 0 2.83L11.1 17.1a2 2 0 0 1-2.83 0L4.9 13.73a2 2 0 0 1 0-2.83L16.24 3.56zM3 20h10a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2z"/></svg>'); }
+#pbBrush::before{  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M20.71 4.63a2 2 0 0 0-2.83 0l-7.8 7.8a3 3 0 0 0-.76 1.29L8.9 16.1l2.38-.41a3 3 0 0 0 1.29-.76l7.8-7.8a2 2 0 0 0 0-2.83zM7 18a3 3 0 0 0-3 3H3a5 5 0 0 1 5-5v2z"/></svg>'); }
+.save-btn::before{  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-3 0v6H5V5h9zM7 20v-6h10v6H7z"/></svg>'); }
 
 /* Vertical sliders */
-.vslider{ width:68px; display:flex; flex-direction:column; align-items:center; gap:6px; margin:6px 0; }
-.vslider label{ color:#ddd; font-size:12px; }
-.vslider input[type="range"]{ writing-mode:bt-lr; -webkit-appearance:slider-vertical; height:220px; width:16px; }
-input[type="range"]{ outline:none; }
-input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--accent); border:2px solid #2c3e50; }
-input[type="range"]::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:var(--accent); border:2px solid #2c3e50; }
-
-/* Save menu at bottom */
-.save-wrap{ margin-top:auto; }
-.tool-save{ color:#fff; font-weight:600; background:var(--panel2); }
-
-/* Save popover (re-uses old class names so JS stays intact) */
-.save-options{
-  position:absolute; left:92px; bottom:14px; background:#fff; border-radius:10px; border:1px solid #ddd;
-  box-shadow:0 12px 28px rgba(0,0,0,.25); padding:6px; display:flex; flex-direction:column; gap:6px; z-index:140;
+.vslider{
+  display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:6px;
 }
-.save-options.hidden{ display:none; }
-.save-options button{ background:#fff; border:1px solid #e7e7e7; border-radius:8px; padding:8px 10px; cursor:pointer; }
-
-/* Popovers */
-.popover{
-  position:fixed; left:110px; top:60px; background:var(--popover); color:#fff; border-radius:12px;
-  box-shadow:0 12px 28px rgba(0,0,0,.35); padding:12px; z-index:130; min-width:260px;
+.vslider input[type="range"]{
+  writing-mode: bt-lr;     /* Firefox vertical */
+  -webkit-appearance: slider-vertical;
+  height:160px; width:16px; padding:0;
 }
-.popover.hidden{ display:none; }
-
-/* Brush rows */
-.brush-row{
-  display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.04);
-  color:#fff; border:1px solid rgba(255,255,255,.08); cursor:pointer; margin:6px 0;
+.vslider label{
+  color:#ddd; font-size:12px; margin-top:4px;
 }
-.brush-row:hover{ background:rgba(255,255,255,.08); }
 
-/* Stroke thumbnails */
-.stroke{ display:inline-block; height:10px; width:92px; border-radius:12px; background:#fff; opacity:.95; }
-.stroke.Marker{ height:12px; }
-.stroke-paint{ box-shadow:0 3px 6px rgba(0,0,0,.35) inset; }
-.stroke-pencil{ height:6px; opacity:.85; }
-.stroke-marker{ height:12px; }
+/* Save dropdown */
+.save-wrap{ position:relative; }
+.save-menu{
+  position:absolute; left:72px; top:-4px;
+  background:#fff; border-radius:10px; padding:8px;
+  box-shadow:0 10px 24px rgba(0,0,0,.15);
+  display:none; flex-direction:column; gap:8px; min-width:160px; z-index:200;
+}
+.save-menu.open{ display:flex; }
+.save-menu button{
+  appearance:none; border:1px solid #e7e7ea; border-radius:10px; background:#fff;
+  padding:10px 12px; cursor:pointer; text-align:left;
+}
+.save-menu button:hover{ background:#f7f7fb; }
 
-/* Color popover */
-.color-preview{ width:220px; height:150px; border-radius:8px; background:#6bb043; margin-bottom:10px; border:2px solid rgba(255,255,255,.2); }
+/* ---------- Preview HUD (top-right) ---------- */
+.preview-hud{
+  position:fixed; top:24px; right:24px; z-index:140;
+}
+#previewCanvas{
+  border:2px solid #4d8ad5; border-radius:12px;
+  width:320px; height:auto;
+}
 
-/* Preview HUD / nav (unchanged) */
-.preview-hud{ position:fixed; top:24px; right:24px; z-index:140; }
-#previewCanvas{ border:2px solid #4d8ad5; border-radius:12px; width:320px; height:auto; }
-.nav-floating{ position:fixed; right:24px; bottom:24px; z-index:130; background:#fff; border:2px solid #4d8ad5; border-radius:32px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.15); display:flex; gap:8px; align-items:center; }
-.nav-floating button{ width:42px; height:42px; border-radius:21px; border:1px solid #ccc; background:#fff; cursor:pointer; font-size:16px; }
-.nav-floating button:active{ transform:translateY(1px); }
+/* ---------- Bottom-right floating nav ---------- */
+.nav-floating{
+  position:fixed; right:24px; bottom:24px;
+  z-index:130; background:#fff; border:2px solid #4d8ad5;
+  border-radius:32px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.15);
+  display:flex; gap:8px; align-items:center;
+}
+.nav-floating button{
+  width:42px; height:42px; border-radius:21px; border:1px solid #ccc; background:#fff; cursor:pointer; font-size:16px;
+}
+.nav-floating button:active{ transform: translateY(1px); }
 
 
 
