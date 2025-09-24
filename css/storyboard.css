@@ -74,10 +74,9 @@ h2 {
 }
 
 @keyframes bounceLeftRight {
-  0%, 100% { transform: translateX(0px) translateY(0px); }
-  25% { transform: translateX(8px) translateY(-2px); }
-  50% { transform: translateX(0px) translateY(0px); }
-  75% { transform: translateX(-8px) translateY(-2px); }
+  0% { transform: translateX(-30px) translateY(-2px) rotate(-5deg); }
+  50% { transform: translateX(30px) translateY(-2px) rotate(5deg); }
+  100% { transform: translateX(-30px) translateY(-2px) rotate(-5deg); }
 }
 
 @keyframes energeticHareHop {

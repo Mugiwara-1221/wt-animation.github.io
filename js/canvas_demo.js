@@ -336,101 +336,131 @@ function downloadDataUrl(dataUrl, filename) {
   document.body.removeChild(a);
 }
 
+// NOTE: previous version
+
 /* ------- Send to storyboard ------- */
+// async function sendToStoryboard() {
+//   try {
+//     const { x, y, width, height } = allowedArea;
+
+//     // Crop the paint layer to the sprite box
+//     const crop = document.createElement("canvas");
+//     crop.width = width;
+//     crop.height = height;
+//     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
+
+//     // Find mask sets for the selected character
+//     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+//     if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
+
+//     const bySlide = {};
+//     for (const { frame, prefix } of sets) {
+//       const list = [];
+
+//       const csvURL = `${prefix}1.csv`;
+//       if (!(await urlExists(csvURL))) continue;
+
+//       const { mat, W, H } = await loadCSVMatrix(csvURL);
+//       const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
+
+//       for (const regionId of uniqueIds) {
+//         const maskCanvas = document.createElement("canvas");
+//         maskCanvas.width = W;
+//         maskCanvas.height = H;
+//         const ctx = maskCanvas.getContext("2d");
+//         const imgData = ctx.createImageData(W, H);
+
+//         for (let y = 0; y < H; y++) {
+//           for (let x = 0; x < W; x++) {
+//             if (mat[y][x] === regionId) {
+//               const idx = (y * W + x) * 4;
+//               imgData.data[idx + 0] = 255;
+//               imgData.data[idx + 1] = 255;
+//               imgData.data[idx + 2] = 255;
+//               imgData.data[idx + 3] = 255;
+//             }
+//           }
+//         }
+//         ctx.putImageData(imgData, 0, 0);
+
+//         const scaledMask = document.createElement("canvas");
+//         scaledMask.width = width;
+//         scaledMask.height = height;
+//         scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
+
+//         const masked = document.createElement("canvas");
+//         masked.width = width;
+//         masked.height = height;
+//         const mctx = masked.getContext("2d");
+//         mctx.drawImage(crop, 0, 0);
+//         mctx.globalCompositeOperation = "destination-in";
+//         mctx.drawImage(scaledMask, 0, 0);
+//         mctx.globalCompositeOperation = "source-over";
+
+//         const blob = await new Promise(res => masked.toBlob(res, "image/png"));
+//         const url = URL.createObjectURL(blob);
+
+//         list.push({ regionId, img: url, frame, maskIndex: 1 });
+//       }
+
+//       if (list.length) bySlide[frame] = list;
+//     }
+
+//     const imageOnlyBySlide = {};
+//     const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+//     for (const [frame, regions] of Object.entries(bySlide)) {
+//       imageOnlyBySlide[frame] = regions.map(r => r.img);
+//     }
+
+//     localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(imageOnlyBySlide));
+
+//     const firstFrame = Object.values(imageOnlyBySlide)[0];
+//     if (firstFrame?.length) {
+//       localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
+//       localStorage.setItem("coloredCharacter", firstFrame[0]);
+//     }
+
+//     localStorage.setItem("selectedCharacter", selectedChar);
+
+//     const firstImg = firstFrame?.[0] || "";
+//     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
+
+//     if (firstImg) {
+//       try {
+//         await submitDrawing(sessionCode, selectedChar, firstImg, uid);
+//       } catch (e) {
+//         console.warn("[submitDrawing]", e);
+//       }
+//     }
+
+
+/* ------- Send to storyboard (simplified - save locally) ------- */
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
 
-    // Crop the paint layer to the sprite box
-    const crop = document.createElement("canvas");
-    crop.width = width;
-    crop.height = height;
-    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
+    // Create final colored character image (drawing + outline)
+    const finalCanvas = document.createElement("canvas");
+    finalCanvas.width = width;
+    finalCanvas.height = height;
+    const ctx = finalCanvas.getContext("2d");
 
-    // Find mask sets for the selected character
-    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
-    if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
+    // Draw the colored drawing
+    ctx.drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    const bySlide = {};
-    for (const { frame, prefix } of sets) {
-      const list = [];
-
-      const csvURL = `${prefix}1.csv`;
-      if (!(await urlExists(csvURL))) continue;
-
-      const { mat, W, H } = await loadCSVMatrix(csvURL);
-      const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
-
-      for (const regionId of uniqueIds) {
-        const maskCanvas = document.createElement("canvas");
-        maskCanvas.width = W;
-        maskCanvas.height = H;
-        const ctx = maskCanvas.getContext("2d");
-        const imgData = ctx.createImageData(W, H);
-
-        for (let y = 0; y < H; y++) {
-          for (let x = 0; x < W; x++) {
-            if (mat[y][x] === regionId) {
-              const idx = (y * W + x) * 4;
-              imgData.data[idx + 0] = 255;
-              imgData.data[idx + 1] = 255;
-              imgData.data[idx + 2] = 255;
-              imgData.data[idx + 3] = 255;
-            }
-          }
-        }
-        ctx.putImageData(imgData, 0, 0);
-
-        const scaledMask = document.createElement("canvas");
-        scaledMask.width = width;
-        scaledMask.height = height;
-        scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
-
-        const masked = document.createElement("canvas");
-        masked.width = width;
-        masked.height = height;
-        const mctx = masked.getContext("2d");
-        mctx.drawImage(crop, 0, 0);
-        mctx.globalCompositeOperation = "destination-in";
-        mctx.drawImage(scaledMask, 0, 0);
-        mctx.globalCompositeOperation = "source-over";
-
-        const blob = await new Promise(res => masked.toBlob(res, "image/png"));
-        const url = URL.createObjectURL(blob);
-
-        list.push({ regionId, img: url, frame, maskIndex: 1 });
-      }
-
-      if (list.length) bySlide[frame] = list;
+    // Draw the outline on top if loaded
+    if (outlineLoaded) {
+      ctx.drawImage(outlineImg, 0, 0, width, height);
     }
 
-    const imageOnlyBySlide = {};
-    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-    for (const [frame, regions] of Object.entries(bySlide)) {
-      imageOnlyBySlide[frame] = regions.map(r => r.img);
-    }
+    // Convert to data URL
+    const dataURL = finalCanvas.toDataURL("image/png");
 
-    localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(imageOnlyBySlide));
-
-    const firstFrame = Object.values(imageOnlyBySlide)[0];
-    if (firstFrame?.length) {
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
-      localStorage.setItem("coloredCharacter", firstFrame[0]);
-    }
-
+    // Save to localStorage with character-specific key
+    localStorage.setItem(`coloredCharacter:${selectedChar}`, dataURL);
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    const firstImg = firstFrame?.[0] || "";
-    const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-
-    if (firstImg) {
-      try {
-        await submitDrawing(sessionCode, selectedChar, firstImg, uid);
-      } catch (e) {
-        console.warn("[submitDrawing]", e);
-      }
-    }
-
+    // Navigate to storyboard
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
     if (sessionCode) q.set("session", sessionCode);
     if (selectedGrade) q.set("grade", selectedGrade);

@@ -91,7 +91,7 @@ const OVERLAY_KEY = `coloredFrames:${storyFolder}:${selectedChar}`;
 let coloredBySlide = {};
 try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
 
-const legacySingle  = localStorage.getItem("coloredCharacter") || null;
+const legacySingle  = localStorage.getItem(`coloredCharacter:${selectedChar}`) || localStorage.getItem("coloredCharacter") || null;
 let   legacyFrames  = null;
 try { const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
       if (Array.isArray(arr) && arr.length) legacyFrames = arr; } catch {}
@@ -100,6 +100,7 @@ function setTitle(){
   const h2 = document.querySelector("h2");
   if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
 }
+
 function clearLayers(){
   for (const stop of loops) { try { stop(); } catch{} }
   loops.clear();
@@ -207,6 +208,38 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
 async function placeCharacter(cfg, slideNo){
   const { id, x, y, w, h, z=1, fps=4 } = cfg;
 
+  // Check localStorage first for selected character
+  if (id === selectedChar && legacySingle){
+    const host = (()=>{
+      let h = document.getElementById("charHost");
+      if (!h){
+        h = document.createElement("div");
+        h.id = "charHost";
+        Object.assign(h.style, { position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none" });
+        scene.parentElement.appendChild(h);
+      }
+      return h;
+    })();
+
+    const img = document.createElement("img");
+    img.className = `char-layer ${id}`;
+    Object.assign(img.style, {
+      position:"absolute",
+      left:pct(x), top:pct(y),
+      width:pct(w),
+      height:(h != null ? pct(h) : "auto"),
+      zIndex:String(z),
+      pointerEvents:"none",
+      animation: `bounceLeftRight 4s ease-in-out infinite`
+    });
+    img.src = legacySingle;
+    host.appendChild(img);
+
+    const stop = () => { try { img.remove(); } catch {} };
+    loops.add(stop);
+    return;
+  }
+
   const host = (()=>{
     let h = document.getElementById("charHost");
     if (!h){
@@ -256,25 +289,25 @@ async function placeCharacter(cfg, slideNo){
     const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
 
     // choose / build overlays for THIS slide
-    let overlays = null;
-    if (id === selectedChar){
-      const stored = coloredBySlide[String(slideNo)];
-      if (Array.isArray(stored) && stored.length){
-        overlays = await Promise.all(stored.map(loadImage));
-      } else if (Array.isArray(legacyFrames) && legacyFrames.length){
-        overlays = await Promise.all(legacyFrames.slice(0, baseFrames.length).map(loadImage));
-      } else if (legacySingle){
-        overlays = await buildOverlaysForSlideFromSingle(legacySingle, slideNo, id, cvs);
-      }
-    }
+    // let overlays = null;
+    // if (id === selectedChar){
+    //   const stored = coloredBySlide[String(slideNo)];
+    //   if (Array.isArray(stored) && stored.length){
+    //     overlays = await Promise.all(stored.map(loadImage));
+    //   } else if (Array.isArray(legacyFrames) && legacyFrames.length){
+    //     overlays = await Promise.all(legacyFrames.slice(0, baseFrames.length).map(loadImage));
+    //   } else if (legacySingle){
+    //     overlays = await buildOverlaysForSlideFromSingle(legacySingle, slideNo, id, cvs);
+    //   }
+    // }
 
     function draw(ix){
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0,0,r.width,r.height);
-      if (overlays){
-        const ov = overlays[ix % overlays.length];
-        ctx.drawImage(ov, 0, 0, r.width, r.height);
-      }
+      // if (overlays){
+      //   const ov = overlays[ix % overlays.length];
+      //   ctx.drawImage(ov, 0, 0, r.width, r.height);
+      // }
       const base = baseFrames[ix % baseFrames.length];
       ctx.drawImage(base, 0, 0, r.width, r.height);
     }

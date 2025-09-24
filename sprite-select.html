@@ -37,7 +37,7 @@
     const slide      = Number(q.get('slide')) || Number(ctx.slide) || 1;
 
     // DEV: show only some characters while building; leave [] for all
-    const SHOW_ONLY = ["mama_duck"]; // e.g., ["mama_duck"]
+    const SHOW_ONLY = []; // NOTE: showing all characters now
 
     // Ensure absolutely-positioned children are relative to the scene wrapper
     container.style.position = 'relative';
@@ -76,7 +76,7 @@
       imgs.forEach((img, i) => {
         const r = Math.floor(i / cols);
         const c = i % cols;
-        const gap = 6; // %
+        const gap = 12; // NOTE: increased specifically for tortoise & hare
         const cellW = (100 - (cols + 1) * gap) / cols;
         const cellH = (100 - (rows + 1) * gap) / rows;
 
@@ -157,7 +157,8 @@
       container.appendChild(frag);
 
       // Auto-place only those lacking positions
-      autoPlace(needsAuto);
+      // NOTE: Disabled for now to hard-code tortoise and hare
+      // autoPlace(needsAuto);
 
       // Hook up hit-testing + navigation after sprites exist
       await import('./js/sprite-select.js');
