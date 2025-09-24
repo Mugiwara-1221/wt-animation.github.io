@@ -310,6 +310,68 @@ function stampSegment(x0,y0,x1,y1){
   for (let i=0;i<=count;i++){ const t=i/count; dotAt(x0+dx*t,y0+dy*t); }
 }
 
+/* atomic updates to avoid flicker */
+let previewToken=0;
+async function drawPreview(){
+  if(!pctx || !slidesManifest || !appearances.length){
+    if(pctx) pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+    return;
+  }
+  const myToken=++previewToken;
+  const globalIdx=appearances[appearCursor];
+  const slide=slidesManifest.slides[globalIdx]; if(!slide) return;
+
+  try{
+    const bgIm=await loadImageCached(slide.background);
+    const { sceneW, sceneH } = ensurePreviewDimsFor(bgIm);
+    const scale = Math.min(previewBuffer.width/sceneW, previewBuffer.height/sceneH);
+    const vw=sceneW*scale, vh=sceneH*scale;
+    const ox=(previewBuffer.width-vw)/2, oy=(previewBuffer.height-vh)/2;
+
+    pb.clearRect(0,0,previewBuffer.width,previewBuffer.height);
+    pb.drawImage(bgIm, ox, oy, vw, vh);
+
+    const charCfg=(slide.characters||[]).find(c => (c.id||"").toLowerCase()===selectedChar);
+    if(charCfg){
+      const dx=ox + (charCfg.x/100)*vw;
+      const dy=oy + (charCfg.y/100)*vh;
+      const dw=(charCfg.w/100)*vw;
+      const dh=dw;
+
+      const sprite=document.createElement("canvas");
+      sprite.width=Math.max(1,Math.round(dw));
+      sprite.height=Math.max(1,Math.round(dh));
+      const scx=sprite.getContext("2d"); scx.imageSmoothingEnabled=false;
+      scx.drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,sprite.width,sprite.height);
+
+      try{
+        const storyFolder=resolveStoryFolder(selectedStory || "tortoise-hare");
+        const csvURL=`images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}_mask_1.csv`;
+        if(await urlExists(csvURL)){
+          const { mat,W,H }=await loadCSVMatrix(csvURL);
+          const mask=await matrixToMaskCanvas(mat,W,H,sprite.width,sprite.height);
+          scx.globalCompositeOperation="destination-in"; scx.drawImage(mask,0,0); scx.globalCompositeOperation="source-over";
+        }
+      }catch{}
+
+      pb.drawImage(sprite, dx,dy,dw,dh);
+
+      try{
+        const storyFolder=resolveStoryFolder(selectedStory || "tortoise-hare");
+        const frame1=`images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}1.png`;
+        if(await urlExists(frame1)){ const ol=await loadImageCached(frame1); pb.drawImage(ol, dx,dy,dw,dh); }
+      }catch{}
+    }
+
+    if(myToken===previewToken){
+      pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+      pctx.drawImage(previewBuffer,0,0);
+    }
+  }catch{
+    pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+  }
+}
+
 /* Preview throttle */
 let previewScheduled=false;
 function schedulePreview(){
