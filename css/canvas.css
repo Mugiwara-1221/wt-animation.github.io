@@ -34,7 +34,7 @@ body{ margin:0; padding:0; overflow:hidden; width:100vw; height:100vh; backgroun
   width:56px; height:56px; border:2px solid rgba(255,255,255,.15); border-radius:12px; background:#232528;
   display:grid; place-items:center; cursor:pointer; transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
 }
-.tool.icon img{ width:30px; height:30px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+.tool.icon img{ width:60px; height:60px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
 .tool.icon:hover{ border-color:rgba(255,255,255,.4); }
 .tool.icon:focus-visible{ outline:2px solid var(--accent); }
 .tool.icon.active{ box-shadow:0 0 0 3px var(--accent) inset; }
