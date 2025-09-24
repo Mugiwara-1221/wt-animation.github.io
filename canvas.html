@@ -17,7 +17,7 @@
       <span class="swatch" aria-hidden="true"></span>
     </label>
 
-    <!-- Smudge (UI only—uses draw tool with soft brush style) -->
+    <!-- Smudge (UI only—same draw tool, different feel later if desired) -->
     <button class="tool icon" id="btnSmudge" title="Smudge" data-tool="smudge">
       <img alt="" src="images/icons/smudge-icon.png">
     </button>
@@ -27,12 +27,13 @@
       <img alt="" src="images/icons/eraser-icon.png">
     </button>
 
-    <!-- Brush (opens mini menu + sliders) -->
-    <button class="tool icon" id="btnBrush" title="Brush" data-tool="draw" aria-haspopup="true" aria-expanded="false" aria-controls="brushMenu">
+    <!-- Brush (opens mini menu) -->
+    <button class="tool icon" id="btnBrush" title="Brush" data-tool="draw"
+            aria-haspopup="true" aria-expanded="false" aria-controls="brushMenu">
       <img alt="" src="images/icons/brush-icon.png">
     </button>
 
-    <!-- Vertical sliders (kept same class names so JS continues to work) -->
+    <!-- Vertical sliders (keep class names the canvas code expects) -->
     <div class="slider-wrap">
       <div class="slider-label">Size</div>
       <input type="range" class="brush-size-slider vslider" min="1" max="100" value="18" aria-label="Brush size">
@@ -43,7 +44,7 @@
       <input type="range" class="opacity-slider vslider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity">
     </div>
 
-    <!-- Save popover -->
+    <!-- Save dropdown (kept your structure & onclicks) -->
     <div class="save-wrap">
       <button id="saveBtn" class="tool save-btn" aria-expanded="false" aria-controls="saveOptions">Save</button>
       <div id="saveOptions" class="save-options hidden" role="menu">
@@ -55,7 +56,7 @@
 
   <!-- Brush mini menu (appears near Brush button) -->
   <div id="brushMenu" class="menu hidden" role="menu" aria-label="Brush types">
-    <button class="brush-choice" data-brush="basic"  role="menuitem"><span class="chip"></span> Paintbrush</button>
+    <button class="brush-choice" data-brush="paint"  role="menuitem"><span class="chip"></span> Paintbrush</button>
     <button class="brush-choice" data-brush="pencil" role="menuitem"><span class="chip"></span> Pencil</button>
     <button class="brush-choice" data-brush="marker" role="menuitem"><span class="chip"></span> Marker</button>
   </div>
@@ -86,10 +87,9 @@
     window.__flowCtx = ctx;
   </script>
 
-  <!-- Your existing logic (UNCHANGED) -->
+  <!-- Logic -->
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="js/canvas_demo.js"></script>
-  <script type="module" src="js/toolboard.js"></script>
 </body>
 </html>
 
