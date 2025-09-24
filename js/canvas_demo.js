@@ -16,6 +16,9 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
+/* === Preview state MUST be declared early (used during layout) === */
+let previewScheduled = false;
+
 /* === Mini preview + appearances-only nav === */
 const previewCanvas = document.getElementById("previewCanvas");
 const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
@@ -186,92 +189,61 @@ let opacity     = 1.0;
 let prevX = null, prevY = null;
 let zoomLevel = 1;
 
-/* Tool UI wiring */
-const el = (id) => document.getElementById(id);
-const btnColor   = el("btnColor");
-const btnSmudge  = el("btnSmudge");
-const btnEraser  = el("btnEraser");
-const btnBrush   = el("btnBrush");
-const btnSave    = el("btnSave");
-const popupColor = el("popupColor");
-const popupBrush = el("popupBrush");
-const popupSave  = el("popupSave");
-const swatch     = el("swatch");
-const colorPrev  = el("colorPreview");
-const colorInput = el("colorInput");
-const slidersBox = el("sliders");
-const sizeSlider = el("sizeSlider");
-const opacitySlider = el("opacitySlider");
-const actDownload   = el("actDownload");
-const actStoryboard = el("actStoryboard");
+/* ===== Toolboard wiring (NEW) ===== */
+const colorInput    = document.querySelector(".pick-color");
+const colorTool     = document.querySelector(".color-tool");
+const swatchEl      = document.querySelector(".color-tool .swatch");
+const btnSmudge     = document.getElementById("btnSmudge");
+const btnEraser     = document.getElementById("btnEraser");
+const btnBrush      = document.getElementById("btnBrush");
+const brushMenu     = document.getElementById("brushMenu");
+const saveBtn       = document.getElementById("saveBtn");
+const saveOptions   = document.getElementById("saveOptions");
+const sizeSlider    = document.querySelector(".brush-size-slider");
+const opacitySlider = document.querySelector(".opacity-slider");
 
-function setActive(btn){
-  [btnColor,btnSmudge,btnEraser,btnBrush].forEach(b => b.classList.toggle("active", b===btn));
-}
-function closeAllPopups(){ [popupColor,popupBrush,popupSave].forEach(p => p.classList.add("hidden")); }
-function show(el, yAnchor=80){ el.style.top = `${yAnchor}px`; el.classList.remove("hidden"); }
-
-/* Color */
-function openColor(){
-  setActive(btnColor);
-  closeAllPopups();
-  show(popupColor, btnColor.getBoundingClientRect().top);
-  // open native picker immediately
-  colorInput.click();
-}
-colorInput.addEventListener("input", e => {
+/* Swatch opens native picker */
+colorTool?.addEventListener("click", () => colorInput?.click());
+colorInput?.addEventListener("input", e => {
   brushColor = e.target.value;
-  swatch.style.background = brushColor;
-  colorPrev.style.background = brushColor;
+  if (swatchEl) swatchEl.style.background = brushColor;
 });
+if (swatchEl) swatchEl.style.background = brushColor;
 
-/* Brush popup */
-function openBrush(){
+/* Tool buttons */
+function setActive(btn) {
+  [btnSmudge, btnEraser, btnBrush].forEach(b => b?.classList.toggle("active", b === btn));
+}
+btnSmudge?.addEventListener("click", () => { currentTool = "draw"; setActive(btnSmudge); brushMenu?.classList.add("hidden"); });
+btnEraser?.addEventListener("click", () => { currentTool = "erase"; setActive(btnEraser); brushMenu?.classList.add("hidden"); });
+
+btnBrush?.addEventListener("click", () => {
   setActive(btnBrush);
-  closeAllPopups();
-  show(popupBrush, btnBrush.getBoundingClientRect().top - 8);
-  slidersBox.classList.remove("hidden");
-}
-/* Smudge / Eraser choose tool + show sliders */
-function pickTool(t){
-  currentTool = t;
-  setActive(t==="erase" ? btnEraser : btnSmudge);
-  closeAllPopups();
-  slidersBox.classList.remove("hidden");
-}
-
-/* Save popup */
-function openSave(){
-  setActive(null);
-  closeAllPopups();
-  show(popupSave, btnSave.getBoundingClientRect().top - 8);
-}
-
-/* Attach events */
-btnColor.addEventListener("click", openColor);
-btnBrush.addEventListener("click", openBrush);
-btnSmudge.addEventListener("click", () => pickTool("smudge"));
-btnEraser.addEventListener("click", () => pickTool("erase"));
-btnSave.addEventListener("click", openSave);
+  const show = brushMenu?.classList.contains("hidden");
+  if (show) brushMenu.classList.remove("hidden"); else brushMenu.classList.add("hidden");
+  btnBrush.setAttribute("aria-expanded", String(show));
+});
 
 /* Brush choices */
-popupBrush.querySelectorAll("[data-brush]").forEach(btn=>{
-  btn.addEventListener("click", () => {
-    brushKind = btn.dataset.brush; // for future tuning
-    currentTool = "draw";
-    setActive(btnBrush);
-    closeAllPopups();
-    slidersBox.classList.remove("hidden");
-  });
+brushMenu?.addEventListener("click", (e) => {
+  const b = e.target.closest(".brush-choice");
+  if (!b) return;
+  brushKind = b.dataset.brush || "paint";
+  currentTool = "draw";
+  setActive(btnBrush);
+  brushMenu.classList.add("hidden");
+  btnBrush?.setAttribute("aria-expanded", "false");
 });
 
-/* sliders */
-sizeSlider.addEventListener("input", ()=>{ brushSize = +sizeSlider.value; });
-opacitySlider.addEventListener("input", ()=>{ opacity = +opacitySlider.value; });
+/* Sliders */
+sizeSlider?.addEventListener("input", () => { brushSize = +sizeSlider.value; });
+opacitySlider?.addEventListener("input", () => { opacity = +opacitySlider.value; });
 
-/* Initial swatch */
-swatch.style.background = brushColor;
-colorPrev.style.background = brushColor;
+/* Save dropdown */
+saveBtn?.addEventListener("click", () => {
+  saveOptions?.classList.toggle("hidden");
+  saveBtn.setAttribute("aria-expanded", String(!saveOptions.classList.contains("hidden")));
+});
 
 /* Core draw helpers */
 function getPos(e){
@@ -288,31 +260,13 @@ ctx.lineJoin = "round";
 ctx.lineCap  = "round";
 ctx.imageSmoothingEnabled = true;
 
-/* per-slide autosave/restore */
-function persistCurrentAppearance(){
-  if(!appearances.length) return;
-  const slide1=appearances[appearCursor]+1;
-  const crop=document.createElement("canvas"); crop.width=allowedArea.width; crop.height=allowedArea.height;
-  crop.getContext("2d").drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,allowedArea.width,allowedArea.height);
-  localStorage.setItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1), crop.toDataURL("image/png"));
-}
-function restoreCurrentAppearance(){
-  ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
-  if(!appearances.length) return;
-  const slide1=appearances[appearCursor]+1;
-  const dataURL=localStorage.getItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1));
-  if(!dataURL) return;
-  const img=new Image();
-  img.onload=()=>{ ctx.drawImage(img,0,0,img.width,img.height, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height); schedulePreview(); };
-  img.src=dataURL;
-}
-
 /* History */
 let history = [], redoStack = [];
 function saveHistory(){ history.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); if (history.length>40) history.shift(); redoStack=[]; }
 function undo(){ if(!history.length) return; redoStack.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); ctx.putImageData(history.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 function redo(){ if(!redoStack.length) return; saveHistory(); ctx.putImageData(redoStack.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 
+/* Stamping brush */
 function dotAt(x,y){
   ctx.beginPath();
   ctx.arc(x, y, brushSize/2, 0, Math.PI*2);
@@ -328,6 +282,29 @@ function stampSegment(x0,y0,x1,y1){
   const count = Math.ceil(dist/step);
   for (let i=0;i<=count;i++){ const t=i/count; dotAt(x0+dx*t,y0+dy*t); }
 }
+
+/* === Preview helpers === */
+function ensurePreviewDimsFor(bgIm){
+  const sceneW = bgIm.naturalWidth  || bgIm.width  || 1600;
+  const sceneH = bgIm.naturalHeight || bgIm.height || 900;
+  const MAX_W = 320, MAX_H = 200;
+  const scale = Math.min(MAX_W/sceneW, MAX_H/sceneH);
+  const cw = Math.max(1, Math.round(sceneW*scale));
+  const ch = Math.max(1, Math.round(sceneH*scale));
+  if (previewCanvas && (previewCanvas.width!==cw || previewCanvas.height!==ch)){
+    previewCanvas.width=cw; previewCanvas.height=ch;
+    previewCanvas.style.width=`${cw}px`; previewCanvas.style.height=`${ch}px`;
+  }
+  if (previewBuffer.width!==cw || previewBuffer.height!==ch){
+    previewBuffer.width=cw; previewBuffer.height=ch;
+  }
+  return { sceneW, sceneH };
+}
+
+/* === Appearances-only model + preview === */
+let slidesManifest=null;
+let appearances=[];
+let appearCursor=0;
 
 /* atomic updates to avoid flicker */
 let previewToken=0;
@@ -392,7 +369,6 @@ async function drawPreview(){
 }
 
 /* Preview throttle */
-let previewScheduled=false;
 function schedulePreview(){
   if(previewScheduled) return;
   previewScheduled=true;
@@ -443,21 +419,6 @@ function applyZoom(){
   schedulePreview();
 }
 
-/* Save actions */
-actDownload.addEventListener("click", downloadImage);
-actStoryboard.addEventListener("click", sendToStoryboard);
-
-function downloadImage(){
-  // merge for download (no mask; quick preview)
-  const merged=document.createElement("canvas");
-  merged.width=drawCanvas.width; merged.height=drawCanvas.height;
-  const m=merged.getContext("2d");
-  m.fillStyle="white"; m.fillRect(0,0,merged.width,merged.height);
-  m.drawImage(drawCanvas,0,0); m.drawImage(spriteCanvas,0,0);
-  const a=document.createElement("a"); a.download="my_drawing.png"; a.href=merged.toDataURL(); a.click();
-  closeAllPopups();
-}
-
 /* ---------- CSV → alpha mask helpers ---------- */
 async function loadCSVMatrix(url){
   const resp=await fetch(url,{cache:"no-store"}); if(!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
@@ -478,25 +439,22 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH){
 }
 async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
-  const base=`images/frames/${storyFolder}`; const out=[];
-  // probe frame1 only (latest repo structure); extend easily if you add more frames later
+  const base=`images/frames/${storyFolder}`;
   const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
+  const out=[];
   if (await urlExists(`${prefix}1.csv`)) out.push({frame:1,prefix});
   return out;
 }
 
-/* ------- Send to storyboard (restores mask clipping) ------- */
+/* ------- Send to storyboard (uses masks to clip) ------- */
 async function sendToStoryboard() {
   try {
-    closeAllPopups();
-
     // crop paint layer to sprite box
     const { x, y, width, height } = allowedArea;
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    // Try mask sets
     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
 
     const bySlide = {};
@@ -591,6 +549,59 @@ async function sendToStoryboard() {
     alert("Send to Storyboard failed. See console for details.");
   }
 }
+
+/* per-slide autosave/restore */
+function persistCurrentAppearance(){
+  if(!appearances.length) return;
+  const slide1=appearances[appearCursor]+1;
+  const crop=document.createElement("canvas"); crop.width=allowedArea.width; crop.height=allowedArea.height;
+  crop.getContext("2d").drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,allowedArea.width,allowedArea.height);
+  localStorage.setItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1), crop.toDataURL("image/png"));
+}
+function restoreCurrentAppearance(){
+  ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  if(!appearances.length) return;
+  const slide1=appearances[appearCursor]+1;
+  const dataURL=localStorage.getItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1));
+  if(!dataURL) return;
+  const img=new Image();
+  img.onload=()=>{ ctx.drawImage(img,0,0,img.width,img.height, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height); schedulePreview(); };
+  img.src=dataURL;
+}
+
+/* Appearance navigation */
+async function gotoAppearance(n){
+  if(!appearances.length) return;
+  if(n<0 || n>=appearances.length) return;
+  appearCursor=n;
+  const outlineURL=await resolveOutlineURLForSlide(appearances[appearCursor]+1);
+  outlineImg.src=outlineURL;
+  restoreCurrentAppearance();
+  schedulePreview();
+}
+function nextAppearance(){ gotoAppearance(appearCursor+1); }
+function prevAppearance(){ gotoAppearance(appearCursor-1); }
+prevAppBtn?.addEventListener("click", prevAppearance);
+nextAppBtn?.addEventListener("click", nextAppearance);
+addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if(e.key==="ArrowLeft") prevAppearance(); });
+
+/* ---------- Boot ---------- */
+(async function boot(){
+  const fallbackOutline = await resolveOutlineURLForSlide(1);
+  outlineImg.src=fallbackOutline;
+  layoutAndRedraw();
+
+  const storyId = selectedStory || "tortoise-hare";
+  const manifest = await loadSlidesManifest(storyId);
+  slidesManifest = manifest;
+  appearances = buildAppearances(manifest, selectedChar);
+
+  if(appearances.length){ await gotoAppearance(0); }
+  else { schedulePreview(); }
+})();
+
+/* Expose only the two actions used by onclicks in HTML */
+Object.assign(window, { downloadImage, sendToStoryboard });
 
 /* ---------- Slider cosmetics (optional) ---------- */
 /*function updateSliderFill(slider)
