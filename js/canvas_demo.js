@@ -22,13 +22,7 @@ const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
 const prevAppBtn    = document.getElementById("prevAppBtn");
 const nextAppBtn    = document.getElementById("nextAppBtn");
 
-/* Nuke any lingering chip element from older markup */
-(() => {
-  const chip = document.querySelector(".preview-caption");
-  if (chip) chip.remove();
-})();
-
-/* Offscreen buffer to prevent flicker */
+/* Offscreen buffer for the preview */
 const previewBuffer = (() => {
   const c = document.createElement("canvas");
   c.width  = previewCanvas ? previewCanvas.width  : 0;
@@ -73,8 +67,6 @@ const sessionCode   =  urlParams.get("session") || localStorage.getItem("session
 const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
 
-localStorage.setItem("selectedCharacter", selectedChar);
-
 /* ---------- Helpers ---------- */
 function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
@@ -112,7 +104,7 @@ async function resolveSpriteURL() {
     const manifest = await r.json();
     const hit = (manifest.characters || []).find(c => (c.id || "").toLowerCase() === selectedChar);
     if (hit?.sprite) return hit.sprite;
-  } catch (e) { console.warn("[resolveSpriteURL] manifest load failed:", e); }
+  } catch {}
 
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
   const candidates = [
@@ -121,9 +113,7 @@ async function resolveSpriteURL() {
     `images/outline/${selectedChar}_transparent.png`,
     `images/outline/${selectedChar}-transparent.png`,
   ];
-  for (const u of candidates) {
-    if (await urlExists(u)) return u;
-  }
+  for (const u of candidates) if (await urlExists(u)) return u;
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
@@ -136,7 +126,6 @@ outlineImg.onerror = () => alert(`Could not load character image: ${outlineImg.s
 async function resolveOutlineURLForSlide(slide1) {
   const storyDash   = selectedStory || "tortoise-hare";
   const storyFolder = resolveStoryFolder(storyDash);
-
   if (outlineParam) return outlineParam;
 
   const tries = [
@@ -145,9 +134,7 @@ async function resolveOutlineURLForSlide(slide1) {
     `images/outline/${selectedChar}_transparent.png`,
     `images/outline/${selectedChar}-transparent.png`,
   ];
-  for (const url of tries) {
-    if (await urlExists(url)) return url;
-  }
+  for (const url of tries) if (await urlExists(url)) return url;
 
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
@@ -192,13 +179,111 @@ addEventListener("resize", layoutAndRedraw);
 /* ---------- Drawing ---------- */
 let drawing = false;
 let currentTool = "draw";
+let brushKind   = "paint"; // paint | pencil | marker (UI only for now)
 let brushSize   = 18;
 let brushColor  = "#2ad0ff";
 let opacity     = 1.0;
 let prevX = null, prevY = null;
 let zoomLevel = 1;
 
-/* (kept) stroke engine */
+/* Tool UI wiring */
+const el = (id) => document.getElementById(id);
+const btnColor   = el("btnColor");
+const btnSmudge  = el("btnSmudge");
+const btnEraser  = el("btnEraser");
+const btnBrush   = el("btnBrush");
+const btnSave    = el("btnSave");
+const popupColor = el("popupColor");
+const popupBrush = el("popupBrush");
+const popupSave  = el("popupSave");
+const swatch     = el("swatch");
+const colorPrev  = el("colorPreview");
+const colorInput = el("colorInput");
+const slidersBox = el("sliders");
+const sizeSlider = el("sizeSlider");
+const opacitySlider = el("opacitySlider");
+const actDownload   = el("actDownload");
+const actStoryboard = el("actStoryboard");
+
+function setActive(btn){
+  [btnColor,btnSmudge,btnEraser,btnBrush].forEach(b => b.classList.toggle("active", b===btn));
+}
+function closeAllPopups(){ [popupColor,popupBrush,popupSave].forEach(p => p.classList.add("hidden")); }
+function show(el, yAnchor=80){ el.style.top = `${yAnchor}px`; el.classList.remove("hidden"); }
+
+/* Color */
+function openColor(){
+  setActive(btnColor);
+  closeAllPopups();
+  show(popupColor, btnColor.getBoundingClientRect().top);
+  // open native picker immediately
+  colorInput.click();
+}
+colorInput.addEventListener("input", e => {
+  brushColor = e.target.value;
+  swatch.style.background = brushColor;
+  colorPrev.style.background = brushColor;
+});
+
+/* Brush popup */
+function openBrush(){
+  setActive(btnBrush);
+  closeAllPopups();
+  show(popupBrush, btnBrush.getBoundingClientRect().top - 8);
+  slidersBox.classList.remove("hidden");
+}
+/* Smudge / Eraser choose tool + show sliders */
+function pickTool(t){
+  currentTool = t;
+  setActive(t==="erase" ? btnEraser : btnSmudge);
+  closeAllPopups();
+  slidersBox.classList.remove("hidden");
+}
+
+/* Save popup */
+function openSave(){
+  setActive(null);
+  closeAllPopups();
+  show(popupSave, btnSave.getBoundingClientRect().top - 8);
+}
+
+/* Attach events */
+btnColor.addEventListener("click", openColor);
+btnBrush.addEventListener("click", openBrush);
+btnSmudge.addEventListener("click", () => pickTool("smudge"));
+btnEraser.addEventListener("click", () => pickTool("erase"));
+btnSave.addEventListener("click", openSave);
+
+/* Brush choices */
+popupBrush.querySelectorAll("[data-brush]").forEach(btn=>{
+  btn.addEventListener("click", () => {
+    brushKind = btn.dataset.brush; // for future tuning
+    currentTool = "draw";
+    setActive(btnBrush);
+    closeAllPopups();
+    slidersBox.classList.remove("hidden");
+  });
+});
+
+/* sliders */
+sizeSlider.addEventListener("input", ()=>{ brushSize = +sizeSlider.value; });
+opacitySlider.addEventListener("input", ()=>{ opacity = +opacitySlider.value; });
+
+/* Initial swatch */
+swatch.style.background = brushColor;
+colorPrev.style.background = brushColor;
+
+/* Core draw helpers */
+function getPos(e){
+  const r = drawCanvas.getBoundingClientRect();
+  const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+  const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+  return [(clientX - r.left) / zoomLevel, (clientY - r.top) / zoomLevel];
+}
+function isInBounds(x, y){
+  return x >= allowedArea.x && x <= allowedArea.x + allowedArea.width &&
+         y >= allowedArea.y && y <= allowedArea.y + allowedArea.height;
+}
 ctx.lineJoin = "round";
 ctx.lineCap  = "round";
 ctx.imageSmoothingEnabled = true;
@@ -209,7 +294,6 @@ function saveHistory(){ history.push(ctx.getImageData(0,0,drawCanvas.width,drawC
 function undo(){ if(!history.length) return; redoStack.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); ctx.putImageData(history.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 function redo(){ if(!redoStack.length) return; saveHistory(); ctx.putImageData(redoStack.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 
-/* Circle stamp brush */
 function dotAt(x,y){
   ctx.beginPath();
   ctx.arc(x, y, brushSize/2, 0, Math.PI*2);
@@ -234,19 +318,21 @@ function schedulePreview(){
   requestAnimationFrame(()=>{ previewScheduled=false; drawPreview(); });
 }
 
-/* Pointer helpers */
-function getPos(e){
-  const r = drawCanvas.getBoundingClientRect();
-  const clientX = e.clientX ?? e.touches?.[0]?.clientX;
-  const clientY = e.clientY ?? e.touches?.[0]?.clientY;
-  return [(clientX - r.left) / zoomLevel, (clientY - r.top) / zoomLevel];
-}
-function isInBounds(x, y){
-  return x >= allowedArea.x && x <= allowedArea.x + allowedArea.width &&
-         y >= allowedArea.y && y <= allowedArea.y + allowedArea.height;
-}
+/* Mouse / touch */
+drawCanvas.addEventListener("mousedown", e => {
+  const [x,y]=getPos(e);
+  if(isInBounds(x,y)){ saveHistory(); drawing=true; prevX=prevY=null; drawStroke(e); }
+});
+drawCanvas.addEventListener("mousemove", drawStroke);
+addEventListener("mouseup",   () => { drawing=false; prevX=prevY=null; persistCurrentAppearance(); schedulePreview(); });
+drawCanvas.addEventListener("mouseout",  () => { drawing=false; prevX=prevY=null; });
+drawCanvas.addEventListener("touchstart", e => {
+  const [x,y]=getPos(e);
+  if(isInBounds(x,y)){ saveHistory(); drawing=true; prevX=prevY=null; drawStroke(e.touches[0]); }
+},{ passive:true });
+drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); drawStroke(e.touches[0]); }, { passive:false });
+drawCanvas.addEventListener("touchend",  () => { drawing=false; prevX=prevY=null; persistCurrentAppearance(); schedulePreview(); });
 
-/* Stroke */
 function drawStroke(e){
   if(!drawing) return;
   const [x,y] = getPos(e);
@@ -264,22 +350,6 @@ function drawStroke(e){
   schedulePreview();
 }
 
-/* Mouse / touch */
-drawCanvas.addEventListener("mousedown", e => {
-  const [x,y]=getPos(e);
-  if(isInBounds(x,y)){ saveHistory(); drawing=true; prevX=prevY=null; drawStroke(e); }
-});
-drawCanvas.addEventListener("mousemove", drawStroke);
-addEventListener("mouseup",   () => { drawing=false; prevX=prevY=null; persistCurrentAppearance(); schedulePreview(); });
-drawCanvas.addEventListener("mouseout",  () => { drawing=false; prevX=prevY=null; });
-
-drawCanvas.addEventListener("touchstart", e => {
-  const [x,y]=getPos(e);
-  if(isInBounds(x,y)){ saveHistory(); drawing=true; prevX=prevY=null; drawStroke(e.touches[0]); }
-},{ passive:true });
-drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); drawStroke(e.touches[0]); }, { passive:false });
-drawCanvas.addEventListener("touchend",  () => { drawing=false; prevX=prevY=null; persistCurrentAppearance(); schedulePreview(); });
-
 /* Clear + zoom */
 function clearCanvas(){ ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height); layoutAndRedraw(); persistCurrentAppearance(); }
 function zoomIn(){  zoomLevel*=1.1; applyZoom(); }
@@ -292,25 +362,22 @@ function applyZoom(){
   schedulePreview();
 }
 
-/* Save dropdown (logic kept the same APIs) */
-function toggleSaveMenu(open){
-  const menu = document.getElementById("pbSaveMenu");
-  const btn  = document.getElementById("pbSave");
-  const willOpen = open ?? !menu.classList.contains("open");
-  menu.classList.toggle("open", willOpen);
-  btn.setAttribute("aria-expanded", String(willOpen));
-}
+/* Save actions */
+actDownload.addEventListener("click", downloadImage);
+actStoryboard.addEventListener("click", sendToStoryboard);
+
 function downloadImage(){
+  // merge for download (no mask; quick preview)
   const merged=document.createElement("canvas");
   merged.width=drawCanvas.width; merged.height=drawCanvas.height;
   const m=merged.getContext("2d");
   m.fillStyle="white"; m.fillRect(0,0,merged.width,merged.height);
   m.drawImage(drawCanvas,0,0); m.drawImage(spriteCanvas,0,0);
   const a=document.createElement("a"); a.download="my_drawing.png"; a.href=merged.toDataURL(); a.click();
-  toggleSaveMenu(false);
+  closeAllPopups();
 }
 
-/* ---------- CSV → alpha mask helpers (unchanged) ---------- */
+/* ---------- CSV → alpha mask helpers ---------- */
 async function loadCSVMatrix(url){
   const resp=await fetch(url,{cache:"no-store"}); if(!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
   const text=await resp.text(); const rows=text.trim().split(/\r?\n/);
@@ -321,356 +388,132 @@ async function loadCSVMatrix(url){
 async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH){
   const src=document.createElement("canvas"); src.width=srcW; src.height=srcH;
   const cSrc=src.getContext("2d"); const imgData=cSrc.createImageData(srcW,srcH); let k=0;
-  for(let y=0;y<srcH;y++){ const row=mat[y]; for(let x=0;x<srcW;x++){ const a=row?.[x]?255:0;
-    imgData.data[k++]=255; imgData.data[k++]=255; imgData.data[k++]=255; imgData.data[k++]=a; } }
+  for(let y=0;y<srcH;y++){ const row=mat[y]; for(let x=0;x<srcW;x++){ const on=row?.[x]>0?255:0;
+    imgData.data[k++]=255; imgData.data[k++]=255; imgData.data[k++]=255; imgData.data[k++]=on; } }
   cSrc.putImageData(imgData,0,0);
   const scaled=document.createElement("canvas"); scaled.width=targetW; scaled.height=targetH;
   const cTgt=scaled.getContext("2d"); cTgt.imageSmoothingEnabled=false; cTgt.drawImage(src,0,0,targetW,targetH);
   return scaled;
 }
-
-/* findMaskSets (kept your current behavior) */
 async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
-  let misses=0;
-  for(let n=1;n<2;n++){
-    const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
-    if(await urlExists(`${prefix}${n}.csv`)){ out.push({frame:n,prefix}); misses=0; }
-    else { misses++; if(misses>=2 && out.length) break; }
-  }
+  // probe frame1 only (latest repo structure); extend easily if you add more frames later
+  const prefix=`${base}/frame1/${charId}/${charId}_mask_`;
+  if (await urlExists(`${prefix}1.csv`)) out.push({frame:1,prefix});
   return out;
 }
 
-/* download helper */
-function downloadDataUrl(dataUrl, filename) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-function loadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-/* ------- Send to storyboard (unchanged) ------- */
+/* ------- Send to storyboard (restores mask clipping) ------- */
 async function sendToStoryboard() {
-  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-  const baseFrameURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
-  const { x: cropX, y: cropY, width: cropW, height: cropH } = allowedArea;
-  const bySlide = {};
   try {
-    let baseData = null;
-    const baseImg = await loadImage(baseFrameURL);
-    const baseCanvas = document.createElement("canvas");
-    baseCanvas.width = baseImg.width;
-    baseCanvas.height = baseImg.height;
-    const baseCtx = baseCanvas.getContext("2d");
-    baseCtx.drawImage(baseImg, 0, 0);
-    baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
+    closeAllPopups();
 
-    const cropCanvas = document.createElement("canvas");
-    cropCanvas.width = cropW;
-    cropCanvas.height = cropH;
-    const cropCtx = cropCanvas.getContext("2d");
-    cropCtx.drawImage(drawCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    // crop paint layer to sprite box
+    const { x, y, width, height } = allowedArea;
+    const crop = document.createElement("canvas");
+    crop.width = width; crop.height = height;
+    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    if (selectedChar === "tortoise") {
-      const merged = document.createElement("canvas");
-      merged.width = cropCanvas.width;
-      merged.height = cropCanvas.height;
-      const mctx = merged.getContext("2d");
-      mctx.drawImage(cropCanvas, 0, 0);
-      const baseImg2 = await loadImage(baseFrameURL);
-      mctx.drawImage(baseImg2, 0, 0, merged.width, merged.height);
-      const dataUrl = merged.toDataURL("image/png");
-      localStorage.setItem("coloredCharacter", dataUrl);
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify([dataUrl]));
-      localStorage.setItem("selectedCharacter", selectedChar);
-      const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-      if (sessionCode)   q.set("session", sessionCode);
-      if (selectedGrade) q.set("grade", selectedGrade);
-      location.href = `storyboard.html?${q.toString()}`;
-      return;
-    } else {
-      const { x, y, width, height } = allowedArea;
-      const crop = document.createElement("canvas");
-      crop.width = width;
-      crop.height = height;
-      crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
-      const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
-      if (!sets.length) throw new Error(`No masks found for "${selectedChar}" in story "${selectedStory}".`);
+    // Try mask sets
+    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+
+    const bySlide = {};
+    if (sets.length) {
       for (const { frame, prefix } of sets) {
         const list = [];
         const csvURL = `${prefix}1.csv`;
         if (!(await urlExists(csvURL))) continue;
+
         const { mat, W, H } = await loadCSVMatrix(csvURL);
         const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
+
         for (const regionId of uniqueIds) {
           const maskCanvas = document.createElement("canvas");
-          maskCanvas.width = W;
-          maskCanvas.height = H;
-          const c2 = maskCanvas.getContext("2d");
-          const imgData = c2.createImageData(W, H);
-          for (let yy = 0; yy < H; yy++) {
-            for (let xx = 0; xx < W; xx++) {
-              if (mat[yy][xx] === regionId) {
-                const idx = (yy * W + xx) * 4;
-                imgData.data[idx + 0] = 255;
-                imgData.data[idx + 1] = 255;
-                imgData.data[idx + 2] = 255;
-                imgData.data[idx + 3] = 255;
+          maskCanvas.width = W; maskCanvas.height = H;
+          const mc = maskCanvas.getContext("2d");
+          const imgData = mc.createImageData(W, H);
+          for (let yy=0; yy<H; yy++){
+            for (let xx=0; xx<W; xx++){
+              if (mat[yy][xx] === regionId){
+                const i=(yy*W+xx)*4;
+                imgData.data[i]=imgData.data[i+1]=imgData.data[i+2]=255;
+                imgData.data[i+3]=255;
               }
             }
           }
-          c2.putImageData(imgData, 0, 0);
+          mc.putImageData(imgData,0,0);
+
           const scaledMask = document.createElement("canvas");
-          scaledMask.width = width;
-          scaledMask.height = height;
+          scaledMask.width = width; scaledMask.height = height;
           scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
+
           const masked = document.createElement("canvas");
-          masked.width = width;
-          masked.height = height;
+          masked.width = width; masked.height = height;
           const mctx = masked.getContext("2d");
           mctx.drawImage(crop, 0, 0);
           mctx.globalCompositeOperation = "destination-in";
           mctx.drawImage(scaledMask, 0, 0);
           mctx.globalCompositeOperation = "source-over";
+
           const blob = await new Promise(res => masked.toBlob(res, "image/png"));
           const url = URL.createObjectURL(blob);
           list.push({ regionId, img: url, frame, maskIndex: 1 });
         }
         if (list.length) bySlide[frame] = list;
       }
+    } else {
+      // Fallback: merge outline + paint (no mask available)
+      const merged = document.createElement("canvas");
+      merged.width = width; merged.height = height;
+      const mctx = merged.getContext("2d");
+      mctx.drawImage(crop, 0, 0);
+
+      const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
+      const outlineURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
+      if (await urlExists(outlineURL)) {
+        const ol = await loadImageCached(outlineURL);
+        mctx.drawImage(ol, 0, 0, width, height);
+      }
+      const blob = await new Promise(res => merged.toBlob(res, "image/png"));
+      const url = URL.createObjectURL(blob);
+      bySlide[1] = [{ regionId: 1, img: url, frame: 1, maskIndex: 1 }];
     }
+
+    // Save to localStorage (storyboard consumption)
     const imageOnlyBySlide = {};
     const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
     for (const [frame, regions] of Object.entries(bySlide)) {
       imageOnlyBySlide[frame] = regions.map(r => r.img);
     }
     localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(imageOnlyBySlide));
+
     const firstFrame = Object.values(imageOnlyBySlide)[0];
     if (firstFrame?.length) {
       localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
       localStorage.setItem("coloredCharacter", firstFrame[0]);
     }
     localStorage.setItem("selectedCharacter", selectedChar);
+
+    // Optional submit
     const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    if (firstImg) {
-      try { await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch (e) { console.warn("[submitDrawing]", e); }
-    }
+    if (firstImg) { try { await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch {} }
+
+    // Route
     const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode) q.set("session", sessionCode);
+    if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade", selectedGrade);
     location.href = `storyboard.html?${q.toString()}`;
-  } catch (err) {
+  } catch(err) {
     console.error("[sendToStoryboard] failed:", err);
     alert("Send to Storyboard failed. See console for details.");
   }
 }
 
-/* ---------- Slider fill cosmetics (kept) ---------- */
+/* ---------- Slider cosmetics (optional) ---------- */
 function updateSliderFill(slider){
-  if(!slider) return;
-  const value=((slider.value-slider.min)/(slider.max-slider.min))*100;
-  slider.style.setProperty("--percent", `${value}%`);
-}
-
-/* === Appearances-only model + preview (unchanged) === */
-let slidesManifest=null;
-let appearances=[];
-let appearCursor=0;
-
-function ensurePreviewDimsFor(bgIm){
-  const sceneW = bgIm.naturalWidth  || bgIm.width  || 1600;
-  const sceneH = bgIm.naturalHeight || bgIm.height || 900;
-  const MAX_W = 320, MAX_H = 200;
-  const scale = Math.min(MAX_W/sceneW, MAX_H/sceneH);
-  const cw = Math.max(1, Math.round(sceneW*scale));
-  const ch = Math.max(1, Math.round(sceneH*scale));
-  if (previewCanvas && (previewCanvas.width!==cw || previewCanvas.height!==ch)){
-    previewCanvas.width=cw; previewCanvas.height=ch;
-    previewCanvas.style.width=`${cw}px`; previewCanvas.style.height=`${ch}px`;
-  }
-  if (previewBuffer.width!==cw || previewBuffer.height!==ch){
-    previewBuffer.width=cw; previewBuffer.height=ch;
-  }
-  return { sceneW, sceneH };
-}
-
-/* atomic updates to avoid flicker */
-let previewToken=0;
-async function drawPreview(){
-  if(!pctx || !slidesManifest || !appearances.length){
-    if(pctx) pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
-    return;
-  }
-  const myToken=++previewToken;
-  const globalIdx=appearances[appearCursor];
-  const slide=slidesManifest.slides[globalIdx]; if(!slide) return;
-
-  try{
-    const bgIm=await loadImageCached(slide.background);
-    const { sceneW, sceneH } = ensurePreviewDimsFor(bgIm);
-    const scale = Math.min(previewBuffer.width/sceneW, previewBuffer.height/sceneH);
-    const vw=sceneW*scale, vh=sceneH*scale;
-    const ox=(previewBuffer.width-vw)/2, oy=(previewBuffer.height-vh)/2;
-
-    pb.clearRect(0,0,previewBuffer.width,previewBuffer.height);
-    pb.drawImage(bgIm, ox, oy, vw, vh);
-
-    const charCfg=(slide.characters||[]).find(c => (c.id||"").toLowerCase()===selectedChar);
-    if(charCfg){
-      const dx=ox + (charCfg.x/100)*vw;
-      const dy=oy + (charCfg.y/100)*vh;
-      const dw=(charCfg.w/100)*vw;
-      const dh=dw;
-
-      const sprite=document.createElement("canvas");
-      sprite.width=Math.max(1,Math.round(dw));
-      sprite.height=Math.max(1,Math.round(dh));
-      const scx=sprite.getContext("2d"); scx.imageSmoothingEnabled=false;
-      scx.drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,sprite.width,sprite.height);
-
-      try{
-        const storyFolder=resolveStoryFolder(selectedStory || "tortoise-hare");
-        const csvURL=`images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}_mask_1.csv`;
-        if(await urlExists(csvURL)){
-          const { mat,W,H }=await loadCSVMatrix(csvURL);
-          const mask=await matrixToMaskCanvas(mat,W,H,sprite.width,sprite.height);
-          scx.globalCompositeOperation="destination-in"; scx.drawImage(mask,0,0); scx.globalCompositeOperation="source-over";
-        }
-      }catch{}
-
-      pb.drawImage(sprite, dx,dy,dw,dh);
-
-      try{
-        const storyFolder=resolveStoryFolder(selectedStory || "tortoise-hare");
-        const frame1=`images/frames/${storyFolder}/frame${globalIdx+1}/${selectedChar}/${selectedChar}1.png`;
-        if(await urlExists(frame1)){ const ol=await loadImageCached(frame1); pb.drawImage(ol, dx,dy,dw,dh); }
-      }catch{}
-    }
-
-    if(myToken===previewToken){
-      pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
-      pctx.drawImage(previewBuffer,0,0);
-    }
-  }catch{
-    pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
-  }
-}
-
-async function gotoAppearance(n){
-  if(!appearances.length) return;
-  if(n<0 || n>=appearances.length) return;
-  appearCursor=n;
-  const outlineURL=await resolveOutlineURLForSlide(appearances[appearCursor]+1);
-  outlineImg.src=outlineURL;
-  restoreCurrentAppearance();
-  schedulePreview();
-}
-function nextAppearance(){ gotoAppearance(appearCursor+1); }
-function prevAppearance(){ gotoAppearance(appearCursor-1); }
-prevAppBtn?.addEventListener("click", prevAppearance);
-nextAppBtn?.addEventListener("click", nextAppearance);
-
-/* keyboard nav */
-addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if(e.key==="ArrowLeft") prevAppearance(); });
-
-/* per-slide autosave/restore */
-function persistCurrentAppearance(){
-  if(!appearances.length) return;
-  const slide1=appearances[appearCursor]+1;
-  const crop=document.createElement("canvas"); crop.width=allowedArea.width; crop.height=allowedArea.height;
-  crop.getContext("2d").drawImage(drawCanvas, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height, 0,0,allowedArea.width,allowedArea.height);
-  localStorage.setItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1), crop.toDataURL("image/png"));
-}
-function restoreCurrentAppearance(){
-  ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
-  if(!appearances.length) return;
-  const slide1=appearances[appearCursor]+1;
-  const dataURL=localStorage.getItem(perSlidePaintKey(selectedStory || "tortoise-hare",selectedChar,slide1));
-  if(!dataURL) return;
-  const img=new Image();
-  img.onload=()=>{ ctx.drawImage(img,0,0,img.width,img.height, allowedArea.x,allowedArea.y,allowedArea.width,allowedArea.height); schedulePreview(); };
-  img.src=dataURL;
-}
-
-/* ---------- Boot ---------- */
-(async function boot(){
-  const fallbackOutline = await resolveOutlineURLForSlide(1);
-  outlineImg.src=fallbackOutline;
-  layoutAndRedraw();
-
-  const storyId = selectedStory || "tortoise-hare";
-  const manifest = await loadSlidesManifest(storyId);
-  slidesManifest = manifest;
-  appearances = buildAppearances(manifest, selectedChar);
-
-  if(appearances.length){ await gotoAppearance(0); }
-  else { schedulePreview(); }
-
-  /* ===== Paintbar wiring ===== */
-  const colorBtn = document.getElementById("pbColorBtn");
-  const colorInp = document.getElementById("pbColorInput");
-  const sizeSl   = document.getElementById("pbSize");
-  const opSl     = document.getElementById("pbOpacity");
-  const saveBtn  = document.getElementById("pbSave");
-  const dlBtn    = document.getElementById("pbDownload");
-  const sbBtn    = document.getElementById("pbStoryboard");
-
-  // initialize UI from current values
-  colorBtn.style.background = brushColor;
-  sizeSl.value = String(brushSize);
-  opSl.value   = String(opacity);
-
-  // open native color picker and keep swatch in sync
-  colorBtn.addEventListener("click", () => colorInp.click());
-  colorInp.addEventListener("input", e => {
-    brushColor = e.target.value;
-    colorBtn.style.background = brushColor;
-  });
-
-  // size / opacity
-  const updateFill = s => {
-    const pct=((s.value - s.min)/(s.max - s.min))*100;
-    s.style.setProperty("--percent", `${pct}%`);
-  };
-  [sizeSl, opSl].forEach(s => { updateFill(s); s.addEventListener("input", () => updateFill(s)); });
-  sizeSl.addEventListener("input", () => { brushSize = parseInt(sizeSl.value,10)||1; });
-  opSl.addEventListener("input", () => { opacity   = parseFloat(opSl.value)||0; });
-
-  // tool select UI state
-  const toolBtns = [document.getElementById("pbSmudge"), document.getElementById("pbEraser"), document.getElementById("pbBrush")];
-  function setTool(tool){
-    currentTool = tool === "smudge" ? "draw" : tool; // smudge uses same engine now
-    toolBtns.forEach(b => b.classList.toggle("active", b.dataset.tool === tool));
-  }
-  toolBtns.forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
-  setTool("draw"); // default
-
-  // save menu + actions
-  saveBtn.addEventListener("click", () => toggleSaveMenu());
-  dlBtn.addEventListener("click", downloadImage);
-  sbBtn.addEventListener("click", sendToStoryboard);
-  document.addEventListener("click", (e) => {
-    const menu = document.getElementById("pbSaveMenu");
-    const inside = e.target.closest(".save-wrap");
-    if (!inside && menu.classList.contains("open")) toggleSaveMenu(false);
-  });
-})();
-
-/* expose for safety (used in older HTML) */
-Object.assign(window,{ undo, redo, clearCanvas, zoomIn, zoomOut, downloadImage, sendToStoryboard });
+  if(!slider)
 
 
 
