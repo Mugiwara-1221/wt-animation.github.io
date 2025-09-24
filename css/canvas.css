@@ -1,43 +1,106 @@
 
 :root{
-  --panel-bg:#191b1e;           /* dark rail */
-  --panel-card:#303336;         /* popover bg */
-  --panel-border:#222;
-  --accent:#4da3ff;
+  --panel-bg: #191b1e;           /* dark rail */
+  --panel-card: #303336;         /* popover bg */
+  --panel-border: #222;
+  --accent :#4da3ff;
   --shadow:0 12px 30px rgba(0,0,0,.25);
 }
 
-/* Page */
-body{ margin:0; padding:0; overflow:hidden; width:100vw; height:100vh; background:#fff; font-family:system-ui,Arial; }
+body{ 
+  margin:0; 
+  padding:0; 
+  overflow:hidden; 
+  width:100vw; 
+  height:100vh; 
+  background:#fff; 
+  font-family:system-ui,Arial; 
+}
 
-/* Canvases (unchanged) */
-#bgCanvas, #drawCanvas, #spriteCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-#bgCanvas{ z-index:1; }
-#drawCanvas{ z-index:10; pointer-events:auto; }
-#spriteCanvas{ z-index:20; }
+/* Canvases*/
+#bgCanvas, #drawCanvas, #spriteCanvas{ 
+  position:absolute; 
+  inset:0; 
+  width:100%; 
+  height:100%; 
+  pointer-events:none; 
+}
+#bgCanvas{ 
+  z-index:1; 
+}
+#drawCanvas{ 
+  z-index:10; pointer-events:auto; 
+}
+#spriteCanvas{ 
+  z-index:20; 
+}
 
 /* ---------- LEFT TOOLBOARD ---------- */
 #toolboard{
-  position:fixed; left:0; top:0; bottom:0; width:86px; background:var(--panel-bg);
-  display:flex; flex-direction:column; align-items:center; gap:16px; padding:12px 8px; z-index:200;
+  position:fixed; 
+  left:0; 
+  top:0; 
+  bottom:0; 
+  width:86px; 
+  background:var(--panel-bg);
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+  gap:16px; padding:12px 8px; 
+  z-index:200;
   box-shadow: 8px 0 24px rgba(0,0,0,.2);
 }
 
 /* Color tool */
-.color-tool{ width:56px; height:56px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.35); position:relative; cursor:pointer; }
-.color-tool .pick-color{ position:absolute; inset:0; opacity:0; cursor:pointer; }
-.color-tool .swatch{ width:74%; height:74%; border-radius:10px; box-shadow:inset 0 0 0 2px rgba(0,0,0,.25); background:#2ad0ff; }
+.color-tool{ 
+  width:56px; 
+  height:56px; 
+  border-radius:12px; 
+  display:inline-flex; 
+  align-items:center; 
+  justify-content:center;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.35); 
+  position:relative; cursor:pointer; 
+}
+.color-tool .pick-color{ 
+  position:absolute; 
+  inset:0; 
+  opacity:0; 
+  cursor:pointer; 
+}
+.color-tool .swatch{ 
+  width:74%; 
+  height:74%; 
+  border-radius:10px; 
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.25); 
+  background:#2ad0ff; 
+}
 
 /* Icon buttons */
 .tool.icon{
-  width:56px; height:56px; border:2px solid rgba(255,255,255,.15); border-radius:12px; background:#232528;
-  display:grid; place-items:center; cursor:pointer; transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
+  width:56px; 
+  height:56px; 
+  border:2px solid rgba(255,255,255,.15); 
+  border-radius:12px; 
+  background:#232528;
+  display:grid; 
+  place-items:center; 
+  cursor:pointer; 
+  transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
 }
-.tool.icon img{ width:60px; height:60px; filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
-.tool.icon:hover{ border-color:rgba(255,255,255,.4); }
-.tool.icon:focus-visible{ outline:2px solid var(--accent); }
-.tool.icon.active{ box-shadow:0 0 0 3px var(--accent) inset; }
+.tool.icon img{ 
+  width:100px; 
+  height:100px; 
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); 
+}
+.tool.icon:hover{ 
+  border-color:rgba(255,255,255,.4); 
+}
+.tool.icon:focus-visible{ 
+  outline:2px solid var(--accent); 
+}
+.tool.icon.active{ 
+  box-shadow:0 0 0 3px var(--accent) inset; }
 
 /* Vertical sliders */
 .slider-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:4px; }
