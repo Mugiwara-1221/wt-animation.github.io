@@ -1,7 +1,23 @@
 
 {
   "grades": {
-    "TK-2": {
+        "TK-K": {
+      "label": "TK–2",
+      "tools": {
+        "brush": true,
+        "eraser": false,
+        "fill": true,
+        "colorPicker": true,
+        "layers": false,
+        "zoom": true
+      },
+      "brush": { "min": 8, "max": 24, "default": 14, "hardEdges": true },
+      "palette": ["#ff6961","#77dd77","#fdfd96","#84b6f4","#fdcae1","#cfcfc4","#000000","#ffffff"],
+      "snapInsideLines": true,
+      "allowFreeDrawCharacter": false,
+      "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
+    }
+    "1-2": {
       "label": "TK–2",
       "tools": {
         "brush": true,
@@ -17,7 +33,7 @@
       "allowFreeDrawCharacter": false,
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
-    "G.3-4": {
+    "G.3-5": {
       "label": "G.3–4",
       "tools": {
         "brush": true,
@@ -33,7 +49,7 @@
       "allowFreeDrawCharacter": false,
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
-    "G.5-8": {
+    "G.6-8": {
       "label": "G.5–8",
       "tools": {
         "brush": true,
