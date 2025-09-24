@@ -1,20 +1,18 @@
 
 :root{
-  --drawing-color:#000000;
-  --panel-bg:#1d1d1f;
-  --panel-border:#111;
-  --panel-shadow:rgba(0,0,0,.25);
-  --accent:#8bb9ff;
-  --btn:#2a2a2c;
-  --btnHover:#343437;
-  --btnActive:#3c70ff;
+  --panel-bg:#1e1f22;
+  --panel-shadow:rgba(0,0,0,.18);
+  --panel-outline:#70a1ff;
+  --popup-bg:#36383d;
+  --popup-radius:12px;
+  --popup-shadow:0 10px 26px rgba(0,0,0,.25);
 }
 
 /* Page */
 body{
   margin:0; padding:0; overflow:hidden;
   width:100vw; height:100vh;
-  font-family:Inter, system-ui, Arial, sans-serif;
+  font-family:Inter, ui-sans-serif, system-ui, Arial, sans-serif;
   background:#fff;
 }
 
@@ -27,99 +25,94 @@ body{
 #drawCanvas{ z-index:10; pointer-events:auto; }
 #spriteCanvas{ z-index:20; }
 
-/* ---------- NEW compact left painting toolbox ---------- */
-.paintbar{
-  position:fixed; left:0; top:0; bottom:0; width:96px;
-  background:#18181a;
-  border-right:1px solid #0f0f10;
-  box-shadow: 8px 0 24px rgba(0,0,0,.25) inset;
-  z-index:120;                  /* sits above canvases, below preview */
-  display:flex; flex-direction:column; align-items:center; gap:14px;
-  padding:16px 10px;
+/* ---------- Compact Left Toolbox ---------- */
+#toolbox{
+  position:fixed; left:0; top:0;
+  width:88px; height:100%;
+  background:var(--panel-bg);
+  box-shadow:2px 0 8px var(--panel-shadow);
+  display:flex; flex-direction:column; align-items:center;
+  gap:14px; padding:14px 0;
+  z-index:120;
+}
+.toolbtn{
+  width:56px; height:56px; border-radius:14px; border:2px solid transparent;
+  background:#2a2b2f; display:grid; place-items:center; cursor:pointer;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.toolbtn:hover{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.toolbtn.active{ outline:2px solid var(--panel-outline); outline-offset:2px; }
+.toolbtn.small{ width:44px; height:44px; }
+
+.swatch #swatch{
+  width:34px; height:34px; border-radius:8px; box-shadow: inset 0 0 0 3px rgba(255,255,255,.85);
+  display:block; background:#2ad0ff;
 }
 
-/* Color square + hidden native input (clicking the square opens picker) */
-#pbColorInput{ position:absolute; left:-9999px; top:-9999px; }
-.color-btn{
-  width:56px; height:56px; border-radius:10px; border:3px solid #d7ead7;
-  box-shadow:0 2px 8px rgba(0,0,0,.35) inset, 0 1px 0 rgba(255,255,255,.06);
-  background:#2ad0ff;           /* JS keeps this in sync with current color */
-}
-.color-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+/* icons (swap the background-image URLs to your final assets) */
+.ico{ width:26px; height:26px; display:block; background-size:contain; background-position:center; background-repeat:no-repeat; filter:invert(1) opacity(.92); }
+.ico-brush  { background-image:url('images/ui/brush.svg'); }
+.ico-eraser { background-image:url('images/ui/eraser.svg'); }
+.ico-smudge { background-image:url('images/ui/smudge.svg'); }
+.ico-save   { background-image:url('images/ui/save.svg'); }
 
-/* Tool buttons (smudge/eraser/brush + save) */
-.tool-btn{
-  width:56px; height:56px; border-radius:12px;
-  background:var(--btn);
-  border:1px solid #2b2b2e;
-  display:grid; place-items:center;
-  cursor:pointer;
-  transition:transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+/* vertical sliders group */
+.sliders{
+  margin-top:8px; display:flex; flex-direction:column; gap:22px; align-items:center;
 }
-.tool-btn:hover{ background:var(--btnHover); }
-.tool-btn.active{
-  box-shadow:0 0 0 3px rgba(60,112,255,.35);
-  border-color:var(--btnActive);
+.vslider{ display:flex; flex-direction:column; align-items:center; gap:8px; color:#d7d7d7; font-size:12px; }
+.vslider input{
+  appearance:none; width:140px; height:8px; border-radius:8px; background:#424449;
+  transform:rotate(-90deg);
 }
+.vslider input::-webkit-slider-thumb{
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 0 0 2px #1116;
+}
+.hidden{ display:none !important; }
 
-/* SVG icons via masks (no external assets required) */
-.tool-btn::before{
-  content:"";
-  display:block; width:26px; height:26px;
-  background:white;
-  mask-size:contain; -webkit-mask-size:contain;
-  mask-repeat:no-repeat; -webkit-mask-repeat:no-repeat;
-  mask-position:center; -webkit-mask-position:center;
-  opacity:.95;
+/* ---------- Popups ---------- */
+.popup{
+  position:fixed; left:96px; /* place to the right of bar */
+  min-width:260px; background:var(--popup-bg); color:#fff; border-radius:var(--popup-radius);
+  box-shadow:var(--popup-shadow); z-index:125; user-select:none;
 }
-#pbSmudge::before{ mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M13.5 2a1.5 1.5 0 0 1 1.4.98l.54 1.45a2 2 0 0 0 1.22 1.2l1.47.54a1.5 1.5 0 0 1 0 2.78l-1.47.54a2 2 0 0 0-1.22 1.2l-.54 1.45a1.5 1.5 0 0 1-2.8 0l-.53-1.45a2 2 0 0 0-1.22-1.2l-1.47-.54a1.5 1.5 0 0 1 0-2.78l1.47-.54a2 2 0 0 0 1.22-1.2l.53-1.45A1.5 1.5 0 0 1 13.5 2zM5 20h14a1 1 0 0 1 0 2H5a1 1 0 1 1 0-2z"/></svg>'); }
-#pbEraser::before{ mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M16.24 3.56a2 2 0 0 1 2.83 0l1.37 1.37a2 2 0 0 1 0 2.83L11.1 17.1a2 2 0 0 1-2.83 0L4.9 13.73a2 2 0 0 1 0-2.83L16.24 3.56zM3 20h10a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2z"/></svg>'); }
-#pbBrush::before{  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M20.71 4.63a2 2 0 0 0-2.83 0l-7.8 7.8a3 3 0 0 0-.76 1.29L8.9 16.1l2.38-.41a3 3 0 0 0 1.29-.76l7.8-7.8a2 2 0 0 0 0-2.83zM7 18a3 3 0 0 0-3 3H3a5 5 0 0 1 5-5v2z"/></svg>'); }
-.save-btn::before{  mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23fff" d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-3 0v6H5V5h9zM7 20v-6h10v6H7z"/></svg>'); }
+.popup-head{ font-weight:700; padding:12px 14px; border-bottom:1px solid #4a4d53; }
+.popup-body{ padding:14px; }
 
-/* Vertical sliders */
-.vslider{
-  display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:6px;
-}
-.vslider input[type="range"]{
-  writing-mode: bt-lr;     /* Firefox vertical */
-  -webkit-appearance: slider-vertical;
-  height:160px; width:16px; padding:0;
-}
-.vslider label{
-  color:#ddd; font-size:12px; margin-top:4px;
-}
+.color-preview{ width:200px; height:140px; border-radius:8px; background:#2ad0ff; box-shadow:inset 0 0 0 2px rgba(255,255,255,.15); }
+#colorInput{ position:absolute; inset:0; width:1px; height:1px; opacity:0; }
 
-/* Save dropdown */
-.save-wrap{ position:relative; }
-.save-menu{
-  position:absolute; left:72px; top:-4px;
-  background:#fff; border-radius:10px; padding:8px;
-  box-shadow:0 10px 24px rgba(0,0,0,.15);
-  display:none; flex-direction:column; gap:8px; min-width:160px; z-index:200;
+/* Brush list */
+.brush-list{ display:flex; flex-direction:column; gap:10px; }
+.brush-row{
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid #4a4d53;
+  background:#2f3136; color:#fff; display:flex; align-items:center; gap:12px; cursor:pointer;
 }
-.save-menu.open{ display:flex; }
-.save-menu button{
-  appearance:none; border:1px solid #e7e7ea; border-radius:10px; background:#fff;
-  padding:10px 12px; cursor:pointer; text-align:left;
-}
-.save-menu button:hover{ background:#f7f7fb; }
+.brush-row:hover{ background:#3a3d43; }
+.stroke{ width:90px; height:10px; border-radius:10px; background:#fff; opacity:.9; }
+.stroke-2{ height:6px; opacity:.8; }
+.stroke-3{ height:14px; opacity:.95; }
 
-/* ---------- Preview HUD (top-right) ---------- */
-.preview-hud{
-  position:fixed; top:24px; right:24px; z-index:140;
+/* Save list */
+.save-list{ display:flex; flex-direction:column; gap:10px; }
+.save-list button{
+  width:170px; padding:10px 12px; border-radius:10px; border:1px solid #e9e9ec;
+  background:#fff; color:#222; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,.08);
 }
+.save-list button:hover{ background:#f4f6ff; }
+
+/* Preview HUD */
+.preview-hud{ position:fixed; top:24px; right:24px; z-index:110; }
 #previewCanvas{
   border:2px solid #4d8ad5; border-radius:12px;
   width:320px; height:auto;
 }
 
-/* ---------- Bottom-right floating nav ---------- */
+/* Bottom-right slide nav */
 .nav-floating{
-  position:fixed; right:24px; bottom:24px;
-  z-index:130; background:#fff; border:2px solid #4d8ad5;
-  border-radius:32px; padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,.15);
-  display:flex; gap:8px; align-items:center;
+  position:fixed; right:24px; bottom:24px; z-index:110;
+  background:#fff; border:2px solid #4d8ad5; border-radius:32px; padding:8px 10px;
+  box-shadow:0 2px 10px rgba(0,0,0,.15); display:flex; gap:8px; align-items:center;
 }
 .nav-floating button{
   width:42px; height:42px; border-radius:21px; border:1px solid #ccc; background:#fff; cursor:pointer; font-size:16px;
