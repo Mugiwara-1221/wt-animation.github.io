@@ -9,34 +9,67 @@
   <link rel="stylesheet" href="css/canvas.css" />
 </head>
 <body>
+  <!-- New compact left toolbox -->
+  <aside id="toolbox" aria-label="Painting tools">
+    <!-- color swatch -->
+    <button id="btnColor" class="toolbtn swatch" aria-label="Color">
+      <span id="swatch" aria-hidden="true"></span>
+    </button>
 
-  <!-- Compact left painting toolbox -->
-  <aside class="paintbar" aria-label="Painting tools">
-    <!-- Color square (opens native color picker immediately) -->
-    <button class="tool-btn color-btn" id="pbColorBtn" aria-label="Pick color"></button>
-    <input id="pbColorInput" type="color" value="#2ad0ff" aria-label="Pick color" />
+    <!-- smudge -->
+    <button id="btnSmudge" class="toolbtn" aria-label="Smudge">
+      <span class="ico ico-smudge" aria-hidden="true"></span>
+    </button>
 
-    <!-- Smudge, Eraser, Brush -->
-    <button class="tool-btn" data-tool="smudge" id="pbSmudge" aria-label="Smudge"></button>
-    <button class="tool-btn" data-tool="erase"  id="pbEraser" aria-label="Eraser"></button>
-    <button class="tool-btn" data-tool="draw"   id="pbBrush"  aria-label="Brush"></button>
+    <!-- eraser -->
+    <button id="btnEraser" class="toolbtn" aria-label="Eraser">
+      <span class="ico ico-eraser" aria-hidden="true"></span>
+    </button>
 
-    <!-- Vertical sliders (always available; we just highlight brush/eraser/smudge) -->
-    <div class="vslider">
-      <input id="pbSize" type="range" min="1" max="100" value="18" aria-label="Brush size" orient="vertical">
-      <label for="pbSize">Size</label>
+    <!-- brush -->
+    <button id="btnBrush" class="toolbtn" aria-label="Brush">
+      <span class="ico ico-brush" aria-hidden="true"></span>
+    </button>
+
+    <!-- sliders (shown for brush / eraser / smudge) -->
+    <div id="sliders" class="sliders hidden" aria-hidden="true">
+      <label class="vslider">
+        <input id="sizeSlider" type="range" min="1" max="100" value="18" />
+        <span>Size</span>
+      </label>
+      <label class="vslider">
+        <input id="opacitySlider" type="range" min="0" max="1" step="0.01" value="1" />
+        <span>Opacity</span>
+      </label>
     </div>
-    <div class="vslider">
-      <input id="pbOpacity" type="range" min="0" max="1" step="0.01" value="1" aria-label="Opacity" orient="vertical">
-      <label for="pbOpacity">Opacity</label>
+
+    <!-- save menu trigger -->
+    <button id="btnSave" class="toolbtn small" aria-label="Save">
+      <span class="ico ico-save" aria-hidden="true"></span>
+    </button>
+
+    <!-- popups (positioned to the right of the bar) -->
+    <div id="popupColor" class="popup hidden" role="dialog" aria-label="Colors">
+      <div class="popup-head">Colors</div>
+      <div class="popup-body">
+        <div id="colorPreview" class="color-preview"></div>
+        <!-- Hidden native input; we click it programmatically -->
+        <input id="colorInput" type="color" value="#2ad0ff" />
+      </div>
     </div>
 
-    <!-- Save menu -->
-    <div class="save-wrap">
-      <button id="pbSave" class="tool-btn save-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="pbSaveMenu"></button>
-      <div id="pbSaveMenu" class="save-menu" role="menu">
-        <button role="menuitem" id="pbDownload">Download Image</button>
-        <button role="menuitem" id="pbStoryboard">Send to Storyboard</button>
+    <div id="popupBrush" class="popup hidden" role="dialog" aria-label="Brushes">
+      <div class="popup-body brush-list">
+        <button data-brush="paint"  class="brush-row"><span class="stroke stroke-1"></span>Paintbrush</button>
+        <button data-brush="pencil" class="brush-row"><span class="stroke stroke-2"></span>Pencil</button>
+        <button data-brush="marker" class="brush-row"><span class="stroke stroke-3"></span>Marker</button>
+      </div>
+    </div>
+
+    <div id="popupSave" class="popup hidden" role="menu" aria-label="Save Options">
+      <div class="popup-body save-list">
+        <button id="actDownload">Download Image</button>
+        <button id="actStoryboard">Send to Storyboard</button>
       </div>
     </div>
   </aside>
@@ -67,7 +100,6 @@
     window.__flowCtx = ctx;
   </script>
 
-  <!-- Canvas logic (unchanged) -->
   <script type="module" src="js/azure-api.js"></script>
   <script type="module" src="js/canvas_demo.js"></script>
 </body>
