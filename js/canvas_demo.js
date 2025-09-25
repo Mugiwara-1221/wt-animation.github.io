@@ -487,8 +487,6 @@ try {
                     correct storyboard handoff (0-based slide).
    ======================================================================= */
 
-"use strict";
-
 /* -------------------------- Query/Context -------------------------- */
 const urlParams   = new URLSearchParams(location.search);
 const ctx         = safeParse(localStorage.getItem("ctx")) || {};
