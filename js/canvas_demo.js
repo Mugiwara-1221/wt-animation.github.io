@@ -956,10 +956,8 @@ async function sendToStoryboard() {
           mctx.drawImage(scaledMask, 0, 0);
           mctx.globalCompositeOperation = "source-over";
 
-          const blob = await new Promise(res => masked.toBlob(res, "image/png"));
-          const url = URL.createObjectURL(blob);
-
-          list.push({ regionId, img: url, frame, maskIndex: 1 });
+         const dataUrl = masked.toDataURL("image/png");
+         list.push({ regionId, img: dataUrl, frame, maskIndex: 1 });
         }
 
         if (list.length) bySlide[frame] = list;
