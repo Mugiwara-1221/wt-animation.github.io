@@ -104,15 +104,15 @@
       const bgBase = `images/backgrounds/${storyId}`;
       const bgCandidates = [
         manifest.background,                        // explicit override from JSON (optional)
-        `${bgBase}/background${index}.png`,         // background1.png, background2.png, ...
-        `${bgBase}/background-${index}.png`,        // also accept background-1.png
+        `${bgBase}/background.png`,         
+        `${bgBase}/background${index}.png`,        // background1.png, background2.png, ...
       ].filter(Boolean);
       setBackground(bgCandidates);
 
       // Optional grade filter — safe if not present
       let allowed = null;
       try {
-        const caps = await getGradeCaps?.(ctx.grade || 'k-2');
+        const caps = await getGradeCaps?.(ctx.grade || 'TK-2');
         if (caps?.allowedCharacters?.length) allowed = new Set(caps.allowedCharacters);
       } catch {}
 
