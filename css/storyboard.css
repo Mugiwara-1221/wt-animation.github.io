@@ -96,6 +96,16 @@ h2 {
   50% { transform: translateY(-15px); }
 }
 
+@keyframes tortoiseWaddle {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(30px); }
+  100% { transform: translateX(0); }
+}
+
+canvas.char-layer.tortoise {
+  animation: tortoiseWaddle 2s ease-in-out infinite;
+}
+
 img.character {
   position: absolute;
   user-select: none;
