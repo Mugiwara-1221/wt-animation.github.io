@@ -290,7 +290,9 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
   const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
 
   const overlays = [];
-  const frameCount = charId.toLowerCase() === "tortoise" ? 1 : 4;
+  // 🐢🐭🦆 If tortoise, mouse, or duck → only 1 frame
+  const singleFrameChars = ["tortoise", "mouse", "mama_duck"];
+  const frameCount = singleFrameChars.includes(charId.toLowerCase()) ? 1 : 4;
 
   for (let i = 0; i < frameCount; i++) {
     const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
