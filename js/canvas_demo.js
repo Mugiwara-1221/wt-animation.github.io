@@ -644,11 +644,9 @@ async function resolveOutlineURLForSlide(slide1) {
   for (const url of tries) {
     if (await urlExists(url)) return url;
   }
-
   // 3) frame overlay fallback
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
-
   // 4) fallback
   return await resolveSpriteURL();
 }
@@ -993,7 +991,7 @@ async function sendToStoryboard() {
 
     // ✅ PASS slide1 to findMaskSets (was missing before)
     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar, slide1);
-    const staticChars = ["tortoise", "mouse", "duck"];
+    const staticChars = ["tortoise", "mouse", "mama_duck"];
 
     if (!staticChars.includes(selectedChar.toLowerCase())) {
       for (const { frame, prefix } of sets) {
@@ -1049,8 +1047,8 @@ async function sendToStoryboard() {
       merged.width = width; merged.height = height;
       const mctx = merged.getContext("2d");
       mctx.drawImage(crop, 0, 0);
-
       const overlay = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
+       
       try {
         if (await urlExists(overlay)) {
           const ol = await loadImageCached(overlay);
