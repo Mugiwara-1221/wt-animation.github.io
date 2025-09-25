@@ -1086,15 +1086,6 @@ function updateMiniPreview(){
   // we rely on drawPreview() for the full scene preview with masks and overlay
 }
 
-function downloadImage(){
-  const merged=document.createElement("canvas");
-  merged.width=drawCanvas.width; merged.height=drawCanvas.height;
-  const m=merged.getContext("2d");
-  m.fillStyle="white"; m.fillRect(0,0,merged.width,merged.height);
-  m.drawImage(drawCanvas,0,0); m.drawImage(spriteCanvas,0,0);
-  const a=document.createElement("a"); a.download="my_drawing.png"; a.href=merged.toDataURL(); a.click();
-  document.getElementById("saveOptions")?.classList.add("hidden");
-}
 function zoomIn(){  zoomLevel*=1.1; applyZoom(); }
 function zoomOut(){ zoomLevel/=1.1; applyZoom(); }
 
