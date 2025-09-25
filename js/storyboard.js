@@ -1,37 +1,60 @@
+// js/storyboard.js — PNG frame animation + optional GIF/static characters
 
-// js/storyboard.js — PNG frame animation + optional GIF characters
-
- const qs            = new URLSearchParams(location.search);
- const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare" || "lion-mouse").replace(/_/g,"-");
-// const initialSlide  = Math.max(0, +qs.get("slide") || 0);
- const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
-// read slide from URL if present; else from ctx (where it's likely 1-based)
+// --- Query & context (must be first) ---
+const qs  = new URLSearchParams(location.search);
 const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
-const requested = Number(qs.get("slide"));     // storyboard uses 0-based in the URL
-const fromCtx   = Number(ctx.slide);           // your earlier pages often store 1-based
+
+// story id (keep fallback logic)
+const storyId = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
+
+// read slide from URL (0-based for storyboard); else from ctx (usually 1-based)
+const requested = Number(qs.get("slide"));
+const fromCtx   = Number(ctx.slide);
 let initialSlide = 0;
 
 if (!Number.isNaN(requested)) {
   initialSlide = Math.max(0, requested);
 } else if (!Number.isNaN(fromCtx)) {
-  initialSlide = Math.max(0, fromCtx - 1);     // convert 1-based → 0-based
+  initialSlide = Math.max(0, fromCtx - 1); // convert 1-based → 0-based
 }
 
-// storyIDs correct file path (masks)
+// selected character (optional)
+const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 
+// storyIDs → repo folders (for masks/frames)
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
-  ["little-ducks",    "5_little_ducks"],
+  ["little-ducks",  "5_little_ducks"],
 ]);
 
 function resolveStoryFolder(id) {
   const dash = (id || "").replace(/_/g, "-");
-  return STORY_FOLDER_MAP.get(dash) || dash; // fallback to id if already matches
+  return STORY_FOLDER_MAP.get(dash) || dash; // fallback to dashed id
 }
 const storyFolder = resolveStoryFolder(storyId);
 
+// DOM
 const scene = document.getElementById("scene");
+
+// caches
+const framesCache   = new Map(); // key -> [Image...]
+const maskMatCache  = new Map(); // key -> { mats, W, H, prefix }
+const maskBmpCache  = new Map(); // key -> ImageBitmap
+const loops         = new Set();
+
+// colored overlays store (per story/char/slide)
+const OVERLAY_KEY = `coloredFrames:${storyFolder}:${selectedChar}`;
+let coloredBySlide = {};
+try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
+
+const legacySingle  = localStorage.getItem("coloredCharacter") || null;
+let   legacyFrames  = null;
+try {
+  const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
+  if (Array.isArray(arr) && arr.length) legacyFrames = arr;
+} catch {}
+
 let manifest = null;
 let cur = 0;
 
@@ -39,6 +62,18 @@ const pct = n => `${n}%`;
 function slideNoFromPath(p){
   const m = /slide(\d+)\.png/i.exec(p||"");
   return m ? parseInt(m[1],10) : null;
+}
+
+function setTitle(){
+  const h2 = document.querySelector("h2");
+  if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
+}
+
+function clearLayers(){
+  for (const stop of loops) { try { stop(); } catch{} }
+  loops.clear();
+  const host = document.getElementById("charHost");
+  if (host) host.innerHTML = "";
 }
 
 function loadImage(src){
@@ -52,6 +87,7 @@ function loadImage(src){
 async function urlExists(url){
   try{ const r = await fetch(url,{cache:"no-store"}); return r.ok; }catch{ return false; }
 }
+
 function fitCanvasToCSS(cvs){
   const r = cvs.getBoundingClientRect();
   const dpr = devicePixelRatio || 1;
@@ -91,38 +127,11 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, cssW, cssH){
   return offTgt.transferToImageBitmap();
 }
 
-// caches
-const framesCache = new Map();    // key -> [Image...]
-const maskMatCache = new Map();   // key -> { mats, W, H }
-const maskBmpCache = new Map();   // key -> ImageBitmap
-const loops = new Set();
-
-// colored overlays store (per story/char/slide)
-const OVERLAY_KEY = `coloredFrames:${storyFolder}:${selectedChar}`;
-let coloredBySlide = {};
-try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
-
-const legacySingle  = localStorage.getItem("coloredCharacter") || null;
-let   legacyFrames  = null;
-try { const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
-      if (Array.isArray(arr) && arr.length) legacyFrames = arr; } catch {}
-
-function setTitle(){
-  const h2 = document.querySelector("h2");
-  if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
-}
-function clearLayers(){
-  for (const stop of loops) { try { stop(); } catch{} }
-  loops.clear();
-  const host = document.getElementById("charHost");
-  if (host) host.innerHTML = "";
-}
-
-/* ----------------- NEW: Mount a GIF when framesPath is a .gif ----------------- */
+/* ------------- Mount helpers for .gif and static images ---------------- */
 function mountGif(host, cfg){
   const { id, x, y, w, h, z=1 } = cfg;
   const img = document.createElement("img");
-  img.src = cfg.framesPath;           // you already put the GIF here
+  img.src = cfg.framesPath;
   img.alt = id || "";
   img.className = `character ${id||""}`;
   Object.assign(img.style, {
@@ -137,12 +146,10 @@ function mountGif(host, cfg){
   const stop = () => { try { img.remove(); } catch {} };
   loops.add(stop);
 }
-
-/* ----------------- NEW: Mount a static image (PNG, JPG, JPEG, WEBP, etc.) ----------------- */
 function mountStaticImage(host, cfg){
   const { id, x, y, w, h, z=1 } = cfg;
   const img = document.createElement("img");
-  img.src = cfg.framesPath;           // static image file
+  img.src = cfg.framesPath;
   img.alt = id || "";
   img.className = `character ${id||""}`;
   Object.assign(img.style, {
@@ -160,27 +167,22 @@ function mountStaticImage(host, cfg){
 
 /* ----------------- PNG stack (existing behavior) ----------------- */
 async function getFrames(prefix, count) {
-  // 🐢 Special case: if this is the tortoise, use the locally stored image
+  // special case for tortoise: allow single stored image
   const parts = prefix.split("/");
-  console.log(parts);
   const tortoiseIndex = parts[5];
   if (tortoiseIndex == "tortoise" && selectedChar === "tortoise") {
     const stored = localStorage.getItem("coloredCharacter");
     if (stored) {
-      // Wrap in an array so the return type matches other characters
       const img = await loadImage(stored);
       return [img];
     }
   }
 
-  // 🐇 Default: load multiple frames from files
   const key = `${prefix}|${count}`;
   if (framesCache.has(key)) return framesCache.get(key);
 
   const images = await Promise.all(
-    Array.from({ length: count }, (_, i) =>
-      loadImage(`${prefix}${i + 1}.png`)
-    )
+    Array.from({ length: count }, (_, i) => loadImage(`${prefix}${i + 1}.png`))
   );
 
   framesCache.set(key, images);
@@ -189,59 +191,14 @@ async function getFrames(prefix, count) {
 
 async function getMasksForSlide(charId, slideNo){
   const prefix = `images/frames/${storyFolder}/frame${slideNo}/${charId}/${charId}_mask_`;
-  /* const prefix = `images/frames/${storyId}/frame${slideNo}/${charId}/${charId}_mask_`;       edited 9/12/25' */
   const key = `${prefix}|4`;
-  console.log(prefix, charId);
   if (maskMatCache.has(key)) return maskMatCache.get(key);
 
-  const mats = await Promise.all(
-    [1,2,3,4].map(i => loadCSVMatrix(`${prefix}${i}.csv`))
-  );
+  const mats = await Promise.all([1,2,3,4].map(i => loadCSVMatrix(`${prefix}${i}.csv`)));
   const H = mats[0].length, W = mats[0][0].length;
   const out = { mats, W, H, prefix };
   maskMatCache.set(key, out);
   return out;
-}
-
-async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs) {
-  const r = cvs.getBoundingClientRect();
-  const base = await loadImage(coloredImg);
-  const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
-
-  const overlays = [];
-
-  // 🐢 If tortoise, only build one overlay
-  const frameCount = charId.toLowerCase() === "tortoise" ? 1 : 4;
-
-  for (let i = 0; i < frameCount; i++) {
-    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
-    let bmp = maskBmpCache.get(bmpKey);
-    if (!bmp) {
-      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
-      maskBmpCache.set(bmpKey, bmp);
-    }
-
-    const off = document.createElement("canvas");
-    off.width = Math.round(r.width);
-    off.height = Math.round(r.height);
-    const cx = off.getContext("2d");
-    cx.imageSmoothingEnabled = false;
-
-    // Draw base character
-    cx.drawImage(base, 0, 0, off.width, off.height);
-
-    // Apply mask
-    cx.globalCompositeOperation = "destination-in";
-    cx.drawImage(bmp, 0, 0);
-
-    // Reset blend mode
-    cx.globalCompositeOperation = "source-over";
-
-    // Save overlay
-    overlays.push(await loadImage(off.toDataURL()));
-  }
-
-  return overlays;
 }
 
 /* ----------------- Character placement ----------------- */
@@ -259,24 +216,18 @@ async function placeCharacter(cfg, slideNo){
     return h;
   })();
 
-  // If framesPath is a GIF, mount it and return
   const src = (cfg.framesPath || "").trim();
   if (src && /\.gif(\?.*)?$/i.test(src)){
     mountGif(host, cfg);
     return;
   }
-
-  // If framesPath is a static image (PNG, JPG, JPEG, WEBP, SVG, etc.), mount it and return
-  if (src && /\d*\.(png|jpe?g|webp|svg|bmp|tiff?)(\?.*)?$/i.test(src)){
+  if (src && /\.\s*(png|jpe?g|webp|svg|bmp|tiff?)(\?.*)?$/i.test(src)){
     mountStaticImage(host, cfg);
     return;
   }
 
-  // Otherwise: default PNG frames location (or provided prefix)
-  /* const framesPrefix = src || `images/frames/${storyId}/frame${slideNo}/${id}/${id}`;         edited 9/12/25' */
-
   const framesPrefix = cfg.framesPath ||
-  `images/frames/${storyFolder}/frame${slideNo}/${id}/${id}`;
+    `images/frames/${storyFolder}/frame${slideNo}/${id}/${id}`;
 
   const cvs = document.createElement("canvas");
   cvs.className = `char-layer ${id}`;
@@ -296,7 +247,6 @@ async function placeCharacter(cfg, slideNo){
   try{
     const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
 
-    // choose / build overlays for THIS slide
     let overlays = null;
     if (id === selectedChar){
       const stored = coloredBySlide[String(slideNo)];
@@ -336,50 +286,60 @@ async function placeCharacter(cfg, slideNo){
   }
 }
 
+async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs) {
+  const r = cvs.getBoundingClientRect();
+  const base = await loadImage(coloredImg);
+  const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
+
+  const overlays = [];
+  const frameCount = charId.toLowerCase() === "tortoise" ? 1 : 4;
+
+  for (let i = 0; i < frameCount; i++) {
+    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+    let bmp = maskBmpCache.get(bmpKey);
+    if (!bmp) {
+      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
+      maskBmpCache.set(bmpKey, bmp);
+    }
+
+    const off = document.createElement("canvas");
+    off.width = Math.round(r.width);
+    off.height = Math.round(r.height);
+    const cx = off.getContext("2d");
+    cx.imageSmoothingEnabled = false;
+
+    cx.drawImage(base, 0, 0, off.width, off.height);
+    cx.globalCompositeOperation = "destination-in";
+    cx.drawImage(bmp, 0, 0);
+    cx.globalCompositeOperation = "source-over";
+
+    overlays.push(await loadImage(off.toDataURL()));
+  }
+  return overlays;
+}
+
+/* ---------------- Manifest discovery ---------------- */
 async function discoverManifest(){
   const url = `stories/${storyId}/slides.json`;
   console.log("[loadSlidesJson] Fetching URL:", url);
 
+  const r = await fetch(url, { cache: "no-store" });
+  console.log(`[loadSlidesJson] Response status: ${r.status} ${r.statusText}`);
+  if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+
+  const txt = await r.text();
   try {
-    const r = await fetch(url, { cache: "no-store" });
-    console.log(`[loadSlidesJson] Response status: ${r.status} ${r.statusText}`);
-
-    if (!r.ok) {
-      throw new Error(`HTTP error! status: ${r.status}`);
-    }
-
-    const txt = await r.text();
-    //console.log("[loadSlidesJson] Raw text:", txt);
-
-    try {
-      const parsed = JSON.parse(txt);
-      console.log("[loadSlidesJson] Parsed JSON OK");
-      return parsed;
-    } catch(parseError) {
-      console.warn("[loadSlidesJson] JSON parse error:", parseError.message);
-      console.warn("[loadSlidesJson] Unable to parse slides.json from:", txt);
-      // Optionally return a fallback or throw
-      throw new Error("slides.json is invalid JSON");
-    }
-  } catch (err) {
-    console.error("[loadSlidesJson] Fetch or other error:", err.message);
-    // Optionally rethrow or return a fallback
-    throw err;
+    const parsed = JSON.parse(txt);
+    console.log("[loadSlidesJson] Parsed JSON OK");
+    return parsed;
+  } catch(parseError) {
+    console.warn("[loadSlidesJson] JSON parse error:", parseError.message);
+    console.warn("[loadSlidesJson] Unable to parse slides.json from:", txt);
+    throw new Error("slides.json is invalid JSON");
   }
-
-  // auto-discover slide1.png..slideN.png
-  const slides = [];
-  for (let i=1;i<=4;i++){
-    const p = `stories/${storyId}/slide${i}.png`;
-    if (await urlExists(p)) slides.push({ background:p, characters:[] });
-    else if (slides.length) break;
-  }
-  return {
-    storyTitle: storyId.replace(/-/g," ").replace(/\b\w/g,s=>s.toUpperCase() ),
-    slides
-  };
 }
 
+/* ---------------- Slide rendering ---------------- */
 async function showSlide(i){
   if (!manifest) return;
   cur = Math.max(0, Math.min(i, manifest.slides.length-1));
@@ -400,7 +360,6 @@ async function showSlide(i){
     slideNoFromPath(s.background) ??
     (manifest.slides.indexOf(s) + 1);
 
-  // place declared characters if provided; otherwise none (background-only slide still works)
   const chars = Array.isArray(s.characters) ? s.characters : [];
   await Promise.allSettled(chars.map(c => placeCharacter({
     frameCount: 4,
@@ -409,6 +368,7 @@ async function showSlide(i){
     ...c
   }, slideNo)));
 
+  // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
   url.searchParams.set("slide", cur);
@@ -422,6 +382,7 @@ function nextSlide(){ showSlide(cur+1); }
 function prevSlide(){ showSlide(cur-1); }
 Object.assign(window, { nextSlide, prevSlide, showSlide });
 
+/* ---------------- Boot ---------------- */
 (async function boot(){
   manifest = await discoverManifest();
   setTitle();
