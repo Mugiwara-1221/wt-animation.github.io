@@ -102,7 +102,7 @@ h2 {
   100% { transform: translateX(0); }
 }
 
-canvas.char-layer.tortoise {
+canvas.tortoise {
   animation: tortoiseWaddle 2s ease-in-out infinite;
 }
 
