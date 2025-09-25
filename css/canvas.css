@@ -1,7 +1,7 @@
-
+/* do not delete please
 :root{
-  --panel-bg: #191b1e;           /* dark rail */
-  --panel-card: #303336;         /* popover bg */
+  --panel-bg: #191b1e;           /* dark rail *
+  --panel-card: #303336;         /* popover bg *
   --panel-border: #222;
   --accent :#4da3ff;
   --shadow:0 12px 30px rgba(77, 138, 213, 1);
@@ -17,7 +17,7 @@ body{
   font-family:system-ui, Arial; 
 }
 
-/* Canvases*/
+/* Canvases*
 #bgCanvas, #drawCanvas, #spriteCanvas{ 
   position: absolute; 
   inset: 0; 
@@ -35,7 +35,7 @@ body{
   z-index:20; 
 }
 
-/* ---------- LEFT TOOLBOARD ---------- */
+/* ---------- LEFT TOOLBOARD ---------- *
 #toolboard{
   position:fixed; 
   left:0; 
@@ -51,7 +51,7 @@ body{
   box-shadow: 8px 0 24px rgba(77, 138, 213, 1);
 }
 
-/* Color tool */
+/* Color tool *
 .color-tool{ 
   width:56px; 
   height:56px; 
@@ -76,14 +76,14 @@ body{
   background:#2ad0ff; 
 }
 
-/* Icon buttons */
+/* Icon buttons *
 .tool.icon{
   width:56px;
   height:56px;
   border:2px solid rgba(255,255,255,.15);
   border-radius:12px;
   background:#232528;
-  position:relative;            /* needed for absolute centering */
+  position:relative;            /* needed for absolute centering *
   cursor:pointer;
   transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
 }
@@ -112,7 +112,7 @@ body{
   box-shadow:0 0 0 3px var(--accent) inset; 
 }
 
-/* Vertical sliders */
+/* Vertical sliders *
 .slider-wrap{ 
   display:flex; 
   flex-direction:column; 
@@ -151,7 +151,7 @@ body{
   border:2px solid #0006; 
 }
 
-/* Save popup */
+/* Save popup *
 .save-wrap{ 
   margin-top:auto; 
   position:relative; 
@@ -189,7 +189,7 @@ body{
   cursor:pointer; 
 }
 
-/* Brush pop menu */
+/* Brush pop menu *
 .menu{
   position:absolute; 
   left:92px; 
@@ -228,7 +228,7 @@ body{
   display:inline-block; 
 }
 
-/* Preview HUD (unchanged) */
+/* Preview HUD *
 .preview-hud{ 
   position:fixed; 
   top:24px; 
@@ -241,7 +241,7 @@ body{
   width:320px; height:auto; 
 }
 
-/* Slide nav (unchanged) */
+/* Slide nav *
 .nav-floating{ 
   position:fixed; 
   right:24px; 
@@ -267,14 +267,14 @@ body{
 }
 .nav-floating button:active{ 
   transform: translateY(1px); 
-}
+} */
 
 
 
 
 
 
-/*
+
 :root{
   --drawing-color:#000000;
   --panel-bg:#4d8ad5;
@@ -283,7 +283,7 @@ body{
   --accent:#BADA55;
 }
 
-/* Page *
+/* Page */
 body{
   margin:0; padding:0; overflow:hidden;
   width:100vw; height:100vh;
@@ -291,16 +291,16 @@ body{
   background:#fff;
 }
 
-/* ---------- Canvas Layers (scope ONLY to the three big canvases) ---------- *
+/* ---------- Canvas Layers (scope ONLY to the three big canvases) ---------- */
 #bgCanvas, #drawCanvas, #spriteCanvas{
   position:absolute; inset:0; width:100%; height:100%;
   pointer-events:none;
 }
 #bgCanvas{ z-index:1; }
-#drawCanvas{ z-index:10; pointer-events:auto; } /* interactive *
+#drawCanvas{ z-index:10; pointer-events:auto; } /* interactive */
 #spriteCanvas{ z-index:20; }
 
-/* ---------- Left Navigation Panel ---------- *
+/* ---------- Left Navigation Panel ---------- */
 #navLeft{
   position:fixed; top:0; left:0; width:250px; height:100%;
   background-color:var(--panel-bg);
@@ -315,26 +315,26 @@ body{
 }
 .nav-content span, .nav-content label{ margin-bottom:5px; font-size:18px; color:white; text-align:center; }
 
-/* Inputs *
+/* Inputs */
 .nav-content input[type="color"], .nav-content input[type="range"], .nav-content select{
   width:80%; margin-bottom:10px;
 }
 
-/* Buttons *
+/* Buttons */
 .nav-content button{
   width:70%; padding:8px; background:#fff; color:#000; border:none; border-radius:5px;
   margin:5px 0; font-size:16px; cursor:pointer; transition:background .2s;
 }
 .nav-content button:hover{ background:var(--accent); }
 
-/* ---------- Toggle Arrow ---------- *
+/* ---------- Toggle Arrow ---------- */
 .toggleNavLeft{
   position:fixed; top:10px; left:250px; width:35px; height:35px;
   background:url("images/navigateLeft.png") center no-repeat; background-size:contain;
   border-bottom-right-radius:5px; border:1px solid #aaa; z-index:150; cursor:pointer; transition:left .4s ease;
 }
 
-/* ---------- Save Dropdown ---------- *
+/* ---------- Save Dropdown ---------- */
 .save-options{
   display:flex; flex-direction:column; gap:5px; margin-top:5px; background:#fff; padding:5px;
   border-radius:5px; border:1px solid #ccc; z-index:200;
@@ -343,7 +343,7 @@ body{
 .save-options button:hover{ background:var(--accent); }
 .hidden{ display:none; }
 
-/* ---------- Slider Styling ---------- *
+/* ---------- Slider Styling ---------- */
 input[type="range"]{
   -webkit-appearance:none; width:80%; height:8px; border-radius:4px; outline:none; padding:0;
   background:linear-gradient(to right, var(--accent) 0%, var(--accent) var(--percent,50%), #ffffff var(--percent,50%), #ffffff 100%);
@@ -358,7 +358,7 @@ input[type="range"]::-moz-range-thumb{
   background:var(--accent); border:2px solid #2c3e50; height:16px; width:16px; border-radius:50%; cursor:pointer;
 }
 
-/* ---------- Preview HUD (top-right) ---------- *
+/* ---------- Preview HUD (top-right) ---------- */
 .preview-hud{
   position:fixed; top:24px; right:24px;
   z-index:140; background:transparent; border:none; box-shadow:none; padding:0;
@@ -368,7 +368,7 @@ input[type="range"]::-moz-range-thumb{
   width:320px; height:auto; /* JS adjusts intrinsic size to keep aspect *
 }
 
-/* ---------- Bottom-right floating nav ---------- *
+/* ---------- Bottom-right floating nav ---------- */
 .nav-floating{
   position:fixed; right:24px; bottom:24px;
   z-index:130; background:#fff; border:2px solid #4d8ad5;
@@ -380,4 +380,4 @@ input[type="range"]::-moz-range-thumb{
 }
 .nav-floating button:active{ transform: translateY(1px); }
 nav-floating button:active{ transform: translateY(1px); }
-*/
+
