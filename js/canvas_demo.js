@@ -951,119 +951,186 @@ async function findMaskSets(storyIdDash, charId, slide1){
 }
 
 /* -------------------------- Send to Storyboard ------------------------- */
-async function sendToStoryboard() {
-  const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-  const { x, y, width, height } = allowedArea;
-  const bySlide = {};
+async function sendToStoryboard(baseFrameURL) {
+  const { x: cropX, y: cropY, width: cropW, height: cropH } = allowedArea;
+  console.log("Trying to load:", baseFrameURL);
 
+  // 1️⃣ Load base outline image for fallback
+  let baseData = null;
   try {
-    // crop painted area
-    const crop = document.createElement("canvas");
-    crop.width = width; crop.height = height;
-    crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
+    const baseImg = await loadImage(baseFrameURL);
+    const baseCanvas = document.createElement("canvas");
+    baseCanvas.width = baseImg.width;
+    baseCanvas.height = baseImg.height;
+    const baseCtx = baseCanvas.getContext("2d");
+    baseCtx.drawImage(baseImg, 0, 0);
+    baseData = baseCtx.getImageData(0, 0, baseImg.width, baseImg.height).data;
+    document.body.appendChild(baseCanvas); // Debug: show base outline
+  } catch (e) {
+    console.warn("Base image failed to load:", baseFrameURL, e);
+  }
 
-    // active appearance → 0-based index; +1 for frame folder
-    const globalIdx = appearances.length ? appearances[appearCursor] : slideIdx0;
-    const slide1    = globalIdx + 1;
+  // 2️⃣ Crop paint layer
+  const cropCanvas = document.createElement("canvas");
+  cropCanvas.width = cropW;
+  cropCanvas.height = cropH;
+  const cropCtx = cropCanvas.getContext("2d");
+  cropCtx.drawImage(drawCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+  const cropData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+  document.body.appendChild(cropCanvas); // Debug: show painted crop
 
-    // find masks for this slide
-    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar, slide1);
+  // 3️⃣ Load masks
+  const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+  if (!sets.length) throw new Error(`No masks found for "${selectedChar}"`);
 
-    if (sets.length) {
-      for (const { frame, prefix } of sets) {
-        const list = [];
-        const csvURL = `${prefix}1.csv`;
-        if (!(await urlExists(csvURL))) continue;
+  const bySlide = {};
+  const usageBySlide = {};
 
-        const { mat, W, H } = await loadCSVMatrix(csvURL);
-        const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
+  for (const { frame, prefix } of sets) {
+    const list = [];
+    usageBySlide[frame] = {};
 
-        for (const regionId of uniqueIds) {
-          const maskCanvas = document.createElement("canvas");
-          maskCanvas.width = W; maskCanvas.height = H;
-          const c = maskCanvas.getContext("2d");
-          const imgData = c.createImageData(W, H);
-          for (let yy = 0; yy < H; yy++) {
-            for (let xx = 0; xx < W; xx++) {
-              if (mat[yy][xx] === regionId) {
-                const idx = (yy * W + xx) * 4;
-                imgData.data[idx + 0] = 255;
-                imgData.data[idx + 1] = 255;
-                imgData.data[idx + 2] = 255;
-                imgData.data[idx + 3] = 255;
-              }
-            }
-          }
-          c.putImageData(imgData, 0, 0);
-
-          const scaledMask = document.createElement("canvas");
-          scaledMask.width = width; scaledMask.height = height;
-          scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
-
-          const masked = document.createElement("canvas");
-          masked.width = width; masked.height = height;
-          const mctx = masked.getContext("2d");
-          mctx.drawImage(crop, 0, 0);
-          mctx.globalCompositeOperation = "destination-in";
-          mctx.drawImage(scaledMask, 0, 0);
-          mctx.globalCompositeOperation = "source-over";
-
-          const dataUrl = masked.toDataURL("image/png");
-          list.push({ regionId, img: dataUrl, frame, maskIndex: 1 });
-        }
-
-        if (list.length) bySlide[frame] = list;
+    const masks = [];
+    let fullW = null, fullH = null;
+    for (let i = 1; i <= 4; i++) {
+      const csvURL = `${prefix}${i}.csv`;
+      if (!(await urlExists(csvURL))) {
+        masks.push(null);
+        continue;
       }
-    } else {
-      // no masks → blend outline overlay for THIS slide if present
-      const merged = document.createElement("canvas");
-      merged.width = width; merged.height = height;
-      const mctx = merged.getContext("2d");
-      mctx.drawImage(crop, 0, 0);
+      const { mat, W, H } = await loadCSVMatrix(csvURL);
+      if (!fullW) { fullW = W; fullH = H; }
+      usageBySlide[frame][i] = countMaskUsage(mat);
+      masks.push({ mat, W, H });
+    }
 
-      const overlay = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
-      try {
-        if (await urlExists(overlay)) {
-          const ol = await loadImageCached(overlay);
-          mctx.drawImage(ol, 0, 0, width, height);
+    const mask1 = masks[0];
+    const mask2 = masks[1];
+    if (!mask1 || !mask2) continue;
+
+    // Debug: render mask1 & mask2
+    renderMaskToCanvas(mask1.mat, mask1.W, mask1.H, "Mask1");
+    renderMaskToCanvas(mask2.mat, mask2.W, mask2.H, "Mask2");
+
+    const { mat: mat2, W: targetW, H: targetH } = mask2;
+    const blockIDs = new Set();
+    for (let yy = 0; yy < targetH; yy++) {
+      for (let xx = 0; xx < targetW; xx++) {
+        const bid = mat2[yy][xx];
+        if (bid > 0) blockIDs.add(bid);
+      }
+    }
+
+    const bboxes = masks.map(mask =>
+      mask ? Object.fromEntries(
+        [...blockIDs].map(bid => {
+          try { return [bid, getBlockBBox(mask.mat, bid)]; }
+          catch { return [bid, null]; }
+        })
+      ) : null
+    );
+
+    const outCanvas = document.createElement("canvas");
+    outCanvas.width = targetW;
+    outCanvas.height = targetH;
+    const outCtx = outCanvas.getContext("2d");
+    const outData = outCtx.createImageData(targetW, targetH);
+
+    let outOfBoundsCount = 0;
+    let sampleLogs = 0;
+
+    for (let yy = 0; yy < targetH; yy++) {
+      for (let xx = 0; xx < targetW; xx++) {
+        const bid = mat2[yy][xx];
+        const dIdx = (yy * targetW + xx) * 4;
+
+        if (bid <= 0) {
+          if (baseData) {
+            const baseIdx = (yy * targetW + xx) * 4;
+            outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
+          }
+          continue;
         }
-      } catch {}
-      const dataUrl  = merged.toDataURL("image/png");
-      bySlide[slide1] = [{ regionId: 1, img: dataUrl, frame: slide1, maskIndex: 1 }];
+
+        const b1 = bboxes[0]?.[bid];
+        const b2 = bboxes[1]?.[bid];
+        if (!b1 || !b2) {
+          if (baseData) {
+            const baseIdx = (yy * targetW + xx) * 4;
+            outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
+          }
+          continue;
+        }
+
+        const [ny, nx] = irregularTo100(yy, xx, b2.xmin, b2.xmax, b2.ymin, b2.ymax);
+        const [sy, sx] = grid100ToIrregular(ny, nx, b1.xmin, b1.xmax, b1.ymin, b1.ymax);
+
+        const adjSy = sy - cropY;
+        const adjSx = sx - cropX;
+
+        if (adjSy >= 0 && adjSy < cropH && adjSx >= 0 && adjSx < cropW) {
+          const sIdx = (adjSy * cropW + adjSx) * 4;
+          outData.data[dIdx]     = cropData[sIdx];
+          outData.data[dIdx + 1] = cropData[sIdx + 1];
+          outData.data[dIdx + 2] = cropData[sIdx + 2];
+          outData.data[dIdx + 3] = 255;
+
+          if (sampleLogs < 10) {
+            //console.log(`Map (${xx},${yy}) -> src (${sx},${sy}) adj (${adjSx},${adjSy})`);
+            sampleLogs++;
+          }
+        } else {
+          outOfBoundsCount++;
+          if (baseData) {
+            const baseIdx = (yy * targetW + xx) * 4;
+            outData.data.set(baseData.slice(baseIdx, baseIdx + 4), dIdx);
+          }
+        }
+      }
     }
 
-    // persist frames for storyboard
-    const imageOnlyBySlide = {};
-    for (const [frame, regions] of Object.entries(bySlide)) {
-      imageOnlyBySlide[frame] = regions.map(r => r.img);
+    console.warn(`Frame ${frame}: ${outOfBoundsCount} pixels out of bounds`);
+
+    outCtx.putImageData(outData, 0, 0);
+    document.body.appendChild(outCanvas); // Debug: show mapped output
+
+    // Per-block export (still base64 for consistency)
+    for (const bid of blockIDs) {
+      const regionCanvas = document.createElement("canvas");
+      regionCanvas.width = targetW;
+      regionCanvas.height = targetH;
+      const rCtx = regionCanvas.getContext("2d");
+      const rData = rCtx.createImageData(targetW, targetH);
+
+      for (let yy = 0; yy < targetH; yy++) {
+        for (let xx = 0; xx < targetW; xx++) {
+          if (mat2[yy][xx] !== bid) continue;
+          const idx = (yy * targetW + xx) * 4;
+          rData.data.set(outData.data.slice(idx, idx + 4), idx);
+        }
+      }
+
+      rCtx.putImageData(rData, 0, 0);
+      const url = regionCanvas.toDataURL("image/png");
+      list.push({ regionId: bid, img: url, frame, maskIndex: 2 });
     }
-    localStorage.setItem(`coloredFrames:${storyFolder}:${selectedChar}`, JSON.stringify(imageOnlyBySlide));
 
-    const firstFrame = Object.values(imageOnlyBySlide)[0];
-    if (firstFrame?.length) {
-      localStorage.setItem("coloredCharacterFrames", JSON.stringify(firstFrame));
-      localStorage.setItem("coloredCharacter", firstFrame[0]);
-    }
-    localStorage.setItem("selectedCharacter", selectedChar);
+    if (list.length) bySlide[frame] = list;
+  }
 
-    // optional: submit to backend (safe if absent)
-    try {
-      const mod = await import("./azure-api.js");
-      const submitDrawing = mod.submitDrawing || (async ()=>{});
-      const firstImg = firstFrame?.[0] || "";
-      const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-      if (firstImg) await submitDrawing(sessionCode, selectedChar, firstImg, uid);
-    } catch {}
+  return { bySlide, usageBySlide };
+}
 
-    // ✅ open storyboard with correct 0-based slide index
-    const q = new URLSearchParams({ char: selectedChar, story: selectedStory, slide: String(globalIdx) });
-    if (sessionCode)   q.set("session", sessionCode);
-    if (selectedGrade) q.set("grade",   selectedGrade);
-    location.href = `storyboard.html?${q.toString()}`;
+async function runStoryboardFlow() {
+  try {
+    console.log("🎨 Building GIF from painted drawings...");
+    const gifBase64 = await buildGifBase64FromPaintings();
+    console.log("✅ GIF built");
 
+    await sendToStoryboard(sessionCode, selectedChar, gifBase64);
   } catch (err) {
-    console.error("[sendToStoryboard] failed:", err);
-    alert("Send to Storyboard failed. See console for details.");
+    console.error("❌ Failed to build/send GIF:", err);
+    alert("Could not create GIF: " + err);
   }
 }
 
