@@ -102,16 +102,10 @@ h2 {
   100% { transform: translateX(0); }
 }
 
-canvas.char-layer.tortoise {
-  animation: torouseWaddle 2s ease-in-out infinite;
-}
-
-canvas.char-layer.mouse {
-  animation: torouseWaddle 2s ease-in-out infinite;
-}
-
+canvas.char-layer.tortoise,
+canvas.char-layer.mouse,
 canvas.char-layer.mama_duck {
-  animation: torouseWaddle 2s ease-in-out infinite;
+  animation: tortoiseWaddle 2s ease-in-out infinite;
 }
 
 img.character {
