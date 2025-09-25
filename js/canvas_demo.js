@@ -3,9 +3,9 @@
    canvas_demo.js  —  slide-aware, outline-first, keeps mini preview,
                       appearances navigation, brush tools, undo/redo,
                       and correct storyboard handoff.
-   ======================================================================= */
+   ======================================================================= *
 
-/* ------------------------------ Context -------------------------------- */
+/* ------------------------------ Context -------------------------------- *
 
 const qs  = new URLSearchParams(location.search);
 const ctx = safeParse(localStorage.getItem("ctx")) || {};
@@ -15,12 +15,12 @@ const selectedChar   = (qs.get("char")  || localStorage.getItem("selectedCharact
 const selectedGrade  = qs.get("grade")   || ctx.grade || "";
 const sessionCode    = qs.get("session") || "";
 
-/* Slides: upstream pages often store 1-based; we derive both forms */
+/* Slides: upstream pages often store 1-based; we derive both forms *
 const slideNum1 = Number(qs.get("slide")) || Number(ctx.slide) || 1;        // 1-based slide/page
 const slideIdx0 = Math.max(0, slideNum1 - 1);                                // 0-based index for storyboard
 
-/* -------------------------- DOM References ----------------------------- */
-/* Your page should have these; we also fail-soft if they’re missing */
+/* -------------------------- DOM References ----------------------------- *
+/* Your page should have these; we also fail-soft if they’re missing *
 const drawCanvas   = document.getElementById("drawCanvas")   || makeCanvas(1024, 768);
 const drawCtx      = drawCanvas.getContext("2d", { willReadFrequently: true });
 
@@ -40,10 +40,10 @@ const toBoardBtn   = document.getElementById("toStoryboardBtn");
 const prevAppearanceBtn = document.getElementById("prevAppearance");
 const nextAppearanceBtn = document.getElementById("nextAppearance");
 
-/* Allowed paint area: upstream sometimes sets this; fallback to full canvas */
+/* Allowed paint area: upstream sometimes sets this; fallback to full canvas *
 const allowedArea = window.allowedArea || { x: 0, y: 0, width: drawCanvas.width, height: drawCanvas.height };
 
-/* ----------------------- Story folder mapping -------------------------- */
+/* ----------------------- Story folder mapping -------------------------- *
 
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
@@ -55,28 +55,28 @@ function resolveStoryFolder(storyDash) {
   return STORY_FOLDER_MAP.get(storyDash) || storyDash; // default to dashed id
 }
 
-/* ------------------------------ State ---------------------------------- */
+/* ------------------------------ State ---------------------------------- *
 
 /* Appearances navigation:
    If upstream passes an array of slide indices, use it; else default to [slideIdx0].
-   You can wire prev/next to cycle positions the character appears in the story. */
+   You can wire prev/next to cycle positions the character appears in the story. *
 const appearances = Array.isArray(window.appearances) && window.appearances.length
   ? window.appearances.slice()
   : [slideIdx0];
 
 let appearCursor = clamp(Number(window.appearCursor) || 0, 0, Math.max(0, appearances.length - 1));
 
-/* Brush state */
+/* Brush state *
 let brushColor = (colorInput && colorInput.value) || "#1e90ff";
 let brushSize  = (sizeInput  && Number(sizeInput.value)) || 24;
 let painting   = false;
 
-/* Undo/redo */
+/* Undo/redo *
 const undoStack = [];
 const redoStack = [];
 const MAX_STACK = 50;
 
-/* ------------------------------ Utils ---------------------------------- */
+/* ------------------------------ Utils ---------------------------------- *
 
 function safeParse(str) { try { return JSON.parse(str || "null"); } catch { return null; } }
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
@@ -113,7 +113,7 @@ async function loadCSVMatrix(url) {
   return { mat: rows, W, H };
 }
 
-/* ---------------- Outline / Sprite URL Resolution (outline-first) ------ */
+/* ---------------- Outline / Sprite URL Resolution (outline-first) ------ *
 
 async function resolveOutlineURLForSlide(slide1) {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
@@ -172,7 +172,7 @@ async function resolveSpriteURL() {
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
-/* ------------------------- Mask discovery (slide-aware) ---------------- */
+/* ------------------------- Mask discovery (slide-aware) ---------------- *
 
 async function findMaskSets(storyIdDash, charId, slide1) {
   const storyFolder = resolveStoryFolder(storyIdDash);
@@ -183,7 +183,7 @@ async function findMaskSets(storyIdDash, charId, slide1) {
   return sets;
 }
 
-/* ---------------------------- Mini Preview ----------------------------- */
+/* ---------------------------- Mini Preview ----------------------------- *
 
 function updateMiniPreview() {
   // Draw the current canvas into the mini preview
@@ -193,7 +193,7 @@ function updateMiniPreview() {
   } catch {}
 }
 
-/* ----------------------------- Painting -------------------------------- */
+/* ----------------------------- Painting -------------------------------- *
 
 function pushUndo() {
   try {
@@ -226,7 +226,7 @@ function redo() {
   } catch {}
 }
 
-/* pen drawing restricted to allowedArea */
+/* pen drawing restricted to allowedArea *
 function inAllowedArea(x, y) {
   const { x: ax, y: ay, width: aw, height: ah } = allowedArea;
   return x >= ax && y >= ay && x < ax + aw && y < ay + ah;
@@ -268,7 +268,7 @@ function eventPos(e, el) {
   };
 }
 
-/* --------------------- Load Outline for Current Slide ------------------ */
+/* --------------------- Load Outline for Current Slide ------------------ *
 
 async function loadOutlineForCurrentSlide() {
   outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
@@ -283,7 +283,7 @@ async function loadOutlineForCurrentSlide() {
   } catch {}
 }
 
-/* -------------------- Appearances Navigation (optional) ---------------- */
+/* -------------------- Appearances Navigation (optional) ---------------- *
 
 function setAppearanceIndex(idx) {
   appearCursor = clamp(idx, 0, Math.max(0, appearances.length - 1));
@@ -305,18 +305,18 @@ if (nextAppearanceBtn) {
   });
 }
 
-/* ------------------------ Send to Storyboard --------------------------- */
+/* ------------------------ Send to Storyboard --------------------------- *
 
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
 
-    /* Crop the painted region */
+    /* Crop the painted region *
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    /* Build colored region images keyed by slide number (1-based frames) */
+    /* Build colored region images keyed by slide number (1-based frames) *
     const bySlide = {};
     const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
 
@@ -392,7 +392,7 @@ async function sendToStoryboard() {
       bySlide[slide1] = [{ regionId: 1, img: url, frame: slide1, maskIndex: 1 }];
     }
 
-    /* Persist for storyboard consumption */
+    /* Persist for storyboard consumption *
     const imageOnlyBySlide = {};
     for (const [frame, regions] of Object.entries(bySlide)) {
       imageOnlyBySlide[frame] = regions.map(r => r.img);
@@ -407,7 +407,7 @@ async function sendToStoryboard() {
     }
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    /* Navigate to storyboard WITH correct (0-based) slide index */
+    /* Navigate to storyboard WITH correct (0-based) slide index *
     const q = new URLSearchParams({ story: selectedStory, char: selectedChar, slide: String(globalIdx) });
     if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade",   selectedGrade);
@@ -419,13 +419,13 @@ async function sendToStoryboard() {
   }
 }
 
-/* ------------------------------ Wiring --------------------------------- */
+/* ------------------------------ Wiring --------------------------------- *
 
-/* Brush UI */
+/* Brush UI *
 if (colorInput) colorInput.addEventListener("input", e => { brushColor = e.target.value || "#1e90ff"; });
 if (sizeInput)  sizeInput.addEventListener("input",  e => { brushSize  = Number(e.target.value) || 24; });
 
-/* Undo/Redo/Clear */
+/* Undo/Redo/Clear *
 if (undoBtn) undoBtn.addEventListener("click", undo);
 if (redoBtn) redoBtn.addEventListener("click", redo);
 if (clearBtn) clearBtn.addEventListener("click", () => {
@@ -434,7 +434,7 @@ if (clearBtn) clearBtn.addEventListener("click", () => {
   updateMiniPreview();
 });
 
-/* Paint events (mouse + touch) */
+/* Paint events (mouse + touch) *
 drawCanvas.addEventListener("mousedown", startPaint);
 drawCanvas.addEventListener("mousemove", movePaint);
 window.addEventListener("mouseup", endPaint);
@@ -442,14 +442,14 @@ drawCanvas.addEventListener("touchstart", e => { e.preventDefault(); startPaint(
 drawCanvas.addEventListener("touchmove",  e => { e.preventDefault(); movePaint(e);  }, { passive:false });
 drawCanvas.addEventListener("touchend",   e => { e.preventDefault(); endPaint();    }, { passive:false });
 
-/* Send to storyboard button */
+/* Send to storyboard button *
 if (toBoardBtn) toBoardBtn.addEventListener("click", sendToStoryboard);
 
-/* Expose helpers for debugging in Console (optional) */
+/* Expose helpers for debugging in Console (optional) *
 window.updateMiniPreview = window.updateMiniPreview || updateMiniPreview;
 window.sendToStoryboard  = window.sendToStoryboard  || sendToStoryboard;
 
-/* ------------------------------- Boot ---------------------------------- */
+/* ------------------------------- Boot ---------------------------------- *
 
 (async function boot() {
   try {
@@ -474,17 +474,17 @@ window.sendToStoryboard  = window.sendToStoryboard  || sendToStoryboard;
 
 
 
-/*
+
 "use strict";
 
-/* ---------- Optional Azure submit (safe if not present) ---------- *
+/* ---------- Optional Azure submit (safe if not present) ---------- */
 let submitDrawing = async () => {};
 try {
   const m = await import("./azure-api.js");
   submitDrawing = m.submitDrawing || submitDrawing;
 } catch {}
 
-/* ---------- Canvas setup ---------- *
+/* ---------- Canvas setup ---------- */
 const bgCanvas     = document.getElementById("bgCanvas");
 const drawCanvas   = document.getElementById("drawCanvas");
 const spriteCanvas = document.getElementById("spriteCanvas");
@@ -492,19 +492,19 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
-/* === Mini preview + appearances-only nav === *
+/* === Mini preview + appearances-only nav === */
 const previewCanvas = document.getElementById("previewCanvas");
 const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
 const prevAppBtn    = document.getElementById("prevAppBtn");
 const nextAppBtn    = document.getElementById("nextAppBtn");
 
-/* Nuke any lingering chip element from older markup *
+/* Nuke any lingering chip element from older markup */
 (() => {
   const chip = document.querySelector(".preview-caption");
   if (chip) chip.remove();
 })();
 
-/* Offscreen buffer to prevent flicker *
+/* Offscreen buffer to prevent flicker */
 const previewBuffer = (() => {
   const c = document.createElement("canvas");
   c.width  = previewCanvas ? previewCanvas.width  : 0;
@@ -513,7 +513,7 @@ const previewBuffer = (() => {
 })();
 const pb = previewBuffer.getContext("2d");
 
-/* Preload/cache *
+/* Preload/cache */
 const imgCache = new Map();
 function loadImageCached(src){
   if (!src) return Promise.reject(new Error("no src"));
@@ -529,18 +529,18 @@ function loadImageCached(src){
   return p;
 }
 
-/* Repo map *
+/* Repo map */
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise_and_the_hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
   ["little-ducks", "5_little_ducks"],
 ]);
 
-/* Full-window canvases; sprite sits in a centered box *
+/* Full-window canvases; sprite sits in a centered box */
 const SPRITE_BOX_SIZE = 600;
 let allowedArea = { x: 0, y: 0, width: 0, height: 0 };
 
-/* ---------- Selected character & flow ---------- *
+/* ---------- Selected character & flow ---------- */
 const urlParams     = new URLSearchParams(location.search);
 const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
 const spriteParam   =  urlParams.get("sprite")  || "";
@@ -551,7 +551,7 @@ const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selecte
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
-/* ---------- Helpers ---------- *
+/* ---------- Helpers ---------- */
 function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(id) || id;
@@ -577,7 +577,7 @@ function perSlidePaintKey(story, charId, slide1){
   return `perSlidePaint:${story}:${charId}:${slide1}`;
 }
 
-/* Sprite URL fallback *
+/* Sprite URL fallback */
 async function resolveSpriteURL() {
   if (spriteParam) return spriteParam;
   const storyId = selectedStory || "tortoise-hare";
@@ -606,7 +606,7 @@ async function resolveSpriteURL() {
   return `images/outline/${selectedChar}-transparent.png`;
 }
 
-/* Outline choice for a slide *
+/* Outline choice for a slide */
 
 async function resolveOutlineURLForSlide(slide1) {
   const storyDash   = selectedStory || "tortoise-hare";
@@ -634,13 +634,13 @@ async function resolveOutlineURLForSlide(slide1) {
   return await resolveSpriteURL();
 }
 
-/* ---------- Sprite (outline) rendering ---------- *
+/* ---------- Sprite (outline) rendering ---------- */
 let outlineLoaded = false;
 const outlineImg = new Image();
 outlineImg.onload  = () => { outlineLoaded = true; layoutAndRedraw(); };
 outlineImg.onerror = () => alert(`Could not load character image: ${outlineImg.src}`);
 
-/* ---------- Layout ---------- *
+/* ---------- Layout ---------- */
 function getSpriteBox() {
   const size = SPRITE_BOX_SIZE;
   return {
@@ -674,7 +674,7 @@ function layoutAndRedraw() {
 }
 addEventListener("resize", layoutAndRedraw);
 
-/* ---------- Drawing ---------- *
+/* ---------- Drawing ---------- */
 let drawing = false;
 let currentTool = "draw";
 let brushSize   = 18;
@@ -683,7 +683,7 @@ let opacity     = 1.0;
 let prevX = null, prevY = null;
 let zoomLevel = 1;
 
-/* UI refs *
+/* UI refs */
 const brushSlider   = document.querySelector(".brush-size-slider");
 const opacitySlider = document.querySelector(".opacity-slider");
 const colorInput    = document.querySelector(".pick-color");
@@ -708,13 +708,13 @@ ctx.lineJoin = "round";
 ctx.lineCap  = "round";
 ctx.imageSmoothingEnabled = true;
 
-/* History *
+/* History */
 let history = [], redoStack = [];
 function saveHistory(){ history.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); if (history.length>40) history.shift(); redoStack=[]; }
 function undo(){ if(!history.length) return; redoStack.push(ctx.getImageData(0,0,drawCanvas.width,drawCanvas.height)); ctx.putImageData(history.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 function redo(){ if(!redoStack.length) return; saveHistory(); ctx.putImageData(redoStack.pop(),0,0); persistCurrentAppearance(); schedulePreview(); }
 
-/* Circle stamp brush *
+/* Circle stamp brush */
 function dotAt(x,y){
   ctx.beginPath();
   ctx.arc(x, y, brushSize/2, 0, Math.PI*2);
@@ -731,7 +731,7 @@ function stampSegment(x0,y0,x1,y1){
   for (let i=0;i<=count;i++){ const t=i/count; dotAt(x0+dx*t,y0+dy*t); }
 }
 
-/* Preview throttle *
+/* Preview throttle */
 let previewScheduled=false;
 function schedulePreview(){
   if(previewScheduled) return;
@@ -756,7 +756,7 @@ function drawStroke(e){
   schedulePreview();
 }
 
-/* Mouse / touch *
+/* Mouse / touch */
 drawCanvas.addEventListener("mousedown", e => {
   const [x,y]=getPos(e);
   if(isInBounds(x,y)){ saveHistory(); drawing=true; prevX=prevY=null; drawStroke(e); }
@@ -772,7 +772,7 @@ drawCanvas.addEventListener("touchstart", e => {
 drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); drawStroke(e.touches[0]); }, { passive:false });
 drawCanvas.addEventListener("touchend",  () => { drawing=false; prevX=prevY=null; persistCurrentAppearance(); schedulePreview(); });
 
-/* Clear + zoom *
+/* Clear + zoom */
 function clearCanvas(){ ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height); layoutAndRedraw(); persistCurrentAppearance(); }
 function zoomIn(){  zoomLevel*=1.1; applyZoom(); }
 function zoomOut(){ zoomLevel/=1.1; applyZoom(); }
@@ -784,7 +784,7 @@ function applyZoom(){
   schedulePreview();
 }
 
-/* Save dropdown *
+/* Save dropdown */
 function toggleSaveOptions(){ document.getElementById("saveOptions").classList.toggle("hidden"); }
 function downloadImage(){
   const merged=document.createElement("canvas");
@@ -796,7 +796,7 @@ function downloadImage(){
   document.getElementById("saveOptions").classList.add("hidden");
 }
 
-/* ---------- CSV → alpha mask helpers ---------- *
+/* ---------- CSV → alpha mask helpers ---------- */
 async function loadCSVMatrix(url){
   const resp=await fetch(url,{cache:"no-store"}); if(!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
   const text=await resp.text(); const rows=text.trim().split(/\r?\n/);
@@ -816,7 +816,7 @@ async function matrixToMaskCanvas(mat, srcW, srcH, targetW, targetH){
 }
 
 /*images/frames/tortoise_and_the_hare/frame1/tortoise/tortoise_mask_1.csv*/
-/*Fix this code as the it needs to call upon all forlders! before it was circulating between frames 1 to 5 folders*
+/*Fix this code as the it needs to call upon all forlders! before it was circulating between frames 1 to 5 folders*/
 async function findMaskSets(storyIdDash, charId){
   const storyFolder=resolveStoryFolder(storyIdDash);
   const base=`images/frames/${storyFolder}`; const out=[];
@@ -848,7 +848,7 @@ function loadImage(url) {
   });
 }
 
-/* ------- Send to storyboard ------- *
+/* ------- Send to storyboard ------- */
 async function sendToStoryboard() {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
   const baseFrameURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
@@ -1005,10 +1005,10 @@ async function sendToStoryboard() {
     }
 }
 
-/* ---------- Expose for buttons ---------- *
+/* ---------- Expose for buttons ---------- */
 Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
 
-/* ---------- Slider fill cosmetics ---------- *
+/* ---------- Slider fill cosmetics ---------- */
 function updateSliderFill(slider){
   if(!slider) return;
   const value=((slider.value-slider.min)/(slider.max-slider.min))*100;
@@ -1018,7 +1018,7 @@ function updateSliderFill(slider){
   if(!sl) return; updateSliderFill(sl); sl.addEventListener("input", ()=>updateSliderFill(sl));
 });
 
-/* === Appearances-only model + preview === *
+/* === Appearances-only model + preview === */
 let slidesManifest=null;
 let appearances=[];
 let appearCursor=0;
@@ -1040,7 +1040,7 @@ function ensurePreviewDimsFor(bgIm){
   return { sceneW, sceneH };
 }
 
-/* atomic updates to avoid flicker *
+/* atomic updates to avoid flicker */
 let previewToken=0;
 async function drawPreview(){
   if(!pctx || !slidesManifest || !appearances.length){
@@ -1116,10 +1116,10 @@ function prevAppearance(){ gotoAppearance(appearCursor-1); }
 prevAppBtn?.addEventListener("click", prevAppearance);
 nextAppBtn?.addEventListener("click", nextAppearance);
 
-/* keyboard nav *
+/* keyboard nav */
 addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if(e.key==="ArrowLeft") prevAppearance(); });
 
-/* per-slide autosave/restore *
+/* per-slide autosave/restore */
 function persistCurrentAppearance(){
   if(!appearances.length) return;
   const slide1=appearances[appearCursor]+1;
@@ -1138,7 +1138,7 @@ function restoreCurrentAppearance(){
   img.src=dataURL;
 }
 
-/* ---------- Boot ---------- *
+/* ---------- Boot ---------- */
 (async function boot(){
   const fallbackOutline = await resolveOutlineURLForSlide(1);
   outlineImg.src=fallbackOutline;
