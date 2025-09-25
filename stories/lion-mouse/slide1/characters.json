@@ -8,6 +8,6 @@
     { "id": "squirrel1", "name": "Squirrel", "sprite": "images/sprites/lion-mouse/squirrel1.png" },
     { "id": "deer", "name": "Deer", "sprite": "images/sprites/lion-mouse/deer.png" },
     { "id": "butterfly", "name": "Butterfly",  "sprite": "images/sprites/lion-mouse/butterfly.png" },
-    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide1/mouse.png", "x": 80, "y": 10, "w": 37.5 }
+    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide1/mouse.png", "x": 60, "y": 2, "w": 30 }
   ]
 }
