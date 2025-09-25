@@ -115,7 +115,7 @@ canvas.char-layer.mama_duck {
   left: 50px;           /* move right from the left edge */
   /* sizing */
   width: 250px;         /* scale the canvas width */
-  height: 250px;         /* keep aspect ratio */
+  height: 350px;         /* keep aspect ratio */
 }
 
 img.character {
