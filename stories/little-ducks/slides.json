@@ -60,7 +60,7 @@
           "framesPath": "images/frames/5_little_ducks/frame2/mama_duck/mama_duck",
           "frameCount": 4}
         { "id": "bush", "x": 80, "y": 20, "w": 30,
-          "framesPath": "images/gifs/5_little_ducks/slide2/bush.png",}  
+          "framesPath": "images/gifs/5_little_ducks/slide2/bush.png"}  
       ]
     },
     {
