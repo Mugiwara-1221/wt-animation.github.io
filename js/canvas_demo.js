@@ -1086,9 +1086,6 @@ function updateMiniPreview(){
   // we rely on drawPreview() for the full scene preview with masks and overlay
 }
 
-function zoomIn(){  zoomLevel*=1.1; applyZoom(); }
-function zoomOut(){ zoomLevel/=1.1; applyZoom(); }
-
 Object.assign(window,{
   setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut
 });
