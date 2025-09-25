@@ -274,14 +274,31 @@ async function placeCharacter(cfg, slideNo){
 
     let i=0, last = performance.now(), raf=0, stop=false;
     const frameMs = 1000 / Math.max(1, fps);
+    const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
+    // draw function stays the same
     draw(0);
-    function tick(ts){
-      if (stop) return;
-      if (ts - last >= frameMs){ last = ts; i=(i+1)%baseFrames.length; draw(i); }
+    if (baseFrames.length > 1 && fps > 0) {
+      let i = 0, last = performance.now(), raf = 0, stop = false;
+      const frameMs = 1000 / Math.max(1, fps);
+      function tick(ts) {
+        if (stop) return;
+        if (ts - last >= frameMs) {
+          last = ts;
+          i = (i + 1) % baseFrames.length;
+          draw(i);
+        }
+        raf = requestAnimationFrame(tick);
+      }
       raf = requestAnimationFrame(tick);
+      loops.add(() => {
+        stop = true;
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+      });
+    } else {
+      // static character, no animation loop needed
+      loops.add(() => ro.disconnect());
     }
-    raf = requestAnimationFrame(tick);
-    loops.add(()=>{ stop=true; cancelAnimationFrame(raf); ro.disconnect(); });
   }catch(e){
     console.warn("[storyboard] character failed:", id, e);
     ro.disconnect();
