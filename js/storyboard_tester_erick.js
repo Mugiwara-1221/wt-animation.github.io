@@ -348,12 +348,17 @@ async function showSlide(i){
   const ids = chars.map(char => char.id);
   console.log(ids);
 // THIS IS WHERE I WAS EDDITING TO CHANGE THE TORTOISE TO A IMAGE ONLY
-  await Promise.allSettled(chars.map(c => placeCharacter({
-    frameCount: 4,
-    fps: 4,
-    z: 1,
-    ...c
-  }, slideNo)));
+  await Promise.allSettled(
+    chars.map(c => {
+      const isTortoise = c.id?.toLowerCase() === "tortoise";
+      return placeCharacter({
+        frameCount: isTortoise ? 1 : 4,  // 🐢 only 1 frame
+        fps: isTortoise ? 0 : 4,         // 🐢 no animation
+        z: 1,
+        ...c
+      }, slideNo);
+    })
+  );
 
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
