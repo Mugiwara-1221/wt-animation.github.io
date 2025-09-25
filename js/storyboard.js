@@ -315,31 +315,25 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
   const isSingle = singleFrameChars.includes(charId.toLowerCase());
   const frameCount = isSingle ? 1 : 4;
 
-  // Helper: build one overlay for a specific frame index
   async function buildOverlayForFrame(i) {
     const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
     let bmp = maskBmpCache.get(bmpKey);
     if (!bmp) {
-      // Create a scaled mask bitmap for this frame
       bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
       maskBmpCache.set(bmpKey, bmp);
     }
-    // Compose base + mask onto an offscreen canvas
+
     const off = document.createElement("canvas");
     off.width = Math.round(r.width);
     off.height = Math.round(r.height);
     const cx = off.getContext("2d");
     cx.imageSmoothingEnabled = false;
-    // Draw base first
-    cx.drawImage(base, 0, 0, off.width, off.height);
 
-    // Apply mask: keep only painted area
+    cx.drawImage(base, 0, 0, off.width, off.height);
     cx.globalCompositeOperation = "destination-in";
     cx.drawImage(bmp, 0, 0, off.width, off.height);
-    // Restore normal composite
     cx.globalCompositeOperation = "source-over";
 
-    // Convert canvas to image for later drawImage
     const img = await loadImage(off.toDataURL());
     overlays.push(img);
   }
