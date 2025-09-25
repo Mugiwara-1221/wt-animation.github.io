@@ -78,23 +78,30 @@ body{
 
 /* Icon buttons */
 .tool.icon{
-  width:56px; 
-  height:56px; 
-  border:2px solid rgba(255,255,255,.15); 
-  border-radius:12px; 
+  width:56px;
+  height:56px;
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:12px;
   background:#232528;
-  display:grid; 
-  place-items:center; 
-  cursor:pointer; 
+  position:relative;            /* needed for absolute centering */
+  cursor:pointer;
   transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
 }
-.tool.icon img{ 
-  width:100px; 
-  height:100px; 
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); 
-  align-items: center;
-  place-items:center;
+
+.tool.icon img{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  max-width:65%;
+  max-height:65%;
+  width:auto;
+  height:auto;
+  display:block;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.35));
+  pointer-events:none;
 }
+
 .tool.icon:hover{ 
   border-color:rgba(255,255,255,.4); 
 }
