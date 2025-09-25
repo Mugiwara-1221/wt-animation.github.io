@@ -38,7 +38,7 @@
     {
       "background": "stories/little-ducks/slide2/slide2.png",
       "characters": [
-         { "id": "last_duck", "x": 45, "y": 40, "w": 30,
+         { "id": "last_duck", "x": 50, "y": 40, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/last_duck.gif",
           "frameCount": 4 },
         { "id": "lead_duck", "x": 15, "y": 50, "w": 30,
@@ -59,7 +59,7 @@
         { "id": "mama_duck", "x": 10, "y": 50, "w": 30,
           "framesPath": "images/frames/5_little_ducks/frame2/mama_duck/mama_duck",
           "frameCount": 4},
-        { "id": "bush", "x": 70, "y": 30, "w": 30,
+        { "id": "bush", "x": 75, "y": 33, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/bush.png"}  
       ]
     },
