@@ -7,7 +7,7 @@
       "characters": [
         {
           "id": "owl",
-          "x": 27, "y": 1, "w": 40, 
+          "x": 27, "y": 1, "w": 45, 
           "framesPath": "images/gifs/lion_and_the_mouse/slide1/owl_colored.gif",
           "frameCount": 4
         },
