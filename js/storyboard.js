@@ -362,13 +362,20 @@ async function showSlide(i){
     (manifest.slides.indexOf(s) + 1);
 
   const chars = Array.isArray(s.characters) ? s.characters : [];
-  await Promise.allSettled(chars.map(c => placeCharacter({
-    frameCount: 4,
-    fps: 4,
-    z: 1,
-    ...c
-  }, slideNo)));
-
+  await Promise.allSettled(
+    chars.map(c => {
+      const id = c.id?.toLowerCase();
+      // 🐢🐭🦆 Example: static characters
+      const staticChars = ["tortoise", "mouse", "duck"];
+      const frameCount = staticChars.includes(id) ? 1 : 4;
+      const fps = staticChars.includes(id) ? 0 : 4;
+      return placeCharacter(
+        { frameCount,
+          fps,
+          z: 1,
+          ...c },
+        slideNo);}));
+  
   // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
