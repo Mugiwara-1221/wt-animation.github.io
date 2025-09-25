@@ -104,7 +104,7 @@ function makeCard(index) {
     // 2. Update context with the slide/index
     const nextCtx = writeCtx({ ...ctx, slide: String(index) });
     // 3. Build the URL with the index as a query param
-    const url = nextURL("sprite-select.html", nextCtx) + `&index=${index}`;
+    const url = nextURL("sprite-select.html", nextCtx) + `&page=${index}`;
     // 4. Navigate
     location.href = url;
   };
