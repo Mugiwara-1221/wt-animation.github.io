@@ -274,7 +274,6 @@ async function placeCharacter(cfg, slideNo){
 
     let i=0, last = performance.now(), raf=0, stop=false;
     const frameMs = 1000 / Math.max(1, fps);
-    const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
     // draw function stays the same
     draw(0);
     if (baseFrames.length > 1 && fps > 0) {
