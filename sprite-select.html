@@ -45,9 +45,8 @@
     async function loadManifest() {
       // Try slide-specific manifest first, then fall back to legacy path
      const candidates = [
-        `stories/${storyId}/slide${slide}/characters.json`,     
-        `stories/${storyId}/slides/${slide}/characters.json`,   
-        `stories/${storyId}/characters.json`                    
+        `stories/${storyId}/slide${index}/characters.json`,     
+        `stories/${storyId}/slide${index}/characters.json`,                  
       ];
       for (const url of candidates) {
         try {
@@ -105,10 +104,8 @@
       const bgBase = `images/backgrounds/${storyId}`;
       const bgCandidates = [
         manifest.background,                        // explicit override from JSON (optional)
-        `${bgBase}/background${slide}.png`,         // background1.png, background2.png, ...
-        `${bgBase}/background-${slide}.png`,        // also accept background-1.png
-        `${bgBase}/background_${slide}.png`,        // also accept background_1.png
-        `${bgBase}/background.png`                  // final fallback
+        `${bgBase}/background${index}.png`,         // background1.png, background2.png, ...
+        `${bgBase}/background-${index}.png`,        // also accept background-1.png
       ].filter(Boolean);
       setBackground(bgCandidates);
 
