@@ -962,13 +962,38 @@ async function findMaskSets(storyIdDash, charId, slide1){
 async function sendToStoryboard() {
   try {
     const { x, y, width, height } = allowedArea;
+
+    // Crop the painted region
     const crop = document.createElement("canvas");
     crop.width = width; crop.height = height;
     crop.getContext("2d").drawImage(drawCanvas, x, y, width, height, 0, 0, width, height);
 
-    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar);
+    // --- compute the correct slide indices ---
+    const q = new URLSearchParams(location.search);
+    const slideParam1 = Number(q.get("slide")); // 1-based on the canvas page
+    const fromAppear0 = (Array.isArray(appearances) && appearances.length) ? appearances[appearCursor] : NaN;
+    const ctxSlide1   = Number((JSON.parse(localStorage.getItem("ctx") || "{}")).slide);
 
+    let slide1    = 1; // 1-based for frame paths
+    let globalIdx = 0; // 0-based for storyboard
+
+    if (!Number.isNaN(slideParam1)) {
+      slide1    = Math.max(1, slideParam1);
+      globalIdx = slide1 - 1;
+    } else if (!Number.isNaN(fromAppear0)) {
+      globalIdx = Math.max(0, fromAppear0);
+      slide1    = globalIdx + 1;
+    } else if (!Number.isNaN(ctxSlide1)) {
+      slide1    = Math.max(1, ctxSlide1);
+      globalIdx = slide1 - 1;
+    }
+
+    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
     const bySlide = {};
+
+    // ✅ PASS slide1 to findMaskSets (was missing before)
+    const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar, slide1);
+
     if (sets.length) {
       for (const { frame, prefix } of sets) {
         const list = [];
@@ -979,25 +1004,30 @@ async function sendToStoryboard() {
         const uniqueIds = [...new Set(mat.flat())].filter(id => id !== 0);
 
         for (const regionId of uniqueIds) {
+          // build a white mask for this region
           const maskCanvas = document.createElement("canvas");
           maskCanvas.width = W; maskCanvas.height = H;
           const mc = maskCanvas.getContext("2d");
           const imgData = mc.createImageData(W, H);
-          for (let yy=0; yy<H; yy++){
-            for (let xx=0; xx<W; xx++){
-              if (mat[yy][xx] === regionId){
-                const i=(yy*W+xx)*4;
-                imgData.data[i]=imgData.data[i+1]=imgData.data[i+2]=255;
-                imgData.data[i+3]=255;
+          for (let yy = 0; yy < H; yy++) {
+            for (let xx = 0; xx < W; xx++) {
+              if (mat[yy][xx] === regionId) {
+                const i = (yy * W + xx) * 4;
+                imgData.data[i]     = 255;
+                imgData.data[i + 1] = 255;
+                imgData.data[i + 2] = 255;
+                imgData.data[i + 3] = 255;
               }
             }
           }
-          mc.putImageData(imgData,0,0);
+          mc.putImageData(imgData, 0, 0);
 
+          // scale mask to the paint size
           const scaledMask = document.createElement("canvas");
           scaledMask.width = width; scaledMask.height = height;
           scaledMask.getContext("2d").drawImage(maskCanvas, 0, 0, width, height);
 
+          // apply mask to the cropped paint
           const masked = document.createElement("canvas");
           masked.width = width; masked.height = height;
           const mctx = masked.getContext("2d");
@@ -1007,32 +1037,32 @@ async function sendToStoryboard() {
           mctx.globalCompositeOperation = "source-over";
 
           const blob = await new Promise(res => masked.toBlob(res, "image/png"));
-          const url = URL.createObjectURL(blob);
+          const url  = URL.createObjectURL(blob);
           list.push({ regionId, img: url, frame, maskIndex: 1 });
         }
         if (list.length) bySlide[frame] = list;
       }
     } else {
-      // Fallback: merge outline + paint (no mask available)
+      // Fallback: merge THIS slide’s overlay (not frame1) with paint
       const merged = document.createElement("canvas");
       merged.width = width; merged.height = height;
       const mctx = merged.getContext("2d");
       mctx.drawImage(crop, 0, 0);
 
-      const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-      const outlineURL = `images/frames/${storyFolder}/frame1/${selectedChar}/${selectedChar}1.png`;
-      if (await urlExists(outlineURL)) {
-        const ol = await loadImageCached(outlineURL);
-        mctx.drawImage(ol, 0, 0, width, height);
-      }
+      const overlay = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
+      try {
+        if (await urlExists(overlay)) {
+          const ol = await loadImageCached(overlay);
+          mctx.drawImage(ol, 0, 0, width, height);
+        }
+      } catch {}
       const blob = await new Promise(res => merged.toBlob(res, "image/png"));
-      const url = URL.createObjectURL(blob);
-      bySlide[1] = [{ regionId: 1, img: url, frame: 1, maskIndex: 1 }];
+      const url  = URL.createObjectURL(blob);
+      bySlide[slide1] = [{ regionId: 1, img: url, frame: slide1, maskIndex: 1 }]; // ✅ key by slide1
     }
 
-    // Save to localStorage (storyboard consumption)
+    // Persist for storyboard
     const imageOnlyBySlide = {};
-    const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
     for (const [frame, regions] of Object.entries(bySlide)) {
       imageOnlyBySlide[frame] = regions.map(r => r.img);
     }
@@ -1045,17 +1075,25 @@ async function sendToStoryboard() {
     }
     localStorage.setItem("selectedCharacter", selectedChar);
 
-    // Optional submit
-    const firstImg = firstFrame?.[0] || "";
-    const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
-    if (firstImg) { try { await submitDrawing(sessionCode, selectedChar, firstImg, uid); } catch {} }
+    // (optional) submit to backend
+    try {
+      const firstImg = firstFrame?.[0] || "";
+      const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
+      if (firstImg && typeof submitDrawing === "function") {
+        await submitDrawing(sessionCode, selectedChar, firstImg, uid);
+      }
+    } catch {}
 
-    // Route
-    const q = new URLSearchParams({ char: selectedChar, story: selectedStory });
-    if (sessionCode)   q.set("session", sessionCode);
-    if (selectedGrade) q.set("grade", selectedGrade);
-    location.href = `storyboard.html?${q.toString()}`;
-  } catch(err) {
+    // ✅ Redirect with correct 0-based slide index in the URL
+    const url2 = new URL("storyboard.html", location.href);
+    url2.searchParams.set("story", selectedStory);
+    url2.searchParams.set("char",  selectedChar);
+    url2.searchParams.set("slide", String(globalIdx)); // <-- crucial
+    if (sessionCode)   url2.searchParams.set("session", sessionCode);
+    if (selectedGrade) url2.searchParams.set("grade",   selectedGrade);
+    location.href = url2.toString();
+
+  } catch (err) {
     console.error("[sendToStoryboard] failed:", err);
     alert("Send to Storyboard failed. See console for details.");
   }
