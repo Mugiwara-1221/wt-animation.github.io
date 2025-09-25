@@ -993,8 +993,9 @@ async function sendToStoryboard() {
 
     // ✅ PASS slide1 to findMaskSets (was missing before)
     const sets = await findMaskSets(selectedStory || "tortoise-hare", selectedChar, slide1);
+    const staticChars = ["tortoise", "mouse", "duck"];
 
-    if (sets.length) {
+    if (!staticChars.includes(selectedChar.toLowerCase()) && sets.length) {
       for (const { frame, prefix } of sets) {
         const list = [];
         const csvURL = `${prefix}1.csv`;
