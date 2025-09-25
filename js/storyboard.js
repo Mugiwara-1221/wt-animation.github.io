@@ -166,27 +166,25 @@ function mountStaticImage(host, cfg){
 }
 
 /* ----------------- PNG stack (existing behavior) ----------------- */
-async function getFrames(prefix, count) {
-  // special case for tortoise: allow single stored image
-  const parts = prefix.split("/");
-  const tortoiseIndex = parts[5];
-  if (tortoiseIndex == "tortoise" && selectedChar === "tortoise") {
-    const stored = localStorage.getItem("coloredCharacter");
-    if (stored) {
-      const img = await loadImage(stored);
-      return [img];
-    }
-  }
-
+async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
+  const parts = prefix.split("/");
+  //console.log(parts);
+
   if (framesCache.has(key)) return framesCache.get(key);
-
+  if (parts[5] == 'tortoise') {
+    const images = await Promise.allSettled([
+      loadImage(`${prefix}1.png`),
+]);
+    framesCache.set(key, images);
+    return images;
+  } else {
   const images = await Promise.all(
-    Array.from({ length: count }, (_, i) => loadImage(`${prefix}${i + 1}.png`))
+    Array.from({length:count},(_,i)=>loadImage(`${prefix}${i+1}.png`))
   );
-
   framesCache.set(key, images);
   return images;
+}
 }
 
 async function getMasksForSlide(charId, slideNo){
