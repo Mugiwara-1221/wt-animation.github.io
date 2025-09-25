@@ -313,14 +313,32 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
   const overlays = [];
   // 🐢🐭🦆 If tortoise, mouse, or duck → only 1 frame
   const singleFrameChars = ["tortoise", "mouse", "mama_duck"];
-  const frameCount = singleFrameChars.includes(charId.toLowerCase()) ? 1 : 4;
-
-  for (let i = 0; i < frameCount; i++) {
-    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+  const isSingle = singleFrameChars.includes(charId.toLowerCase());
+  const frameCount = isSingle ? 1 : 4;
+  
+  if (isSingle) {
+    // just do one frame, no loop
+    const bmpKey = `${prefix}1|${Math.round(r.width)}x${Math.round(r.height)}`;
     let bmp = maskBmpCache.get(bmpKey);
     if (!bmp) {
-      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
+      bmp = await matrixToMaskBitmapScaled(mats[0], W, H, r.width, r.height);
       maskBmpCache.set(bmpKey, bmp);
+    }
+  
+    const off = document.createElement("canvas");
+    off.width = Math.round(r.width);
+    off.height = Math.round(r.height);
+    const cx = off.getContext("2d");
+    cx.imageSmoothingEnabled = false;
+    // … draw your single mask here
+    } else {
+      // multi‑frame characters: loop through all frames
+      for (let i = 0; i < frameCount; i++) {
+        const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+        let bmp = maskBmpCache.get(bmpKey);
+        if (!bmp) {
+          bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
+          maskBmpCache.set(bmpKey, bmp);
     }
 
     const off = document.createElement("canvas");
