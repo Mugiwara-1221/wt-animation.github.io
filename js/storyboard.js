@@ -20,6 +20,7 @@ if (!Number.isNaN(requested)) {
 
 // selected character (optional)
 const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
+console.log(selectedChar);
 
 // storyIDs → repo folders (for masks/frames)
 const STORY_FOLDER_MAP = new Map([
