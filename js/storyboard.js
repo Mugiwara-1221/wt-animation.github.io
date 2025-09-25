@@ -261,14 +261,13 @@ async function placeCharacter(cfg, slideNo){
     function draw(ix) {
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0, 0, r.width, r.height);
-      // Draw overlay if available
       if (overlays && overlays.length > 0) {
-        const ov = overlays[ix % overlays.length]; // safe even if length=1
+        const ov = overlays[ix % overlays.length];
         if (ov) ctx.drawImage(ov, 0, 0, r.width, r.height);
       }
-      // Draw base frame if available
+    
       if (baseFrames && baseFrames.length > 0) {
-        const base = baseFrames[ix % baseFrames.length]; // safe even if length=1
+        const base = baseFrames[ix % baseFrames.length];
         if (base) ctx.drawImage(base, 0, 0, r.width, r.height);
       }
     }
