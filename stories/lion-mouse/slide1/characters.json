@@ -1,6 +1,6 @@
 
 {
-  "background": "images/backgrounds/lion-mouse/frame6.png",
+  "background": "images/backgrounds/lion-mouse/slide1.png",
   "characters": [
     { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/owl.png" },
     { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/lion.png" },
