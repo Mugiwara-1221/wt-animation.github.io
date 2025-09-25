@@ -98,11 +98,11 @@ h2 {
 
 @keyframes tortoiseWaddle {
   0%   { transform: translateX(0); }
-  50%  { transform: translateX(30px); }
+  50%  { transform: translateX(60px); }
   100% { transform: translateX(0); }
 }
 
-canvas.tortoise {
+canvas.char-layer.tortoise {
   animation: tortoiseWaddle 2s ease-in-out infinite;
 }
 
