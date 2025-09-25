@@ -167,25 +167,26 @@ function mountStaticImage(host, cfg){
 }
 
 /* ----------------- PNG stack (existing behavior) ----------------- */
-async function getFrames(prefix, count){
+async function getFrames(prefix, count) {
   const key = `${prefix}|${count}`;
   const parts = prefix.split("/");
-  console.log(parts);
-
+  //console.log(parts);
   if (framesCache.has(key)) return framesCache.get(key);
-  if (parts[5] == 'tortoise' || parts[5] == 'mouse' || parts[5] == 'mama_duck') {
-    const images = await Promise.allSettled([
-      await loadImage(`${prefix}1.png`),
-]);
+  // 🐢🐭🦆 special‑case: single‑frame characters
+  if (["tortoise", "mouse", "mama_duck"].includes(parts[5])) {
+    const img = await loadImage(`${prefix}1.png`); // returns an HTMLImageElement
+    const images = [img];                          // wrap in array
     framesCache.set(key, images);
     return images;
-  } else {
+  }
+  // 🎞 multi‑frame characters
   const images = await Promise.all(
-    Array.from({length:count},(_,i)=>loadImage(`${prefix}${i+1}.png`))
+    Array.from({ length: count }, (_, i) =>
+      loadImage(`${prefix}${i + 1}.png`)
+    )
   );
   framesCache.set(key, images);
   return images;
-}
 }
 
 async function getMasksForSlide(charId, slideNo){
