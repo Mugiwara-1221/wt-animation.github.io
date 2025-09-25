@@ -317,6 +317,7 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
 
   async function buildOverlayForFrame(i) {
     const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
+    console.log(bmpKey)
     let bmp = maskBmpCache.get(bmpKey);
     if (!bmp) {
       bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
