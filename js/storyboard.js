@@ -354,7 +354,6 @@ async function showSlide(i){
     console.error("[storyboard] background failed:", s.background);
     scene.removeAttribute("src");
   }
-
   clearLayers();
 
   const slideNo =
@@ -366,7 +365,7 @@ async function showSlide(i){
     chars.map(c => {
       const id = c.id?.toLowerCase();
       // 🐢🐭🦆 Example: static characters
-      const staticChars = ["tortoise", "mouse", "duck"];
+      const staticChars = ["tortoise", "mouse", "mama_duck"];
       const frameCount = staticChars.includes(id) ? 1 : 4;
       const fps = staticChars.includes(id) ? 0 : 4;
       return placeCharacter(
