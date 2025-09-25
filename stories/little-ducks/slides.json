@@ -38,13 +38,13 @@
     {
       "background": "stories/little-ducks/slide2/slide2.png",
       "characters": [
-         { "id": "last_duck", "x": 75, "y": 60, "w": 30,
+         { "id": "last_duck", "x": 55, "y": 350, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/last_duck.gif",
           "frameCount": 4 },
         { "id": "lead_duck", "x": 15, "y": 50, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/lead_duck.gif",
           "frameCount": 4 },
-        { "id": "angry_duck", "x": 63, "y": 60, "w": 30,
+        { "id": "angry_duck", "x": 50, "y": 30, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/angry_duck.gif",
           "frameCount": 4 },
         { "id": "sleepy_duck", "x": 27, "y": 50, "w": 30,
@@ -53,12 +53,14 @@
         { "id": "waving_duck", "x": 40, "y": 50, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/waving_duck.gif",
           "frameCount": 4 },
-        { "id": "fox", "x": 80, "y": 10, "w": 30,
+        { "id": "fox", "x": 70, "y": 13, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/fox.gif",
           "frameCount": 4 },
-        { "id": "mama_duck", "x": 20, "y": 60, "w": 30,
+        { "id": "mama_duck", "x": 10, "y": 50, "w": 30,
           "framesPath": "images/frames/5_little_ducks/frame2/mama_duck/mama_duck",
           "frameCount": 4}
+        { "id": "bush", "x": 80, "y": 20, "w": 30,
+          "framesPath": "images/gifs/5_little_ducks/slide2/bush.png",}  
       ]
     },
     {
