@@ -170,7 +170,7 @@ function mountStaticImage(host, cfg){
 async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
   const parts = prefix.split("/");
-  //console.log(parts);
+  console.log(parts);
 
   if (framesCache.has(key)) return framesCache.get(key);
   if (parts[5] == 'tortoise' || part[5] == 'mouse' || part[5] == 'mama_duck') {
