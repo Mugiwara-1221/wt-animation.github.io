@@ -978,6 +978,8 @@ async function sendToStoryboard() {
     }
 
     localStorage.setItem("selectedCharacter", selectedChar);
+    console.log("coloredCharacter:", localStorage.getItem("coloredCharacter"));
+    console.log("coloredCharacterFrames:", JSON.parse(localStorage.getItem("coloredCharacterFrames") || "[]"));
 
     const firstImg = firstFrame?.[0] || "";
     const uid = localStorage.getItem("deviceToken") || (crypto.randomUUID?.() || String(Date.now()));
