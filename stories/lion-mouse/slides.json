@@ -3,7 +3,7 @@
   "slideCount": 2,
   "slides": [
     {
-      "background": "stories/lion-mouse/slide1.png",
+      "background": "stories/lion-mouse/slide1/slide1.png",
       "characters": [
         {
           "id": "owl",
@@ -21,7 +21,7 @@
       ]
     },
     {
-      "background": "stories/lion-mouse/slide6.png",
+      "background": "stories/lion-mouse/slide6/slide6.png",
       "characters": [
         {
           "id": "lion",
