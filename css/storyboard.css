@@ -103,7 +103,7 @@ h2 {
 }
 
 canvas.char-layer.tortoise {
-  animation: tortoiseWaddle 2s ease-in-out infinite;
+  animation: walk 2s ease-in-out infinite;
 }
 
 img.character {
