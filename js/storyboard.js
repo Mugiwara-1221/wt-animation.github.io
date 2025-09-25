@@ -120,6 +120,7 @@ async function matrixToMaskBitmapScaled(mat, srcW, srcH, cssW, cssH){
     }
   }
   cSrc.putImageData(img, 0, 0);
+  console.log("mask src", srcW, srcH, "→ target", cssW, cssH);
 
   const offTgt = new OffscreenCanvas(Math.max(1, Math.round(cssW)), Math.max(1, Math.round(cssH)));
   const cTgt = offTgt.getContext("2d");
@@ -262,13 +263,13 @@ async function placeCharacter(cfg, slideNo){
     function draw(ix) {
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0, 0, r.width, r.height);
-      if (baseFrames && baseFrames.length > 0) {
-        const base = baseFrames[ix % baseFrames.length];
-        if (base) ctx.drawImage(base, 0, 0, r.width, r.height);
-      }
       if (overlays && overlays.length > 0) {
         const ov = overlays[ix % overlays.length];
         if (ov) ctx.drawImage(ov, 0, 0, r.width, r.height);
+      }
+      if (baseFrames && baseFrames.length > 0) {
+        const base = baseFrames[ix % baseFrames.length];
+        if (base) ctx.drawImage(base, 0, 0, r.width, r.height);
       }
     }
 
