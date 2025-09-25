@@ -1149,4 +1149,4 @@ function restoreCurrentAppearance(){
 
   if(appearances.length){ await gotoAppearance(0); }
   else { schedulePreview(); }
-})(); */
+})(); 
