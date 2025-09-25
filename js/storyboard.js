@@ -11,6 +11,8 @@ const requested = Number(qs.get("slide"));     // storyboard uses 0-based in the
 const fromCtx   = Number(ctx.slide);           // your earlier pages often store 1-based
 let initialSlide = 0;
 
+console.log(JSON.parse(localStorage.getItem("coloredCharacterFrames")));
+
 if (!Number.isNaN(requested)) {
   initialSlide = Math.max(0, requested);
 } else if (!Number.isNaN(fromCtx)) {
