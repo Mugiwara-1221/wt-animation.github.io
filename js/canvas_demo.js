@@ -1,8 +1,6 @@
 
 /* =======================================================================
-   canvas_demo.js  —  slide-aware, outline-first, keeps mini preview,
-                      appearances navigation, brush tools, undo/redo,
-                      and correct storyboard handoff.
+   canvas_demo.js  —  DO NOT DELETE PLEASE
    ======================================================================= *
 
 /* ------------------------------ Context -------------------------------- *
