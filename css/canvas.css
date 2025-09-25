@@ -42,7 +42,7 @@ body{
   top:0; 
   bottom:0; 
   width:86px; 
-  background:var(--panel-bg);
+  background: #4d8ad5;
   display:flex; 
   flex-direction:column; 
   align-items:center; 
@@ -92,6 +92,7 @@ body{
   width:100px; 
   height:100px; 
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); 
+  align-items: center;
 }
 .tool.icon:hover{ 
   border-color:rgba(255,255,255,.4); 
