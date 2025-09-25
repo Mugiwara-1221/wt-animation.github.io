@@ -43,19 +43,18 @@
     container.style.position = 'relative';
 
     async function loadManifest() {
-      // Try slide-specific manifest first, then fall back to legacy path
-     const candidates = [
-        `stories/${storyId}/characters.json`,     
-        `stories/${storyId}/slide${index}/characters.json`,                  
+      const slide = Number(new URLSearchParams(location.search).get('slide')) || 1;
+      const candidates = [
+        `stories/${storyId}/characters.json`,            // story-level
+        `stories/${storyId}/slide${slide}/characters.json`, // slide-level
       ];
       for (const url of candidates) {
-        try {
+      try {
           const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) return await res.json();
+          if (res.ok) return res.json();
         } catch {}
       }
-      console.warn('No characters.json for', storyId, 'slide', slide);
-      return { background:'', characters:[] };
+      return { background: '', characters: [] };
     }
 
     function setBackground(paths) {
