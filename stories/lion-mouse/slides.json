@@ -1,13 +1,13 @@
 {
   "storyTitle": "The Lion and the Mouse",
-  "slideCount": 2,
+  "slideCount": 6,
   "slides": [
     {
       "background": "stories/lion-mouse/slide1/slide1.png",
       "characters": [
         {
           "id": "owl",
-          "x": 20, "y": 5, "w": 50, 
+          "x": 30, "y": 2, "w": 50, 
           "framesPath": "images/gifs/lion_and_the_mouse/slide1/owl_colored.gif",
           "frameCount": 4
         },
