@@ -1,10 +1,10 @@
 
 // js/storyboard.js — PNG frame animation + optional GIF characters
 
-// const qs            = new URLSearchParams(location.search);
-// const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare" || "lion-mouse").replace(/_/g,"-");
+ const qs            = new URLSearchParams(location.search);
+ const storyId       = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare" || "lion-mouse").replace(/_/g,"-");
 // const initialSlide  = Math.max(0, +qs.get("slide") || 0);
-// const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
+ const selectedChar  = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 // read slide from URL if present; else from ctx (where it's likely 1-based)
 const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
 const requested = Number(qs.get("slide"));     // storyboard uses 0-based in the URL
