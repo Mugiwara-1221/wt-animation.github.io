@@ -311,50 +311,44 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
   const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
 
   const overlays = [];
-  // 🐢🐭🦆 If tortoise, mouse, or duck → only 1 frame
   const singleFrameChars = ["tortoise", "mouse", "mama_duck"];
   const isSingle = singleFrameChars.includes(charId.toLowerCase());
   const frameCount = isSingle ? 1 : 4;
-  
-  if (isSingle) {
-    // just do one frame, no loop
-    const bmpKey = `${prefix}1|${Math.round(r.width)}x${Math.round(r.height)}`;
+
+  // Helper: build one overlay for a specific frame index
+  async function buildOverlayForFrame(i) {
+    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
     let bmp = maskBmpCache.get(bmpKey);
     if (!bmp) {
-      bmp = await matrixToMaskBitmapScaled(mats[0], W, H, r.width, r.height);
+      // Create a scaled mask bitmap for this frame
+      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
       maskBmpCache.set(bmpKey, bmp);
     }
-  
+    // Compose base + mask onto an offscreen canvas
     const off = document.createElement("canvas");
     off.width = Math.round(r.width);
     off.height = Math.round(r.height);
     const cx = off.getContext("2d");
     cx.imageSmoothingEnabled = false;
-    // … draw your single mask here
-    } else {
-      // multi‑frame characters: loop through all frames
-      for (let i = 0; i < frameCount; i++) {
-        const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
-        let bmp = maskBmpCache.get(bmpKey);
-        if (!bmp) {
-          bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
-          maskBmpCache.set(bmpKey, bmp);
-    }
-    }
-  }
-
-    const off = document.createElement("canvas");
-    off.width = Math.round(r.width);
-    off.height = Math.round(r.height);
-    const cx = off.getContext("2d");
-    cx.imageSmoothingEnabled = false;
-
+    // Draw base first
     cx.drawImage(base, 0, 0, off.width, off.height);
+
+    // Apply mask: keep only painted area
     cx.globalCompositeOperation = "destination-in";
-    cx.drawImage(bmp, 0, 0);
+    cx.drawImage(bmp, 0, 0, off.width, off.height);
+    // Restore normal composite
     cx.globalCompositeOperation = "source-over";
 
-    overlays.push(await loadImage(off.toDataURL()));
+    // Convert canvas to image for later drawImage
+    const img = await loadImage(off.toDataURL());
+    overlays.push(img);
+  }
+  if (isSingle) {
+    await buildOverlayForFrame(0);
+  } else {
+    for (let i = 0; i < frameCount; i++) {
+      await buildOverlayForFrame(i);
+    }
   }
   return overlays;
 }
