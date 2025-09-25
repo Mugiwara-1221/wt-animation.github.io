@@ -563,6 +563,16 @@ function loadImageCached(src){
   return p;
 }
 
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // important if loading from another domain
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = url;
+  });
+}
+
 async function loadSlidesManifest(storyIdDash){
   const url = `stories/${storyIdDash}/slides.json`;
   try { const r = await fetch(url, { cache:"no-store" }); if (!r.ok) throw 0; return await r.json(); }
