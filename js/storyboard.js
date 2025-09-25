@@ -340,6 +340,8 @@ async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs)
           bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
           maskBmpCache.set(bmpKey, bmp);
     }
+    }
+  }
 
     const off = document.createElement("canvas");
     off.width = Math.round(r.width);
