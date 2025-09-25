@@ -103,6 +103,7 @@
       const bgBase = `images/backgrounds/${storyId}`;
       const bgCandidates = [
         manifest.background,                        // explicit override from JSON (optional)
+        `${bgBase}/background${slide}.png`,  
         `${bgBase}/background.png`,         
         `${bgBase}/background${slide}.png`,        // background1.png, background2.png, ...
       ].filter(Boolean);
