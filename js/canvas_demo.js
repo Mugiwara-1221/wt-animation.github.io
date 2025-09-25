@@ -1086,7 +1086,6 @@ function updateMiniPreview(){
   // we rely on drawPreview() for the full scene preview with masks and overlay
 }
 
-function clearCanvas(){ ctx2.clearRect(0,0,drawCanvas.width,drawCanvas.height); layoutAndRedraw(); persistCurrentAppearance(); }
 function toggleSaveOptions(){ document.getElementById("saveOptions")?.classList.toggle("hidden"); }
 function downloadImage(){
   const merged=document.createElement("canvas");
