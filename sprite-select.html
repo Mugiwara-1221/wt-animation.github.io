@@ -104,7 +104,7 @@
       const bgCandidates = [
         manifest.background,                        // explicit override from JSON (optional)
         `${bgBase}/background.png`,         
-        `${bgBase}/background${index}.png`,        // background1.png, background2.png, ...
+        `${bgBase}/background${slide}.png`,        // background1.png, background2.png, ...
       ].filter(Boolean);
       setBackground(bgCandidates);
 
