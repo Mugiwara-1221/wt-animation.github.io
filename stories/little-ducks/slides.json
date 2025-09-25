@@ -59,7 +59,7 @@
         { "id": "mama_duck", "x": 10, "y": 50, "w": 30,
           "framesPath": "images/frames/5_little_ducks/frame2/mama_duck/mama_duck",
           "frameCount": 4},
-        { "id": "bush", "x": 73, "y": 31, "w": 30,
+        { "id": "bush", "x": 74, "y": 32, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide2/bush.png"}  
       ]
     },
