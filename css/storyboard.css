@@ -103,9 +103,11 @@ h2 {
 }
 
 canvas.char-layer.tortoise,
-canvas.char-layer.mouse,
-canvas.char-layer.mama_duck {
+canvas.char-layer.mouse {
   animation: tortoiseWaddle 2s ease-in-out infinite;
+}
+canvas.char-layer.mama_duck {
+  animation: birdBounce 2s ease-in-out infinite;
 }
 
 img.character {
