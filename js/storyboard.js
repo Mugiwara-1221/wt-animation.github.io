@@ -175,7 +175,7 @@ async function getFrames(prefix, count){
   if (framesCache.has(key)) return framesCache.get(key);
   if (parts[5] == 'tortoise' || parts[5] == 'mouse' || parts[5] == 'mama_duck') {
     const images = await Promise.allSettled([
-      loadImage(`${prefix}1.png`),
+      await loadImage(`${prefix}1.png`),
 ]);
     framesCache.set(key, images);
     return images;
