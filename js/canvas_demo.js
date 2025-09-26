@@ -626,7 +626,7 @@ async function resolveSpriteURL() {
   for (const u of candidates) {
     if (await urlExists(u)) return u;
   }
-  return `images/outline/${selectedChar}-transparent.png`;
+  return `images/outline/${storyFolder}/${selectedChar}-transparent.png`;
 }
 
 async function resolveOutlineURLForSlide(slide1) {
