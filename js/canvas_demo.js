@@ -642,9 +642,9 @@ async function resolveOutlineURLForSlide(slide1) {
     `images/outline/${selectedChar}_transparent.png`,
     `images/outline/${selectedChar}-transparent.png`,
   ];
-  for (const url of tries) {
+  /*for (const url of tries) {
     if (await urlExists(url)) return url;
-  }
+  }*/
   // 3) frame overlay fallback
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
