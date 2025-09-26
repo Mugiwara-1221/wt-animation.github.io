@@ -1154,5 +1154,6 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
    slidesManifest = manifest; 
    appearances = buildAppearances(manifest, selectedChar);
    if(appearances.length){ 
-      await gotoAppearance(appearCursor); // usually 0 } else { schedulePreview(); } 
+      await gotoAppearance(appearCursor); 
+   }// usually 0 } else { schedulePreview(); } 
 })();
