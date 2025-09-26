@@ -595,7 +595,7 @@ async function resolveSpriteURL() {
 
   // slide-scoped manifest (optional pattern)
   try {
-    const m1 = `stories/${selectedStory}/slides/${pageNumber}/characters.json`;
+    const m1 = `stories/${selectedStory}/slides/${slideNum1}/characters.json`;
     const r1 = await fetch(m1, { cache: "no-store" });
     if (r1.ok) {
       const manifest = await r1.json();
