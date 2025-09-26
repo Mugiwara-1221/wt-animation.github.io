@@ -1143,7 +1143,7 @@ drawCanvas.addEventListener("touchend",  () => { drawing=false; prevX=prevY=null
 addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if(e.key==="ArrowLeft") prevAppearance(); });
 
 /* ---------------------------- Boot ------------------------------ */
-(async function boot(){
+/*(async function boot(){
   const outlineURL = await resolveOutlineURLForSlide(1); // quick placeholder while manifest loads
   outlineImg.src = outlineURL;
   layoutAndRedraw();
@@ -1164,5 +1164,15 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
      schedulePreview();
    }
 
-})();
+})();*/
+(async function boot() {
+  try {
+    // Load the outline for current appearance/slide
+    await loadOutlineForCurrentSlide();
 
+    // Initialize mini preview with current canvas content (blank at start)
+    updateMiniPreview();
+  } catch (e) {
+    console.warn("[boot] outline load failed:", e);
+  }
+})();
