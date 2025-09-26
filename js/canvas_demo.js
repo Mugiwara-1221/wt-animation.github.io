@@ -496,7 +496,7 @@ const selectedGrade  = urlParams.get("grade")   || ctx.grade || "";
 const sessionCode    = urlParams.get("session") || localStorage.getItem("sessionCode") || "";
 const spriteParam    = urlParams.get("sprite")  || "";
 const outlineParam   = urlParams.get("outline") || "";
-const pageNumber     = Number(localStorage.getItem("selectedIndex"));
+//const pageNumber     = Number(localStorage.getItem("selectedIndex"));
 
 // earlier pages often store 1-based slide; we derive both
 //const slideNum1 = Number(urlParams.get("slide")) || Number(ctx.slide) || 1; // 1-based
