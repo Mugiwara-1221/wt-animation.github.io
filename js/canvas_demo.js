@@ -595,7 +595,7 @@ async function resolveSpriteURL() {
 
   // slide-scoped manifest (optional pattern)
   try {
-    const m1 = `stories/${selectedStory}/slides/${slideNum1}/characters.json`;
+    const m1 = `stories/${selectedStory}/slides/${pageNumber}/characters.json`;
     const r1 = await fetch(m1, { cache: "no-store" });
     if (r1.ok) {
       const manifest = await r1.json();
@@ -649,7 +649,8 @@ async function resolveOutlineURLForSlide(slide1) {
   const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
   // 4) fallback
-  return await resolveSpriteURL();
+  //return await resolveSpriteURL();
+  return frame1;
 }
 
 /* -------------------- Layout & Preview -------------------------- */
