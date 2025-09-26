@@ -1149,7 +1149,7 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
   layoutAndRedraw();
 
    // Pick the story ID (fall back to default if none selected)
-   const storyId = selectedStory  "tortoise-hare"; 
+   const storyId = selectedStory || "tortoise-hare"; 
    const manifest = await loadSlidesManifest(storyId); 
    slidesManifest = manifest; 
    appearances = buildAppearances(manifest, selectedChar);
