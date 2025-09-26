@@ -646,7 +646,7 @@ async function resolveOutlineURLForSlide(slide1) {
     if (await urlExists(url)) return url;
   }
   // 3) frame overlay fallback
-  const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}${slide1}.png`;
+  const frame1 = `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}1.png`;
   if (await urlExists(frame1)) return frame1;
   // 4) fallback
   return await resolveSpriteURL();
