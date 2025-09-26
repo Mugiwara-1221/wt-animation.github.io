@@ -29,7 +29,7 @@
         { "id": "waving_duck", "x": 50, "y": 60, "w": 30,
           "framesPath": "images/gifs/5_little_ducks/slide1/wave_duck.gif",
           "frameCount": 4 },
-        { "id": "mama_duck", "x": 10, "y": 50, "w": 30,
+        { "id": "mama_duck", "x": 5, "y": 50, "w": 30,
           "framesPath": "images/frames/5_little_ducks/frame1/mama_duck/mama_duck",
           "maskCsvPrefix": "images/frames/5_little_ducks/frame1/mama_duck/mama_duck_mask_1.csv",
           "frameCount": 4}
