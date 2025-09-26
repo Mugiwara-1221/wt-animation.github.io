@@ -499,7 +499,8 @@ const outlineParam   = urlParams.get("outline") || "";
 const pageNumber     = Number(localStorage.getItem("selectedIndex"));
 
 // earlier pages often store 1-based slide; we derive both
-const slideNum1 = Number(urlParams.get("slide")) || Number(ctx.slide) || 1; // 1-based
+//const slideNum1 = Number(urlParams.get("slide")) || Number(ctx.slide) || 1; // 1-based
+const slideNum1 = 0
 const slideIdx0 = Math.max(0, slideNum1 - 1);                                 // 0-based for storyboard
 
 /* ------------------------------ DOM ------------------------------- */
