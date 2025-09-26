@@ -1143,36 +1143,16 @@ drawCanvas.addEventListener("touchend",  () => { drawing=false; prevX=prevY=null
 addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if(e.key==="ArrowLeft") prevAppearance(); });
 
 /* ---------------------------- Boot ------------------------------ */
-/*(async function boot(){
+(async function boot(){
   const outlineURL = await resolveOutlineURLForSlide(1); // quick placeholder while manifest loads
   outlineImg.src = outlineURL;
   layoutAndRedraw();
 
-// Pick the story ID (fall back to default if none selected)
-   const storyId = selectedStory || "tortoise-hare";
-   // Load the manifest for that story
-   const manifest = await loadSlidesManifest(storyId);
-   slidesManifest = manifest;
-   // Build the appearances for the chosen character
-   appearances = buildAppearances(slidesManifest, selectedChar);
-   // Use the saved index as the starting cursor
-   appearCursor = slideNum1;
-   // Go to that appearance if available, otherwise show a preview
-   if (appearances.length > 0) {
-     await gotoAppearance(appearCursor);
-   } else {
-     schedulePreview();
-   }
-
-})();*/
-(async function boot() {
-  try {
-    // Load the outline for current appearance/slide
-    await loadOutlineForCurrentSlide();
-
-    // Initialize mini preview with current canvas content (blank at start)
-    updateMiniPreview();
-  } catch (e) {
-    console.warn("[boot] outline load failed:", e);
-  }
+   // Pick the story ID (fall back to default if none selected)
+   const storyId = selectedStory  "tortoise-hare"; 
+   const manifest = await loadSlidesManifest(storyId); 
+   slidesManifest = manifest; 
+   appearances = buildAppearances(manifest, selectedChar);
+   if(appearances.length){ 
+      await gotoAppearance(appearCursor); // usually 0 } else { schedulePreview(); } 
 })();
