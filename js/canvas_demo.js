@@ -1148,15 +1148,21 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
   outlineImg.src = outlineURL;
   layoutAndRedraw();
 
-  const storyId = selectedStory || "tortoise-hare";
-  const manifest = await loadSlidesManifest(storyId);
-  slidesManifest = manifest;
-  appearances = buildAppearances(manifest, selectedChar);
+// Pick the story ID (fall back to default if none selected)
+   const storyId = selectedStory || "tortoise-hare";
+   // Load the manifest for that story
+   const manifest = await loadSlidesManifest(storyId);
+   slidesManifest = manifest;
+   // Build the appearances for the chosen character
+   appearances = buildAppearances(slidesManifest, selectedChar);
+   // Use the saved index as the starting cursor
+   appearCursor = pageNumber;
+   // Go to that appearance if available, otherwise show a preview
+   if (appearances.length > 0) {
+     await gotoAppearance(appearCursor);
+   } else {
+     schedulePreview();
+   }
 
-  if(appearances.length){
-    await gotoAppearance(appearCursor); // usually 0
-  } else {
-    schedulePreview();
-  }
 })();
 
