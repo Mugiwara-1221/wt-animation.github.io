@@ -110,14 +110,8 @@ canvas.char-layer.mouse {
 }
 canvas.char-layer.mama_duck {
   /* animation */
-  animation: birdBounce 2s ease-in-out infinite;
-  /* positioning */
-  position: absolute;   /* ensure it can be placed freely */
-  top: 100px;           /* move down from the top */
-  left: 50px;           /* move right from the left edge */
-  /* sizing */
-  width: 250px;         /* scale the canvas width */
-  height: 350px;         /* keep aspect ratio */
+  animation: bounceLeftRight 2s ease-in-out infinite;
+  /* positioning */      /* keep aspect ratio */
 }
 
 img.character {
