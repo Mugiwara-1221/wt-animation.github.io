@@ -1144,7 +1144,7 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
 
 /* ---------------------------- Boot ------------------------------ */
 (async function boot(){
-  const outlineURL = await resolveOutlineURLForSlide(pageNumber); // quick placeholder while manifest loads
+  const outlineURL = await resolveOutlineURLForSlide(1); // quick placeholder while manifest loads
   outlineImg.src = outlineURL;
   layoutAndRedraw();
 
@@ -1156,7 +1156,7 @@ addEventListener("keydown", e => { if(e.key==="ArrowRight") nextAppearance(); if
    // Build the appearances for the chosen character
    appearances = buildAppearances(slidesManifest, selectedChar);
    // Use the saved index as the starting cursor
-   appearCursor = pageNumber;
+   appearCursor = slideNum1;
    // Go to that appearance if available, otherwise show a preview
    if (appearances.length > 0) {
      await gotoAppearance(appearCursor);
