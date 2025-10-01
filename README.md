@@ -59,7 +59,7 @@ windtree-animation-canvas
 
  ┃ ┗ ┗ [storyID]/
 
- | ┗ ┗ ┗ background{index}.png
+  | ┗ ┗ ┗ background{index}.png
  
  ┃ ┗ frames/ (frame pngs & masks per story, per slide, per character)
 
