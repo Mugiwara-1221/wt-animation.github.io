@@ -47,52 +47,93 @@ Wix Studio + Velo API (for integration with Windtree’s platform)
 
 
 ## Folder Structure
+
 bash
 Copy
 Edit
 windtree-animation-canvas
 
- ┃ images/
+ ┃ ./images/
+
+ ┃ ┗ backgrounds/ (character-selection background)
+
+ ┃ ┗ ┗ [storyID]/
+
+ | ┗ ┗ ┗ background{index}.png
  
- ┃ ┗ frames
+ ┃ ┗ frames/ (frame pngs & masks per story, per slide, per character)
+
+ ┃ ┗ ┗ [storyID]/
+
+ | ┗ ┗ ┗ [char{index}].png
+
+ | ┗ ┗ ┗ [char]-mask-{index}.csv
+
+ ┃ ┗ gifs (temporary replacment for frames + masks)
+
+ ┃ ┗ icons (frame pngs & masks per story, per slide, per character)
  
- ┃ ┗ backgrounds
+ ┃ ┗ outline (base transparent .pngs for coloring - canvas page)
+
+ ┃ ┗ sprites (base white [char].pngs - used for sprites sprite-select pg.)
+
+ ┃ ┗ ┗ [storyID]/
+
+ | ┗ ┗ ┗ slide{index}/
+
+ | ┗ ┗ ┗ [char].png
  
- ┃ ┗ thumnails
+ ┃ ┗ story-thumnails (story-selection thumbnails)
+
  
- ┃ js/
  
- ┃ ┗ index.js
+ ┃ ./js/
+ 
+ ┃ ┗ index.js (session)
  
  ┃ ┗ story-select.js
+
+ ┃ ┗ slide-select.js
  
  ┃ ┗ character-select.js
  
  ┃ ┗ canvas.js
  
  ┃ ┗ storyboard.js
+
+ ┃ ┗ storyboard.js
+
  
- ┃ css/
  
- ┃ ┗ index.css
+ ┃ ./css/
+ 
+ ┃ ┗ index.css (session)
  
  ┃ ┗ story-select.css
+
+ ┃ ┗ slide-select.js
  
- ┃ ┗ character-select.css
+ ┃ ┗ sprite-style.css
  
  ┃ ┗ canvas.css
  
  ┃ ┗ storyboard.css
+
  
- ┣ index.html
  
- ┣ index.html
+ ┣ ./index.html (session)
  
- ┣ index.html
+ ┣ ./story-select.html
  
- ┣ index.html
+ ┣ ./slide-select.html
  
- ┣ README.md
+ ┣ ./sprite-select.html
+
+ ┃ ./canvas.html
+
+ ┃ ./storyboard.html
+ 
+ ┣ ./README.md
  
  
 ## How to Use
