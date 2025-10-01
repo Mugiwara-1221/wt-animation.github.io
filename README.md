@@ -55,7 +55,7 @@ windtree-animation-canvas
 
  ┃ ./images/
 
- ┃ ┗ backgrounds/ (character-selection background)
+  ┃ ┗ backgrounds/ (character-selection background)
 
  ┃ ┗ ┗ [storyID]/
 
