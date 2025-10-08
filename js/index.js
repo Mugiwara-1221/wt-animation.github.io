@@ -23,6 +23,8 @@ const deviceToken = getDeviceToken();
 
 const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
+// TODO: update blah blah blah @hidalgoerick
+
 createBtn?.addEventListener('click', async () => {
   try {
     const sessionCode = makeCode();
