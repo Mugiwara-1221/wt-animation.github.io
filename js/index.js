@@ -51,7 +51,7 @@ joinBtn?.addEventListener('click', async () => {
     return;
   }
   if (!/^[1-6]$/.test(idCode)) {
-    joinError.textContent = 'Enter a valid Member ID (1–6).';
+    joinError.textContent = 'ID (1–6).';
     return;
   }
 
