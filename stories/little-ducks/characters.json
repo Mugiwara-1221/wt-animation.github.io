@@ -1,0 +1,12 @@
+
+{
+  "background": "images/backgrounds/little-ducks/background.png",
+  "characters": [
+    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/little-ducks/hare.png" },
+    { "id": "tortoise", "name": "Tortoise", "sprite": "images/sprites/little-ducks/turtle.png"},
+    { "id": "bear",     "name": "Bear",     "sprite": "images/sprites/little-ducks/bear.png" },
+    { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/little-ducks/squirrel.png" },
+    { "id": "bird1",    "name": "Bird 1",   "sprite": "images/sprites/little-ducks/bird1.png" },
+    { "id": "bird2",    "name": "Bird 2",   "sprite": "images/sprites/little-ducks/bird2.png" }
+  ]
+}

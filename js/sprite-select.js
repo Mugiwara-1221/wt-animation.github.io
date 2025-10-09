@@ -31,7 +31,7 @@ const deviceToken = (() => {
 })();
 
 // List any temporarily disabled characters here
-const TEMP_DISABLED = new Set(["bush"]); // ← replace with your data-char id(s)
+const TEMP_DISABLED = new Set(["bush"]); // 
 
 
 /************ Pixel-accurate hover + click ************/
