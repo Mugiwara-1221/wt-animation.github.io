@@ -1,4 +1,4 @@
-from fastAPI import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException
 from uuid import uuid4
 
 app = FastAPI()
@@ -17,4 +17,11 @@ def join_session(sid: str, username: str):
     if len(sessions[sid]["users"]) >= 6:
         raise HTTPException(status_code=400, detail="Session full")
     sessions[sid]["users"].append(username)
-    return {"message": f"{username} joined session {sid}"}
+    return {"joined": True, "users": sessions[sid]["users"]}
+
+@app.websocket("/ws/{sid}")
+async def websocked_endpoint(websocket: WebSocket, sid: str):
+    await websocket.accept()
+    if sid not in sessions:
+        await websocket.close(code=1000)
+        return
