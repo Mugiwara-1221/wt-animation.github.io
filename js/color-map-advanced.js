@@ -189,9 +189,10 @@ export async function loadCSV(url) {
     targetMap,          // 2D array (optional alternative to map2CSVURL)
   }) {
     const srcURL = sourceImageURL || frame1URL;
-    const tgtURL = frame2URL;
-  
-    if (!srcURL || !tgtURL) throw new Error('colorAFrameAdvanced: source and target image URLs are required.');
+    const tgtURL = targetFrameURL  || frame2URL;
+    if (!srcURL || !tgtURL) throw new Error('Source and target image URLs are required.');
+      
+    // now loads rest of body tag (load images, get/scale maps, transfer, return {dataURL, usage})
   
     const [srcImg, tgtImg] = await Promise.all([ loadImage(srcURL), loadImage(tgtURL) ]);
     const idSrc = imageToImageData(srcImg);
@@ -271,7 +272,7 @@ export async function loadCSV(url) {
     };
   }
   
-  /* -------------------- Convenience: loop over N frames -------------------- */
+  /* -------------------- loop over N frames -------------------- */
   export async function colorCharacterFrames({
     character,           // { frameCount, framesPath, maskCSVPrefix, sourceMaskIndex? }
     maskedBaseDataURL,   // data URL from maskColoredBase()
@@ -283,15 +284,15 @@ export async function loadCSV(url) {
     const sourceMapURL = `${character.maskCSVPrefix}${srcIdx}.csv`;
   
     for (let n = 1; n <= character.frameCount; n++) {
-      try {
+      try {  
         const targetFrameURL = `${character.framesPath}${n}.png`;
         const targetMapURL   = `${character.maskCSVPrefix}${n}.csv`;
   
         const { dataURL, usage } = await colorAFrameAdvanced({
-          frame1URL: maskedBaseDataURL,
-          frame2URL: `${character.maskCSVPrefix}1.csv`,     // source mask URL
-          map1CSVURL: `${character.framesPath}${n}.png`,     // frame n outline
-          map2CSVURL: `${character.maskCSVPrefix}${n}.csv`   // target mask URL
+          frame1URL: maskedBaseDataURL,                      //source png URL
+          map1CSVURL: `${character.maskCSVPrefix}1.csv`,     // source mask URL
+          frame2URL: targetFrameURL,     // target png URL
+          map2CSVURL: targetMapURL   // target mask URL
         });
   
         results.push({ n, dataURL });
