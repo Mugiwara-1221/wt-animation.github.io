@@ -279,18 +279,16 @@ export async function loadCSV(url) {
   }) {
     const results = [];
     const usageByMask = [];
-  
-    const srcIdx = character.sourceMaskIndex ?? 1;
-    const sourceMapURL = `${character.maskCSVPrefix}${srcIdx}.csv`;
+    const sourceMapURL = `${character.maskCSVPrefix}1.csv`;
   
     for (let n = 1; n <= character.frameCount; n++) {
       try {  
         const targetFrameURL = `${character.framesPath}${n}.png`;
         const targetMapURL   = `${character.maskCSVPrefix}${n}.csv`;
-  
+
         const { dataURL, usage } = await colorAFrameAdvanced({
           frame1URL: maskedBaseDataURL,                      //source png URL
-          map1CSVURL: `${character.maskCSVPrefix}1.csv`,     // source mask URL
+          map1CSVURL: sourceMapURL,     // source mask URL
           frame2URL: targetFrameURL,     // target png URL
           map2CSVURL: targetMapURL   // target mask URL
         });
