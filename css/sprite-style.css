@@ -56,12 +56,15 @@ h2 {
 /* Characters (injected) */
 .character {
   position: absolute;
-  cursor: pointer;
   user-select: none;
   -webkit-user-drag: none;
   transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
   image-rendering: crisp-edges; /* fallback for Firefox */
   transform-origin: center;
+
+  /* Disable browser’s box hit area, let JS router decide */
+  cursor: default !important;
+  pointer-events: none !important;
 
   /* Reasonable defaults if a story doesn't provide x/y/w */
   top: 0;
@@ -69,9 +72,8 @@ h2 {
   width: 18%;
 }
 
-/* Hover/lock styling */
-.character.hovered:not(.locked),
-.character:not(.locked):hover {
+/* Pixel-perfect hover effect — toggled by JS adding .hovered */
+.character.hovered:not(.locked) {
   transform: scale(1.12);
   filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
 }
@@ -149,4 +151,16 @@ h2 {
 .character:focus-visible {
   outline: 3px solid #BADA55;
   outline-offset: 3px;
+}
+
+/* Temporarily disabled character: not clickable, looks inactive */
+.character.disabled {
+  opacity: 1;
+  filter: none;
+}
+
+/* Make sure disabled never shows the hover effect */
+.character.disabled.hovered {
+  transform: none;
+  filter: none;
 }
