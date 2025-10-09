@@ -4,9 +4,13 @@ from uuid import uuid4
 app = FastAPI()
 sessions = {}
 
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
+
 @app.post("/session")
 def create_session():
-    sid =str(uuid4())
+    sid =str(uuid4())[:6]
     sessions[sid] = {"users": [], "story": None}
     return {"session_id": sid}
 
