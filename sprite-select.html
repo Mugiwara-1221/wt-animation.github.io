@@ -92,10 +92,10 @@
       //   images/backgrounds/<storyId>/background2.png
       //   ...
       // Tries numbered names first, then background.png
-      const bgBase = `stories/${storyId}`;
+      const bgBase = `images/backgrounds/${storyId}`;
       const bgCandidates = [
-        manifest.background,                        // explicit override from JSON (optional)
-        `${bgBase}/slide${slide}.png`,  
+        manifest.background,                     
+        `${bgBase}/background.png`,  //all character selection screen should used "background.pngs"
         `${bgBase}/slide-${slide}.png`,         
       ].filter(Boolean);
       setBackground(bgCandidates);
