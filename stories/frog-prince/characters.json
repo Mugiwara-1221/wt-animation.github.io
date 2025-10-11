@@ -1,0 +1,12 @@
+
+{
+  "background": "images/backgrounds/frog-prince/background.png",
+  "characters": [
+    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/frog-prince/hare.png" },
+    { "id": "tortoise", "name": "Tortoise", "sprite": "images/sprites/frog-prince/turtle.png"},
+    { "id": "bear",     "name": "Bear",     "sprite": "images/sprites/frog-prince/bear.png" },
+    { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/frog-prince/squirrel.png" },
+    { "id": "bird1",    "name": "Bird 1",   "sprite": "images/sprites/frog-prince/bird1.png" },
+    { "id": "bird2",    "name": "Bird 2",   "sprite": "images/sprites/frog-prince/bird2.png" }
+  ]
+}

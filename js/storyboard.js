@@ -1,37 +1,31 @@
-// js/storyboard.js — PNG frame animation + optional GIF/static characters
+// js/storyboard.js — PNG frame animation (no static/GIF fallbacks)
 
 // --- Query & context (must be first) ---
 const qs  = new URLSearchParams(location.search);
 const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
 
-// story id (keep fallback logic)
+// story id (keep fallback logic, normalized with dashes)
 const storyId = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
 
 // read slide from URL (0-based for storyboard); else from ctx (usually 1-based)
 const requested = Number(qs.get("slide"));
 const fromCtx   = Number(ctx.slide);
 let initialSlide = 0;
-
-if (!Number.isNaN(requested)) {
-  initialSlide = Math.max(0, requested);
-} else if (!Number.isNaN(fromCtx)) {
-  initialSlide = Math.max(0, fromCtx - 1); // convert 1-based → 0-based
-}
+if (!Number.isNaN(requested)) initialSlide = Math.max(0, requested);
+else if (!Number.isNaN(fromCtx)) initialSlide = Math.max(0, fromCtx - 1);
 
 // selected character (optional)
 const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
-console.log(selectedChar);
 
-// storyIDs → repo folders (for masks/frames)
+// storyIDs → repo folders (for frames)
 const STORY_FOLDER_MAP = new Map([
-  ["tortoise-hare", "tortoise_and_the_hare"],
+  ["tortoise-hare", "tortoise-hare"],
   ["lion-mouse",    "lion_and_the_mouse"],
   ["little-ducks",  "5_little_ducks"],
 ]);
-
 function resolveStoryFolder(id) {
   const dash = (id || "").replace(/_/g, "-");
-  return STORY_FOLDER_MAP.get(dash) || dash; // fallback to dashed id
+  return STORY_FOLDER_MAP.get(dash) || dash;
 }
 const storyFolder = resolveStoryFolder(storyId);
 
@@ -40,28 +34,14 @@ const scene = document.getElementById("scene");
 
 // caches
 const framesCache   = new Map(); // key -> [Image...]
-const maskMatCache  = new Map(); // key -> { mats, W, H, prefix }
-const maskBmpCache  = new Map(); // key -> ImageBitmap
 const loops         = new Set();
-
-// colored overlays store (per story/char/slide)
-const OVERLAY_KEY = `coloredFrames:${storyFolder}:${selectedChar}`;
-let coloredBySlide = {};
-try { coloredBySlide = JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch {}
-
-const legacySingle  = localStorage.getItem("coloredCharacter") || null;
-let   legacyFrames  = null;
-try {
-  const arr = JSON.parse(localStorage.getItem("coloredCharacterFrames") || "null");
-  if (Array.isArray(arr) && arr.length) legacyFrames = arr;
-} catch {}
 
 let manifest = null;
 let cur = 0;
 
 const pct = n => `${n}%`;
 function slideNoFromPath(p){
-  const m = /slide(\d+)\.png/i.exec(p||"");
+  const m = /slide(\d+)\.png/i.exec(p || "");
   return m ? parseInt(m[1],10) : null;
 }
 
@@ -85,9 +65,6 @@ function loadImage(src){
     im.src = src;
   });
 }
-async function urlExists(url){
-  try{ const r = await fetch(url,{cache:"no-store"}); return r.ok; }catch{ return false; }
-}
 
 function fitCanvasToCSS(cvs){
   const r = cvs.getBoundingClientRect();
@@ -100,111 +77,40 @@ function fitCanvasToCSS(cvs){
   return ctx;
 }
 
-// --- CSV → mask helpers (scaled to canvas size) ---
-async function loadCSVMatrix(url){
-  const r = await fetch(url, { cache:"no-store" });
-  if (!r.ok) throw new Error("Mask 404 " + url);
-  const txt = await r.text();
-  return txt.trim().split(/\r?\n/).map(r => r.split(",").map(v=>+v));
-}
-async function matrixToMaskBitmapScaled(mat, srcW, srcH, cssW, cssH){
-  const offSrc = new OffscreenCanvas(srcW, srcH);
-  const cSrc   = offSrc.getContext("2d", { willReadFrequently:true });
-  const img = cSrc.createImageData(srcW, srcH);
-  let k = 0;
-  for (let y=0; y<srcH; y++){
-    const row = mat[y];
-    for (let x=0; x<srcW; x++){
-      const a = row?.[x] ? 255 : 0;
-      img.data[k++] = 255; img.data[k++] = 255; img.data[k++] = 255; img.data[k++] = a;
-    }
-  }
-  cSrc.putImageData(img, 0, 0);
-  console.log("mask src", srcW, srcH, "→ target", cssW, cssH);
-
-  const offTgt = new OffscreenCanvas(Math.max(1, Math.round(cssW)), Math.max(1, Math.round(cssH)));
-  const cTgt = offTgt.getContext("2d");
-  cTgt.imageSmoothingEnabled = false;
-  cTgt.drawImage(offSrc, 0, 0, offTgt.width, offTgt.height);
-  return offTgt.transferToImageBitmap();
-}
-
-/* ------------- Mount helpers for .gif and static images ---------------- */
-function mountGif(host, cfg){
-  const { id, x, y, w, h, z=1 } = cfg;
-  const img = document.createElement("img");
-  img.src = cfg.framesPath;
-  img.alt = id || "";
-  img.className = `character ${id||""}`;
-  Object.assign(img.style, {
-    position: "absolute",
-    left: pct(x), top: pct(y),
-    width: pct(w),
-    height: (h != null ? pct(h) : "auto"),
-    zIndex: String(z),
-    pointerEvents: "none"
-  });
-  host.appendChild(img);
-  const stop = () => { try { img.remove(); } catch {} };
-  loops.add(stop);
-}
-function mountStaticImage(host, cfg){
-  const { id, x, y, w, h, z=1 } = cfg;
-  const img = document.createElement("img");
-  img.src = cfg.framesPath;
-  img.alt = id || "";
-  img.className = `character ${id||""}`;
-  Object.assign(img.style, {
-    position: "absolute",
-    left: pct(x), top: pct(y),
-    width: pct(w),
-    height: (h != null ? pct(h) : "auto"),
-    zIndex: String(z),
-    pointerEvents: "none"
-  });
-  host.appendChild(img);
-  const stop = () => { try { img.remove(); } catch {} };
-  loops.add(stop);
-}
-
-/* ----------------- PNG stack (existing behavior) ----------------- */
+/* ----------------- PNG stack loader ----------------- */
 async function getFrames(prefix, count) {
   const key = `${prefix}|${count}`;
-  const parts = prefix.split("/");
-  //console.log(parts);
   if (framesCache.has(key)) return framesCache.get(key);
-  // 🐢🐭🦆 special‑case: single‑frame characters
-  if (["tortoise", "mouse", "mama_duck"].includes(parts[5])) {
-    const img = await loadImage(`${prefix}1.png`); // returns an HTMLImageElement
-    const images = [img];                          // wrap in array
-    framesCache.set(key, images);
-    return images;
-  }
-  // 🎞 multi‑frame characters
-  const images = await Promise.all(
-    Array.from({ length: count }, (_, i) =>
-      loadImage(`${prefix}${i + 1}.png`)
-    )
+
+  // Try to load 1..count; ignore any 404s so we don't crash mid-lesson
+  const loaders = Array.from({ length: count }, (_, i) =>
+    loadImage(`${prefix}${i + 1}.png`).catch(() => null)
   );
+  const images = (await Promise.all(loaders)).filter(Boolean);
+  if (!images.length) {
+    console.warn("[storyboard] no frames loaded for", prefix);
+  }
   framesCache.set(key, images);
   return images;
 }
 
-async function getMasksForSlide(charId, slideNo){
-  const prefix = `images/frames/${storyFolder}/frame${slideNo}/${charId}/${charId}_mask_`;
-  const key = `${prefix}|4`;
-  if (maskMatCache.has(key)) return maskMatCache.get(key);
-
-  const mats = await Promise.all([1,2,3,4].map(i => loadCSVMatrix(`${prefix}${i}.csv`)));
-  const H = mats[0].length, W = mats[0][0].length;
-  const out = { mats, W, H, prefix };
-  maskMatCache.set(key, out);
-  return out;
+/* ---------- Read painted frames saved by canvas (chronological) ---------- */
+function getPaintedFrames(storyDash, slide1, charId) {
+  const key = `sbFrames:${storyDash}:${slide1}:${charId}`;
+  try {
+    const obj = JSON.parse(localStorage.getItem(key) || "null");
+    if (obj && Array.isArray(obj.frames) && obj.frames.length) {
+      return obj.frames; // data URLs or blob URLs already in order 1..N
+    }
+  } catch {}
+  return null;
 }
 
 /* ----------------- Character placement ----------------- */
 async function placeCharacter(cfg, slideNo){
-  const { id, x, y, w, h, z=1, fps=4 } = cfg;
+  const { id, x, y, w, h, z = 1 } = cfg;
+  const frameCount = cfg.frameCount || 4;
+  const fps        = cfg.fps ?? 6;
 
   const host = (()=>{
     let h = document.getElementById("charHost");
@@ -217,17 +123,7 @@ async function placeCharacter(cfg, slideNo){
     return h;
   })();
 
-  const src = (cfg.framesPath || "").trim();
-  if (src && /\.gif(\?.*)?$/i.test(src)){
-    mountGif(host, cfg);
-    return;
-  }
-  if (src && /\.\s*(png|jpe?g|webp|svg|bmp|tiff?)(\?.*)?$/i.test(src)){
-    mountStaticImage(host, cfg);
-    return;
-  }
-
-  const framesPrefix = cfg.framesPath ||
+  const framesPrefix = (cfg.framesPath && cfg.framesPath.trim()) ||
     `images/frames/${storyFolder}/frame${slideNo}/${id}/${id}`;
 
   const cvs = document.createElement("canvas");
@@ -246,36 +142,29 @@ async function placeCharacter(cfg, slideNo){
   ro.observe(cvs);
 
   try{
-    const baseFrames = await getFrames(framesPrefix, cfg.frameCount || 4);
+    // 1) Prefer painted frames for the selected character on this slide
+    let baseFrames;
+    const paintedURLs = (id.toLowerCase() === selectedChar)
+      ? getPaintedFrames(storyId, slideNo, id)
+      : null;
 
-    let overlays = null;
-    if (id === selectedChar){
-      const stored = coloredBySlide[String(slideNo)];
-      if (Array.isArray(stored) && stored.length){
-        overlays = await Promise.all(stored.map(loadImage));
-      } else if (Array.isArray(legacyFrames) && legacyFrames.length){
-        overlays = await Promise.all(legacyFrames.slice(0, baseFrames.length).map(loadImage));
-      } else if (legacySingle){
-        overlays = await buildOverlaysForSlideFromSingle(legacySingle, slideNo, id, cvs);
-      }
+    if (paintedURLs) {
+      baseFrames = await Promise.all(paintedURLs.map(loadImage));
+    } else {
+      // 2) Fallback to repo frames
+      baseFrames = await getFrames(framesPrefix, frameCount);
     }
 
     function draw(ix) {
       const r = cvs.getBoundingClientRect();
       ctx.clearRect(0, 0, r.width, r.height);
-      if (overlays && overlays.length > 0) {
-        const ov = overlays[ix % overlays.length];
-        if (ov) ctx.drawImage(ov, 0, 0, r.width, r.height);
-      }
       if (baseFrames && baseFrames.length > 0) {
-        const base = baseFrames[ix % baseFrames.length];
-        if (base) ctx.drawImage(base, 0, 0, r.width, r.height);
+        const frame = baseFrames[ix % baseFrames.length];
+        if (frame) ctx.drawImage(frame, 0, 0, r.width, r.height);
       }
     }
 
-    let i=0, last = performance.now(), raf=0, stop=false;
-    const frameMs = 1000 / Math.max(1, fps);
-    // draw function stays the same
+    // draw & animate if multiple frames and fps > 0
     draw(0);
     if (baseFrames.length > 1 && fps > 0) {
       let i = 0, last = performance.now(), raf = 0, stop = false;
@@ -296,7 +185,6 @@ async function placeCharacter(cfg, slideNo){
         ro.disconnect();
       });
     } else {
-      // static character, no animation loop needed
       loops.add(() => ro.disconnect());
     }
   }catch(e){
@@ -305,74 +193,20 @@ async function placeCharacter(cfg, slideNo){
   }
 }
 
-async function buildOverlaysForSlideFromSingle(coloredImg, slideNo, charId, cvs) {
-  const r = cvs.getBoundingClientRect();
-  const base = await loadImage(coloredImg);
-  const { mats, W, H, prefix } = await getMasksForSlide(charId, slideNo);
-
-  const overlays = [];
-  const singleFrameChars = ["tortoise", "mouse", "mama_duck"];
-  const isSingle = singleFrameChars.includes(charId.toLowerCase());
-  const frameCount = isSingle ? 1 : 4;
-
-  async function buildOverlayForFrame(i) {
-    const bmpKey = `${prefix}${i + 1}|${Math.round(r.width)}x${Math.round(r.height)}`;
-    console.log(bmpKey)
-    let bmp = maskBmpCache.get(bmpKey);
-    if (!bmp) {
-      bmp = await matrixToMaskBitmapScaled(mats[i], W, H, r.width, r.height);
-      maskBmpCache.set(bmpKey, bmp);
-    }
-
-    const off = document.createElement("canvas");
-    off.width = Math.round(r.width);
-    off.height = Math.round(r.height);
-    const cx = off.getContext("2d");
-    cx.imageSmoothingEnabled = false;
-
-    cx.drawImage(base, 0, 0, off.width, off.height);
-    cx.globalCompositeOperation = "destination-in";
-    cx.drawImage(bmp, 0, 0, off.width, off.height);
-    cx.globalCompositeOperation = "source-over";
-
-    const img = await loadImage(off.toDataURL());
-    overlays.push(img);
-  }
-  if (isSingle) {
-    await buildOverlayForFrame(0);
-  } else {
-    for (let i = 0; i < frameCount; i++) {
-      await buildOverlayForFrame(i);
-    }
-  }
-  return overlays;
-}
-
 /* ---------------- Manifest discovery ---------------- */
 async function discoverManifest(){
   const url = `stories/${storyId}/slides.json`;
-  console.log("[loadSlidesJson] Fetching URL:", url);
-
   const r = await fetch(url, { cache: "no-store" });
-  console.log(`[loadSlidesJson] Response status: ${r.status} ${r.statusText}`);
   if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-
   const txt = await r.text();
-  try {
-    const parsed = JSON.parse(txt);
-    console.log("[loadSlidesJson] Parsed JSON OK");
-    return parsed;
-  } catch(parseError) {
-    console.warn("[loadSlidesJson] JSON parse error:", parseError.message);
-    console.warn("[loadSlidesJson] Unable to parse slides.json from:", txt);
-    throw new Error("slides.json is invalid JSON");
-  }
+  try { return JSON.parse(txt); }
+  catch { throw new Error("slides.json is invalid JSON"); }
 }
 
 /* ---------------- Slide rendering ---------------- */
 async function showSlide(i){
   if (!manifest) return;
-  cur = Math.max(0, Math.min(i, manifest.slides.length-1));
+  cur = Math.max(0, Math.min(i, manifest.slides.length - 1));
   const s = manifest.slides[cur];
 
   // background
@@ -391,19 +225,17 @@ async function showSlide(i){
 
   const chars = Array.isArray(s.characters) ? s.characters : [];
   await Promise.allSettled(
-    chars.map(c => {
-      const id = c.id?.toLowerCase();
-      // 🐢🐭🦆 Example: static characters
-      const staticChars = ["tortoise", "mouse", "mama_duck"];
-      const frameCount = staticChars.includes(id) ? 1 : 4;
-      const fps = staticChars.includes(id) ? 0 : 4;
-      return placeCharacter(
-        { frameCount,
-          fps,
-          z: 1,
-          ...c },
-        slideNo);}));
-  
+    chars.map(c => placeCharacter(
+      {
+        frameCount: c.frameCount || 4,
+        fps:        c.fps ?? 6,
+        z:          1,
+        ...c
+      },
+      slideNo
+    ))
+  );
+
   // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
@@ -426,7 +258,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
     console.error("[storyboard] No slides discovered for", storyId);
     return;
   }
-  await showSlide(Math.min(initialSlide, manifest.slides.length-1));
+  await showSlide(Math.min(initialSlide, manifest.slides.length - 1));
 
   addEventListener("keydown", e=>{
     if (e.key === "ArrowRight") nextSlide();
