@@ -54,6 +54,7 @@ const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise-hare"],
   ["lion-mouse",    "lion-mouse"],
 ]);
+console.log("hello")
 
 /* Full-window canvases; sprite sits in a centered square */
 const SPRITE_BOX_SIZE = 600;
