@@ -1,4 +1,3 @@
-<!--
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,31 +8,31 @@
   <link rel="stylesheet" href="css/canvas.css" />
 </head>
 <body>
-  <!-- Toolboard (LEFT) – image buttons + sliders + save --
+  <!-- Toolboard (LEFT) – image buttons + sliders + save -->
   <nav id="toolboard" aria-label="Painting tools">
-    <!-- Color swatch (click opens native picker immediately) --
+    <!-- Color swatch (click opens native picker immediately) -->
     <label class="tool color-tool" title="Color">
       <input class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
       <span class="swatch" aria-hidden="true"></span>
     </label>
 
-    <!-- Smudge --
+    <!-- Smudge -->
     <button class="tool icon" id="btnSmudge" title="Smudge" data-tool="smudge">
       <img alt="" src="images/icons/smudge-icon.png">
     </button>
 
-    <!-- Eraser --
+    <!-- Eraser -->
     <button class="tool icon" id="btnEraser" title="Eraser" data-tool="erase">
       <img alt="" src="images/icons/eraser-icon.png">
     </button>
 
-    <!-- Brush (opens mini menu) --
+    <!-- Brush (opens mini menu) -->
     <button class="tool icon" id="btnBrush" title="Brush" data-tool="draw"
             aria-haspopup="true" aria-expanded="false" aria-controls="brushMenu">
       <img alt="" src="images/icons/brush-icon.png">
     </button>
 
-    <!-- Vertical sliders --
+    <!-- Vertical sliders -->
     <div class="slider-wrap">
       <div class="slider-label">Size</div>
       <input type="range" class="brush-size-slider vslider" min="1" max="100" value="18" aria-label="Brush size">
@@ -44,7 +43,7 @@
       <input type="range" class="opacity-slider vslider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity">
     </div>
 
-    <!-- Save dropdown --
+    <!-- Save dropdown -->
     <div class="save-wrap">
       <button id="saveBtn" class="tool save-btn" aria-expanded="false" aria-controls="saveOptions">Save</button>
       <div id="saveOptions" class="save-options hidden" role="menu">
@@ -54,141 +53,40 @@
     </div>
   </nav>
 
-  <!-- Brush mini menu --
+  <!-- Brush mini menu -->
   <div id="brushMenu" class="menu hidden" role="menu" aria-label="Brush types">
     <button class="brush-choice" data-brush="paint"  role="menuitem"><span class="chip"></span> Paintbrush</button>
     <button class="brush-choice" data-brush="pencil" role="menuitem"><span class="chip"></span> Pencil</button>
     <button class="brush-choice" data-brush="marker" role="menuitem"><span class="chip"></span> Marker</button>
   </div>
 
-  <!-- Canvas Layers --
-  <canvas id="bgCanvas"></canvas>
-  <canvas id="drawCanvas"></canvas>
-  <canvas id="spriteCanvas"></canvas>
-
-  <!-- Mini Preview --
-  <div id="previewHUD" class="preview-hud">
-    <canvas id="previewCanvas" width="320" height="200"></canvas>
-  </div>
-
-  <!-- Slide nav --
-  <div class="nav-floating" aria-label="Slide navigation">
-    <button id="prevAppBtn" aria-label="Previous scene">◀</button>
-    <button id="nextAppBtn" aria-label="Next scene">▶</button>
-  </div>
-
-  <!-- Route guard --
-  <script type="module">
-    import { readCtx, nextURL } from './js/flow.js';
-    const ctx = readCtx();
-    if (!ctx.session) { location.replace('index.html'); throw 0; }
-    if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
-    if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
-    window.__flowCtx = ctx;
-  </script>
-
-  <!-- Logic --
-  <script type="module" src="js/azure-api.js"></script>
-  <script type="module" src="js/canvas_demo.js"></script>
-</body>
-</html>
--->
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Animation Canvas</title>
-  <link rel="stylesheet" href="css/canvas.css" />
-</head>
-<body>
-  <!-- Left navigation toggle button -->
-  <button class="toggleNavLeft" aria-label="Toggle tools panel"></button>
-
-  <!-- Sidebar Tools Panel -->
-  <!-- start open so tools are visible -->
-  <nav id="navLeft" class="open" aria-label="Drawing tools">
-    <div class="nav-content">
-      <span>Brush Type</span>
-      <select class="brush-type-select" aria-label="Brush type">
-        <option value="basic" selected>Basic</option>
-        <option value="soft">Soft</option>
-        <option value="marker">Marker</option>
-        <option value="water">Watercolor</option>
-      </select>
-    </div>
-
-    <div class="nav-content">
-      <span>Brush Size</span>
-      <input type="range" class="brush-size-slider" min="1" max="100" value="18" aria-label="Brush size" />
-    </div>
-
-    <div class="nav-content">
-      <span>Opacity</span>
-      <input type="range" class="opacity-slider" min="0" max="1" step="0.01" value="1" aria-label="Brush opacity" />
-    </div>
-
-    <div class="nav-content">
-      <span>Color</span>
-      <input class="pick-color" type="color" value="#2ad0ff" aria-label="Brush color" />
-    </div>
-
-    <div class="nav-content">
-      <button onclick="setTool('draw')">Brush</button>
-      <button onclick="setTool('erase')">Eraser</button>
-      <button onclick="undo()">Undo</button>
-      <button onclick="redo()">Redo</button>
-      <button onclick="clearCanvas()">Clear</button>
-      <button onclick="toggleSaveOptions()" aria-expanded="false" aria-controls="saveOptions">Save ▼</button>
-      <div id="saveOptions" class="save-options hidden" role="menu">
-        <button onclick="downloadImage()" role="menuitem">Download Image</button>
-        <button onclick="sendToStoryboard()" role="menuitem">Send to Storyboard</button>
-      </div>
-    </div>
-
-    <div class="nav-content">
-      <span>Zoom</span>
-      <button onclick="zoomIn()">+</button>
-      <button onclick="zoomOut()">-</button>
-    </div>
-  </nav>
-
   <!-- Canvas Layers -->
   <canvas id="bgCanvas"></canvas>
   <canvas id="drawCanvas"></canvas>
   <canvas id="spriteCanvas"></canvas>
 
-  <!-- Mini Live Preview (top-right) -->
+  <!-- Mini Preview -->
   <div id="previewHUD" class="preview-hud">
     <canvas id="previewCanvas" width="320" height="200"></canvas>
   </div>
 
-  <!-- Floating slide nav (bottom-right) -->
+  <!-- Slide nav -->
   <div class="nav-floating" aria-label="Slide navigation">
     <button id="prevAppBtn" aria-label="Previous scene">◀</button>
     <button id="nextAppBtn" aria-label="Next scene">▶</button>
   </div>
 
-  <!-- Route guard & pass-through context -->
+  <!-- Route guard -->
   <script type="module">
     import { readCtx, nextURL } from './js/flow.js';
     const ctx = readCtx();
     if (!ctx.session) { location.replace('index.html'); throw 0; }
     if (!ctx.story)   { location.replace(nextURL('story-select.html', ctx)); throw 0; }
-    // no grade gate here
     if (!ctx.char)    { location.replace(nextURL('sprite-select.html', ctx)); throw 0; }
     window.__flowCtx = ctx;
   </script>
 
-  <script type="module" src="js/azure-api.js"></script>
-  <script type="module" src="js/canvas_demo.js"></script>
+  <!-- Logic -->
+  <script type="module" src="js/canvas.js"></script>
 </body>
 </html>
--->
