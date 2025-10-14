@@ -21,20 +21,25 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
-const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
+//const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 // TODO: update blah blah blah @hidalgoerick
 
 createBtn?.addEventListener('click', async () => {
-  try {
-    const sessionCode = makeCode();
-    localStorage.setItem('sessionCode', sessionCode);
-    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
-    const url = nextURL('story-select.html', { session: sessionCode });
-    location.href = url;
-  } catch (e) {
-    alert('Failed to create session. ' + (e?.message || e));
-  }
+ try{
+  const res = await fetch('/session', {method: 'POST'});
+  if(!res.ok) throw new Error(`Server error: ${res.status}`);
+  const {session_id} = await res.json();
+  //console.log('Created session', session_id);
+
+  localStorage.setItem('sessionCode', session_id);
+  sessionCodeDisplay.textContent = `Session ID: ${session_id}`;
+
+  const url = nextURL('story-select.html', { session: session_id });
+  location.href = url;
+ } catch(e) {
+  alert('Failed to create session. ' + (e?.message || e));
+ }
 });
 
 joinBtn?.addEventListener('click', async () => {
@@ -56,6 +61,14 @@ joinBtn?.addEventListener('click', async () => {
   }
 
   try {
+    const res = await fetch(`/session/${code}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "Guest " + idCode })
+    });
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+    //console.log('Joined session', code, data);
     localStorage.setItem('sessionCode', code);
     localStorage.setItem('memberId', idCode);
     localStorage.setItem('deviceToken', deviceToken);
