@@ -2,7 +2,8 @@
   "name": "your-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "start": "vite preview"
   },
   "dependencies": {},
   "devDependencies": {
