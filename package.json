@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "vite build",
-    "start": "vite preview --host 0.0.0.0"
+    "start": "serve . -l 10000"
   },
   "dependencies": {
     "serve": "^14.2.5"
