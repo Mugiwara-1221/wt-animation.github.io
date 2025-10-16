@@ -51,6 +51,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "Hello from FastAPI on Render!"}
+
 @app.middleware("http")
 async def log_requests(request, call_next):
     print("Incoming:", request.method, request.url.path)
