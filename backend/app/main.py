@@ -96,17 +96,19 @@ async def join_session(sid: str, req: JoinRequest):
     return {"joined": True}
 
 @app.post("/session/{session_id}/lock")
-def lock_character(session_id: int, data: LockRequest):
+async def lock_character(session_id: int, data: LockRequest):
     if session_id not in session_locks:
         session_locks[session_id] = {}
-
     # Check if character is already locked
     if data.character in session_locks[session_id]:
         return {"error": "Character already locked"}, 409
-
     # Lock character to user
     session_locks[session_id][data.character] = data.username
-    return {"locked": True, "character": data.character, "username": data.username}
+    await manager.broadcast(session_id, {"type": "locks", "locks": session_locks[session_id]
+    })
+
+    return {"success": True, "character": data.character, "username": data.username, "locks": session_locks[session_id]
+    }
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
