@@ -3,7 +3,7 @@
 import { readCtx, writeCtx, nextURL } from "./flow.js";
 
 const sid = localStorage.getItem("sessionCode");
-const ws = new WebSocket(`ws://${location.host}/ws/${encodeURIComponent(sid)}`);
+const ws = new WebSocket(`wss://wt-animation-github-io.onrender.com/ws/${sessionId}`);
 const messagesDiv = document.getElementById("messages");
 ws.onopen = () => {
   console.log("Connected to session", sid);
