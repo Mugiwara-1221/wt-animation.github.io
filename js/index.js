@@ -25,9 +25,14 @@ const deviceToken = getDeviceToken();
 
 // TODO: update blah blah blah @hidalgoerick
 
-createBtn?.addEventListener('click', async () => {
+/*createBtn?.addEventListener('click', async () => {
  try{
-  const res = await fetch('/session', {method: 'POST'});
+  //const res = await fetch('/session', {method: 'POST'});
+  fetch('https://wt-animation-github-io.onrender.com/session/123/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'Guest 1' })
+  });
   if(!res.ok) throw new Error(`Server error: ${res.status}`);
   const {session_id} = await res.json();
   //console.log('Created session', session_id);
@@ -40,6 +45,27 @@ createBtn?.addEventListener('click', async () => {
  } catch(e) {
   alert('Failed to create session. ' + (e?.message || e));
  }
+});*/
+
+createBtn?.addEventListener('click', async () => {
+  try {
+    const res = await fetch('https://wt-animation-github-io.onrender.com/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'Guest 1' })
+    });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const { session_id } = await res.json();
+
+    localStorage.setItem('sessionCode', session_id);
+    sessionCodeDisplay.textContent = `Session ID: ${session_id}`;
+
+    const url = nextURL('story-select.html', { session: session_id });
+    location.href = url;
+  } catch (e) {
+    alert('Failed to create session. ' + (e?.message || e));
+  }
 });
 
 joinBtn?.addEventListener('click', async () => {
