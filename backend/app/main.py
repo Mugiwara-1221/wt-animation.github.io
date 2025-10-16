@@ -107,14 +107,17 @@ async def lock_character(session_id: int, data: LockRequest):
     await manager.broadcast(session_id, {"type": "locks", "locks": session_locks[session_id]
     })
 
-    return {"success": True, "character": data.character, "username": data.username, "locks": session_locks[session_id]
-    }
+    return {"success": True, "character": data.character, "username": data.username, "locks": session_locks[session_id]}
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
     print(f"[WS] Incoming connection for session {sid}")
     await manager.connect(sid, websocket)
     print(f"[WS] Connected: {sid}")
+    await websocket.send_json({
+        "type": "locks",
+        "locks": session_locks.get(sid, {})
+    })
     try:
         while True:
             msg = await websocket.receive_text()
