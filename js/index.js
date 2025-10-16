@@ -87,7 +87,7 @@ joinBtn?.addEventListener('click', async () => {
   }
 
   try {
-    const res = await fetch(`/session/${code}/join`, {
+    const res = await fetch(`https://wt-animation-github-io.onrender.com/session/${code}/join`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: "Guest " + idCode })
