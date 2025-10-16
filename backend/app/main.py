@@ -10,8 +10,13 @@ import json
 app = FastAPI()
 sessions: Dict[str, Dict] = {}
 sessions_data: Dict[str, Dict] = {}
+session_locks = {}
 
 class JoinRequest(BaseModel):
+    username: str
+
+class LockRequest(BaseModel):
+    character: str
     username: str
 
 class ConnectionManager:
@@ -45,15 +50,16 @@ manager = ConnectionManager()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # or ["http://127.0.0.1:5500"]
+    #allow_origins=["https://mugiwara-1221.github.io/wt-animation.github.io/"],   # or ["http://127.0.0.1:5500"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {"message": "Hello from FastAPI on Render!"}
+# @app.get("/")
+# async def root():
+#     return {"message": "Hello from FastAPI on Render!"}
 
 @app.middleware("http")
 async def log_requests(request, call_next):
@@ -69,6 +75,14 @@ async def create_session():
     sessions[sid] = {"users": [], "story": None}
     return {"session_id": sid}
 
+@app.get("/session/{session_id}")
+def get_session(session_id: str):
+    print(session_id)
+    session = sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
 @app.post("/session/{sid}/join")
 async def join_session(sid: str, req: JoinRequest):
     if sid not in sessions:
@@ -81,6 +95,19 @@ async def join_session(sid: str, req: JoinRequest):
         "message": f"{req.username} has joined the session."
     })
     return {"joined": True}
+
+@app.post("/session/{session_id}/lock")
+def lock_character(session_id: int, data: LockRequest):
+    if session_id not in session_locks:
+        session_locks[session_id] = {}
+
+    # Check if character is already locked
+    if data.character in session_locks[session_id]:
+        return {"error": "Character already locked"}, 409
+
+    # Lock character to user
+    session_locks[session_id][data.character] = data.username
+    return {"locked": True, "character": data.character, "username": data.username}
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
