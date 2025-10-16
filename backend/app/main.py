@@ -77,7 +77,6 @@ async def create_session():
 
 @app.get("/session/{session_id}")
 def get_session(session_id: str):
-    print(session_id)
     session = sessions.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
