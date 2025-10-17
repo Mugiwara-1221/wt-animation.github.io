@@ -1,12 +1,5 @@
 "use strict";
 
-/* ---------- Optional Azure submit (safe if not present) ---------- */
-let submitDrawing = async () => {};
-try {
-  const m = await import("./azure-api.js");
-  submitDrawing = m.submitDrawing || submitDrawing;
-} catch {}
-
 /* ---------- Canvas setup ---------- */
 const bgCanvas     = document.getElementById("bgCanvas");
 const drawCanvas   = document.getElementById("drawCanvas");
@@ -187,21 +180,35 @@ function redrawVisible(){
   }
 }
 
-/* Look for outline frames in a few reasonable locations */
 async function preloadOutlinesForSlide(slide1) {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-  const candidatesFor = (n) => [
-    `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}${n}.png`,
-    `images/frames/${storyFolder}/frame${slide1}/${selectedChar}${n}.png`,
-    `images/frames/${selectedChar}/frame${slide1}/${selectedChar}${n}.png`,
-  ];
+
+  // 1) wipe all old references so nothing stale can be drawn
+  for (let n = 1; n <= TOTAL_FRAMES; n++) outlineImgs[n] = null;
+
+  // 2) helpers that generate the *per-slide* path for frame n
+  const perSlide    = (n) => `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}${n}.png`;
+  const perSlideAlt = (n) => `images/frames/${storyFolder}/frame${slide1}/${selectedChar}${n}.png`;
+
   for (let n = 1; n <= TOTAL_FRAMES; n++) {
-    outlineImgs[n] = null;
-    for (const u of candidatesFor(n)) {
-      if (await urlExists(u)) { outlineImgs[n] = await loadImageCached(u); break; }
+    const candidates = [perSlide(n), perSlideAlt(n)];
+    for (const raw of candidates) {
+      // cache-buster to defeat <img> HTTP cache
+      const url = `${raw}?v=${Date.now()}`;
+      try {
+        if (await urlExists(raw)) {
+          outlineImgs[n] = await loadImageCached(url);
+          console.log(`[preload] slide ${slide1} frame ${n} ->`, raw);
+          break;
+        }
+      } catch {}
+    }
+    if (!outlineImgs[n]) {
+      console.warn("[preload] Missing outline", { slide1, frame: n, tried: candidates });
     }
   }
 }
+
 
 function drawOutlineForFrame(n) {
   sctx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
@@ -591,10 +598,15 @@ async function gotoAppearance(n){
 
   const slide1 = appearances[appearCursor] + 1;
   await preloadOutlinesForSlide(slide1);
+
+  // throw away masks from the previous slide
+  maskLayers.fill(null);
+
   layoutAndRedraw();
   restoreFramePaint(currentFrame);
   schedulePreview();
 }
+
 function nextAppearance(){ gotoAppearance(appearCursor+1); }
 function prevAppearance(){ gotoAppearance(appearCursor-1); }
 prevAppBtn?.addEventListener("click", prevAppearance);
@@ -642,7 +654,7 @@ async function sendToStoryboard() {
 
     // stash for storyboard (1..4 loop)
     const sbKey = `sbFrames:${selectedStory || "tortoise-hare"}:${slide1}:${selectedChar}`;
-    localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 6 }));
+    localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 4 }));
 
     // Navigate
     const q = new URLSearchParams({ story: selectedStory, slide: String(slide1), char: selectedChar });
