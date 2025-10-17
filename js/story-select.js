@@ -2,6 +2,45 @@
 // js/story-select.js — show all stories by default; filter by grade; use manifest if available
 import { readCtx, writeCtx, nextURL } from "./flow.js";
 
+const sid = localStorage.getItem("sessionCode");
+const ws = new WebSocket(`wss://wt-animation-github-io.onrender.com/ws/${sid}`);
+const messagesDiv = document.getElementById("messages");
+ws.onopen = () => {
+  console.log("Connected to session", sid);
+};
+ws.onmessage = (event) => {
+  console.log("Message received:", event.data);
+  try {
+    const data = JSON.parse(event.data);
+    if (data.type === "system") {
+      showMessage(data.message);
+    }
+    if (data.type === "user_list") {
+      // optional: update a user list UI
+    }
+  } catch {
+    // fallback if it's plain text
+    showMessage(event.data);
+  }
+};
+function showMessage(msg) {
+  const popup = document.createElement("div");
+  console.log("Showing message:", msg);
+  popup.textContent = msg;
+  popup.className = "popup-message";
+  document.body.appendChild(popup);
+  // Trigger fade-in
+  requestAnimationFrame(() => {
+    popup.classList.add("visible");
+  });
+  // Remove after 3 seconds
+  setTimeout(() => {
+    popup.classList.remove("visible");
+    popup.addEventListener("transitionend", () => popup.remove());
+  }, 3000);
+}
+
+
 // Try common locations for the manifest (root & relative)
 const MANIFEST_CANDIDATES = [
   //"/stories/config/manifest.json",

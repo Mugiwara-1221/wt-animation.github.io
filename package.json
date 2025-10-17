@@ -2,9 +2,12 @@
   "name": "your-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "start": "serve . -l 10000"
   },
-  "dependencies": {},
+  "dependencies": {
+    "serve": "^14.2.5"
+  },
   "devDependencies": {
     "vite": "^4.0.0"
   }

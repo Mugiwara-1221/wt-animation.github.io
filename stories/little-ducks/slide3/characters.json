@@ -1,0 +1,9 @@
+{
+  "background": "images/backgrounds/little-ducks/background3.png",
+  "characters": [
+    { "id": "lead_duck",     "name": "Lead Duck",     "sprite": "images/sprites/little-ducks/slide3/lead_duck.png", "x": 28, "y": 55, "w": 28},
+    { "id": "mama_duck",     "name": "Mama Duck",     "sprite": "images/sprites/little-ducks/slide3/mama_duck.png", "x": 11.7, "y": 45, "w": 30},
+    { "id": "sleepy_duck",   "name": "Sleepy Duck",   "sprite": "images/sprites/little-ducks/slide3/sleepy_duck.png", "x": 38, "y": 55, "w": 28}, 
+    { "id": "waving_duck",   "name": "Waving Duck",   "sprite": "images/sprites/little-ducks/slide3/waving_duck.png", "x": 48, "y": 55, "w": 28}
+  ]
+}

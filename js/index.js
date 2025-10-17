@@ -21,16 +21,47 @@ function getDeviceToken() {
 }
 const deviceToken = getDeviceToken();
 
-const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
+//const makeCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 // TODO: update blah blah blah @hidalgoerick
 
+/*createBtn?.addEventListener('click', async () => {
+ try{
+  //const res = await fetch('/session', {method: 'POST'});
+  fetch('https://wt-animation-github-io.onrender.com/session/123/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'Guest 1' })
+  });
+  if(!res.ok) throw new Error(`Server error: ${res.status}`);
+  const {session_id} = await res.json();
+  //console.log('Created session', session_id);
+
+  localStorage.setItem('sessionCode', session_id);
+  sessionCodeDisplay.textContent = `Session ID: ${session_id}`;
+
+  const url = nextURL('story-select.html', { session: session_id });
+  location.href = url;
+ } catch(e) {
+  alert('Failed to create session. ' + (e?.message || e));
+ }
+});*/
+
 createBtn?.addEventListener('click', async () => {
   try {
-    const sessionCode = makeCode();
-    localStorage.setItem('sessionCode', sessionCode);
-    sessionCodeDisplay.textContent = `Session ID: ${sessionCode}`;
-    const url = nextURL('story-select.html', { session: sessionCode });
+    const res = await fetch('https://wt-animation-github-io.onrender.com/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'Guest 1' })
+    });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const { session_id } = await res.json();
+
+    localStorage.setItem('sessionCode', session_id);
+    sessionCodeDisplay.textContent = `Session ID: ${session_id}`;
+
+    const url = nextURL('story-select.html', { session: session_id });
     location.href = url;
   } catch (e) {
     alert('Failed to create session. ' + (e?.message || e));
@@ -51,11 +82,19 @@ joinBtn?.addEventListener('click', async () => {
     return;
   }
   if (!/^[1-6]$/.test(idCode)) {
-    joinError.textContent = 'Enter a valid Member ID (1–6).';
+    joinError.textContent = 'ID (1–6).';
     return;
   }
 
   try {
+    const res = await fetch(`https://wt-animation-github-io.onrender.com/session/${code}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "Guest " + idCode })
+    });
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+    //console.log('Joined session', code, data);
     localStorage.setItem('sessionCode', code);
     localStorage.setItem('memberId', idCode);
     localStorage.setItem('deviceToken', deviceToken);
