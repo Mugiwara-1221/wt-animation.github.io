@@ -3,6 +3,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <!-- resolves microsoft edge tools error -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
   <title>Storyboard</title>
   <link rel="stylesheet" href="css/storyboard.css" />
   <style>
@@ -42,7 +44,7 @@
     window.__flowCtx = ctx;
   </script>
 
-  <!-- Storyboard runtime (loads stories/<id>/slides.json and animates per slide) -->
+  <!-- Storyboard runtime (loads stories/<id>/slides.json and animates per slide)-->
   <script type="module" src="js/storyboard.js"></script>
 
   <!-- Wire buttons after runtime exposes next/prev & slide state -->

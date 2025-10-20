@@ -1,4 +1,4 @@
-// js/storyboard.js — PNG frame animation (no static/GIF fallbacks)
+// js/storyboard.js — colored PNG frame animation
 
 // --- Query & context (must be first) ---
 const qs  = new URLSearchParams(location.search);
@@ -20,21 +20,51 @@ const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter"
 // storyIDs → repo folders (for frames)
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise-hare"],
-  ["lion-mouse",    "lion_and_the_mouse"],
-  ["little-ducks",  "5_little_ducks"],
+  ["lion-mouse",    "lion-mouse"],
+  ["little-ducks",  "little-ducks"],
+  ["prince-pauper", "prince-pauper"],
+  ["frog-prince", "frog-prince"],
+  ["old-mcdonald", "old-mcdonald"],
 ]);
+
 function resolveStoryFolder(id) {
   const dash = (id || "").replace(/_/g, "-");
   return STORY_FOLDER_MAP.get(dash) || dash;
 }
+
 const storyFolder = resolveStoryFolder(storyId);
 
 // DOM
 const scene = document.getElementById("scene");
 
-// caches
-const framesCache   = new Map(); // key -> [Image...]
-const loops         = new Set();
+// caches & animation loop registry
+const framesCache = new Map();
+const loops       = new Set(); 
+
+async function getFrames(prefix, count){
+  const key = `${prefix}|${count}`;
+  if (framesCache.has(key)) return framesCache.get(key);
+
+  // cache-buster so slide1/tortoise1.png and slide2/tortoise1.png never collide
+  const now = Date.now();
+  const urls = Array.from({length: count}, (_, i) =>
+    `${prefix}${i+1}.png?v=${now}`
+  );
+
+  const loaders = urls.map(u =>
+    loadImage(u).catch(() => null)
+  );
+
+  const images = (await Promise.all(loaders)).filter(Boolean);
+  if (!images.length){
+    console.warn("[storyboard] no frames loaded for", urls);
+  } else {
+    console.log("[storyboard] frames:", urls);
+  }
+
+  framesCache.set(key, images);
+  return images;
+}
 
 let manifest = null;
 let cur = 0;
@@ -75,23 +105,6 @@ function fitCanvasToCSS(cvs){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.imageSmoothingEnabled = false;
   return ctx;
-}
-
-/* ----------------- PNG stack loader ----------------- */
-async function getFrames(prefix, count) {
-  const key = `${prefix}|${count}`;
-  if (framesCache.has(key)) return framesCache.get(key);
-
-  // Try to load 1..count; ignore any 404s so we don't crash mid-lesson
-  const loaders = Array.from({ length: count }, (_, i) =>
-    loadImage(`${prefix}${i + 1}.png`).catch(() => null)
-  );
-  const images = (await Promise.all(loaders)).filter(Boolean);
-  if (!images.length) {
-    console.warn("[storyboard] no frames loaded for", prefix);
-  }
-  framesCache.set(key, images);
-  return images;
 }
 
 /* ---------- Read painted frames saved by canvas (chronological) ---------- */
@@ -207,6 +220,10 @@ async function discoverManifest(){
 async function showSlide(i){
   if (!manifest) return;
   cur = Math.max(0, Math.min(i, manifest.slides.length - 1));
+
+  // drop any previously cached frame bitmaps
+  framesCache.clear();
+
   const s = manifest.slides[cur];
 
   // background
