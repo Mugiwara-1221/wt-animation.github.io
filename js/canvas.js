@@ -1,5 +1,10 @@
 "use strict";
 
+const API_BASE =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://wt-animation-github-io.onrender.com";
+
 /* ---------- Canvas setup ---------- */
 const bgCanvas     = document.getElementById("bgCanvas");
 const drawCanvas   = document.getElementById("drawCanvas");
@@ -47,7 +52,6 @@ const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise-hare"],
   ["lion-mouse",    "lion-mouse"],
 ]);
-console.log("hello")
 
 /* Full-window canvases; sprite sits in a centered square */
 const SPRITE_BOX_SIZE = 600;
@@ -59,6 +63,7 @@ const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
 const sessionCode   =  urlParams.get("session") || localStorage.getItem("sessionCode")   || "";
 const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
+const userId = localStorage.getItem("memberId");
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
@@ -619,7 +624,7 @@ nextAppBtn?.addEventListener("click", nextAppearance);
 async function sendToStoryboard() {
   try {
     saveCurrentFramePaint(); // persist current frame before exporting
-    const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+    const slide1 = appearances.length ? appearances[appearCursor] : 1;
 
     const frames = [];
     const box = getSpriteBox();
