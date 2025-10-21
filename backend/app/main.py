@@ -8,10 +8,9 @@ import os
 import json
 import asyncio
 
+p = "123456@windtree"
 app = FastAPI()
 sessions: Dict[str, Dict] = {}
-sessions_data: Dict[str, Dict] = {}
-session_locks = {}
 
 class JoinRequest(BaseModel):
     username: str
@@ -19,6 +18,12 @@ class JoinRequest(BaseModel):
 class LockRequest(BaseModel):
     character: str
     user_id: int
+
+class SaveFramesRequest(BaseModel):
+    user_id: int
+    character: str
+    frames: List[str]
+    fps: int
 
 class ConnectionManager:
     def __init__(self):
@@ -41,7 +46,6 @@ class ConnectionManager:
         data = payload if isinstance(payload, str) else json.dumps(payload)
         dead = []
         sockets = self.active.get(sid, [])
-        print(sockets)
         for ws in sockets:
             try:
                 await ws.send_text(data)
@@ -77,8 +81,10 @@ def generate_unique_sid(length=6):
 async def create_session():
     sid = generate_unique_sid()
     sessions[sid] = {
-        "users": [{"id": 1, "label": "Guest 1"}],
-        "locks": {}
+        "users": {1: {"id": 1, "label": "Guest 1"}},  # use dict keyed by user_id for easier lookups
+        "locks": {},       # character → user_id
+        "drawings": {},    # character → {user_id, frames, fps}
+        "data": {}         # extra metadata (story, grade, etc.)
     }
     return {"session_id": sid, "user_id":1, "label": "Guest 1"}
 
@@ -93,77 +99,148 @@ def get_session(session_id: str):
 async def join_session(sid: str, req: JoinRequest):
     if sid not in sessions:
         raise HTTPException(status_code=404, detail="Session not found")
+    session = sessions[sid]
     if len(sessions[sid]["users"]) >= 6:
         raise HTTPException(status_code=400, detail="Session full")
-    new_id = len(sessions[sid]["users"])+1
+    new_id = len(session["users"])+1
     label = req.username or f"Guest {new_id}"
     user = {"id": new_id, "label": label}
-    sessions[sid]["users"].append(user)
+    session["users"][new_id] = user
     await manager.broadcast(sid, {
         "type": "system",
-        "message": f"{user} has joined the session."
+        "message": f"{label} has joined the session."
     })
     return {"joined": True, "user_id": new_id, "label": label}
 
-@app.post("/session/{session_id}/lock")
-async def lock_character(session_id: str, data: LockRequest):
-    if session_id not in session_locks:
-        session_locks[session_id] = {}
+@app.post("/session/{sid}/lock")
+async def lock_character(sid: str, data: LockRequest):
+    session = sessions.setdefault(sid, {
+        "users": {},
+        "locks": {},
+        "drawings": {},
+        "data": {}
+    })
     # Check if character is already locked
-    current_locks = session_locks[session_id]
+    current_locks = session["locks"]
     owner = current_locks.get(data.character)
     print("Trying to lock:", data.character, "for", data.user_id)
     if owner and owner != data.user_id:
         raise HTTPException(status_code=409, detail="Character already locked")
     # Lock character to user
     current_locks[data.character] = data.user_id
-    print(f"[BROADCAST] {session_id} locks -> {current_locks}")
-    await manager.broadcast( session_id, {"type": "locks", "locks": current_locks})
+    print(f"[BROADCAST] {sid} locks -> {current_locks}")
+    await manager.broadcast( sid, {"type": "locks", "locks": current_locks})
     return {"success": True, "character": data.character, "user_id": data.user_id, "locks": current_locks}
 
-@app.post("/session/{session_id}/unlock")
-async def unlock_character(session_id: str, data: LockRequest):
-    if session_id not in session_locks:
+@app.post("/session/{sid}/unlock")
+async def unlock_character(sid: str, data: LockRequest):
+    if sid not in sessions:
         raise HTTPException(status_code=404, detail="Session not found")
     # Only unlock if this user actually owns the lock
-    if session_locks[session_id].get(data.character) == data.username:
-        del session_locks[session_id][data.character]
-        await manager.broadcast(session_id, {
-            "type": "locks",
-            "locks": session_locks[session_id]
-        })
-        return {"success": True}
-    else:
-        raise HTTPException(status_code=403, detail="You don't own this lock")
+    session = sessions[sid]
+    locks = session["locks"]
+    onwer = locks.get(data.character)
+    if onwer is None:
+        raise HTTPException(status_code=404, detail="Charater not locked")
+    if onwer != data.user_id:
+        raise HTTPException(status_code=403, detail="You do not own this lock")
+    del locks[data.character]
+    await manager.broadcast(sid, {
+        "type": "locks",
+        "locks": locks
+    })
+    return {"success": True, "charater": data.character}
+    
+@app.post("/session/{sid}/save_frames")
+async def save_frames(sid: str, data: SaveFramesRequest):
+    session = sessions.setdefault(sid, {
+        "users": {},
+        "locks": {},
+        "drawings": {},
+        "data": {},
+        "frames": []
+    })
+    now = asyncio.get_event_loop().time()
+    session["drawings"][data.character] = {
+        "user_id": data.user_id,
+        "frames": data.frames,
+        "fps": data.fps,
+        "start_time": now
+    }
+    session["frames"].extend(data.frames)  # add new frames
+    session["fps"] = data.fps
+    session["start_time"] = now
+
+    await manager.broadcast(sid, {
+        "type": "character_frames",
+        "character": data.character,
+        "user_id": data.user_id,
+        "frames": session["frames"],
+        "fps": session["fps"],
+        "start_time": sessions["start_time"]
+    })
+    return { "success": True }
+
+@app.get("/session/{sid}/frames")
+async def get_frames(sid: str):
+    session = sessions.get(sid)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session["drawings"]
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
     print(f"[WS] Incoming connection for session {sid}")
     await manager.connect(sid, websocket)
     print(f"[WS] Connected: {sid}")
+    session = sessions.setdefault(sid, {
+        "users": {},
+        "locks": {},
+        "drawings": {},
+        "data": {}
+    })
     await websocket.send_json({
         "type": "locks",
-        "locks": session_locks.get(sid, {})
+        "locks": session["locks"]
+    })
+    await websocket.send_json({
+        "type": "all_characters",
+        "characters": session["drawings"]
     })
     try:
         while True:
-            msg = await websocket.receive_text()
-            await websocket.send_text(f"Echo from {sid}: {msg}")
-            print(f"[WS] Received from {sid}: {msg}")
-            await asyncio.sleep(60)
+            raw = await websocket.receive_text()
+            print(f"[WS] Received from {sid}: {raw}")
+            try:
+                msg = json.loads(raw)
+            except Exception:
+                continue
+            # If it's a character_frames update, broadcast to everyone
+            if msg.get("type") == "character_frames":
+                now = asyncio.get_event_loop().time()
+                msg["start_time"] = now
+                session["drawings"][msg["character"]] = {
+                    "frames": msg["frames"],
+                    "fps": msg["fps"],
+                    "start_time": now
+                }
+                await manager.broadcast(sid, msg)
+            else:
+                # fallback: echo or handle other message types
+                await websocket.send_text(f"Echo from {sid}: {raw}")
     except WebSocketDisconnect:
         print(f"[WS] Disconnected: {sid}")
         manager.disconnect(sid, websocket)
-        if sid in session_locks:
-            to_remove = [
-                char for char, user in session_locks[sid].items()
-                if user == sid
-            ]
+        user_id = websocket.scope.get("user_id")
+        if user_id is not None:
+            locks = session["locks"]
+            to_remove = [char for char, owner in locks.item() if owner == user_id]
             for char in to_remove:
-                del session_locks[sid][char]
+                del locks[char]
+            # Broadcast updated locks
             await manager.broadcast(sid, {
                 "type": "locks",
-                "locks": session_locks[sid]
+                "locks": locks
             })
-    
+
 app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../../"), html=True), name="frontend")

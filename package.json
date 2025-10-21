@@ -6,6 +6,7 @@
     "start": "serve . -l 10000"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
     "serve": "^14.2.5"
   },
   "devDependencies": {
