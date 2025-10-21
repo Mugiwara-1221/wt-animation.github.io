@@ -46,6 +46,10 @@ function loadImageCached(src){
 const STORY_FOLDER_MAP = new Map([
   ["tortoise-hare", "tortoise-hare"],
   ["lion-mouse",    "lion-mouse"],
+  ["little-ducks",  "little-ducks"],
+  ["prince-pauper", "prince-pauper"],
+  ["frog-prince",   "frog-prince"],
+  ["old-mcdonald",  "old-mcdonald"],
 ]);
 console.log("hello")
 
@@ -59,6 +63,9 @@ const selectedChar  = (urlParams.get("char")   || "tortoise").toLowerCase();
 const sessionCode   =  urlParams.get("session") || localStorage.getItem("sessionCode")   || "";
 const selectedStory = (urlParams.get("story")   || localStorage.getItem("selectedStory") || "").replace(/_/g, "-");
 const selectedGrade =  urlParams.get("grade")   || localStorage.getItem("selectedGrade") || "";
+
+const initialSlide1 = Math.max(1, parseInt(urlParams.get("slide") || "1", 10));
+let currentSlide1   = initialSlide1; // keep this synced everywhere
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
@@ -182,33 +189,87 @@ function redrawVisible(){
 
 async function preloadOutlinesForSlide(slide1) {
   const storyFolder = resolveStoryFolder(selectedStory || "tortoise-hare");
-
-  // 1) wipe all old references so nothing stale can be drawn
+  // clear cached outlines
   for (let n = 1; n <= TOTAL_FRAMES; n++) outlineImgs[n] = null;
 
-  // 2) helpers that generate the *per-slide* path for frame n
-  const perSlide    = (n) => `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}${n}.png`;
-  const perSlideAlt = (n) => `images/frames/${storyFolder}/frame${slide1}/${selectedChar}${n}.png`;
+  const slideIdx = (slide1 - 1);
+  const slideCfg = slidesManifest?.slides?.[slideIdx] || null;
+  const charCfg  = (slideCfg?.characters || []).find(
+    c => (c.id || "").toLowerCase() === selectedChar
+  ) || null;
 
-  for (let n = 1; n <= TOTAL_FRAMES; n++) {
-    const candidates = [perSlide(n), perSlideAlt(n)];
+  // Helper: generate candidate URL(s) for frame n
+  const makeCandidates = (n) => {
+    const cand = [];
+
+    if (charCfg?.framesPath) {
+      const fp = charCfg.framesPath;
+
+      // Respect frameCount when provided
+      const fc = Number(charCfg.frameCount || 0);
+      if (fc === 1) {
+        // Single-frame: only try the exact file on n===1
+        if (n === 1) cand.push(fp);
+      } else if (fc > 1) {
+        // Multi-frame:
+        if (/\d+\.png$/i.test(fp)) {
+          // ends with a number, e.g., foo1.png -> foo{n}.png
+          const stem = fp.replace(/\d+\.png$/i, "");
+          cand.push(`${stem}${n}.png`);
+        } else if (/\.png$/i.test(fp)) {
+          // ends with .png but no number, e.g., foo.png -> foo{n}.png
+          const base = fp.replace(/\.png$/i, "");
+          cand.push(`${base}${n}.png`);
+        } else {
+          // no .png at end -> treat as stem
+          cand.push(`${fp}${n}.png`);
+        }
+      } else {
+        // No frameCount specified: be flexible
+        if (/\d+\.png$/i.test(fp)) {
+          const stem = fp.replace(/\d+\.png$/i, "");
+          cand.push(`${stem}${n}.png`);
+        } else if (/\.png$/i.test(fp)) {
+          const base = fp.replace(/\.png$/i, "");
+          // Try exact on n===1, number-suffixed for others
+          if (n === 1) cand.push(fp);
+          cand.push(`${base}${n}.png`);
+        } else {
+          // stem without extension
+          cand.push(`${fp}${n}.png`);
+        }
+      }
+    }
+
+    // Legacy fallbacks (underscore vs no-underscore naming)
+    cand.push(
+      `images/frames/${storyFolder}/frame${slide1}/${selectedChar}/${selectedChar}${n}.png`,
+      `images/frames/${storyFolder}/frame${slide1}/${selectedChar}${n}.png`
+    );
+    return cand;
+  };
+
+  // If single-frame, only try n=1; else loop 1..TOTAL_FRAMES
+  const fc = Number(charCfg?.frameCount || 0);
+  const maxN = fc === 1 ? 1 : TOTAL_FRAMES;
+
+  for (let n = 1; n <= maxN; n++) {
+    const candidates = makeCandidates(n);
     for (const raw of candidates) {
-      // cache-buster to defeat <img> HTTP cache
-      const url = `${raw}?v=${Date.now()}`;
       try {
         if (await urlExists(raw)) {
-          outlineImgs[n] = await loadImageCached(url);
+          const bust = `${raw}?v=${Date.now()}`;
+          outlineImgs[n] = await loadImageCached(bust);
           console.log(`[preload] slide ${slide1} frame ${n} ->`, raw);
           break;
         }
-      } catch {}
+      } catch {/* ignore */}
     }
     if (!outlineImgs[n]) {
       console.warn("[preload] Missing outline", { slide1, frame: n, tried: candidates });
     }
   }
 }
-
 
 function drawOutlineForFrame(n) {
   sctx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
@@ -440,7 +501,7 @@ function downloadImage(){
 
 /* ---------- Per-frame save/restore ---------- */
 function saveCurrentFramePaint() {
-  const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+  const slide1 = currentSlide1;
   const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, currentFrame);
   const p = paintLayers[currentFrame];
   if (p) localStorage.setItem(key, p.toDataURL("image/png"));
@@ -448,7 +509,7 @@ function saveCurrentFramePaint() {
 
 function restoreFramePaint(n) {
   ensurePaintCtx(n);
-  const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+  const slide1 = currentSlide1;
   const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, n);
   const url = localStorage.getItem(key);
   const p = ensurePaintCtx(n);
@@ -596,8 +657,8 @@ async function gotoAppearance(n){
   if(n<0 || n>=appearances.length) return;
   appearCursor=n;
 
-  const slide1 = appearances[appearCursor] + 1;
-  await preloadOutlinesForSlide(slide1);
+  currentSlide1 = appearances[appearCursor] + 1;
+  await preloadOutlinesForSlide(currentSlide1);
 
   // throw away masks from the previous slide
   maskLayers.fill(null);
@@ -616,7 +677,7 @@ nextAppBtn?.addEventListener("click", nextAppearance);
 async function sendToStoryboard() {
   try {
     saveCurrentFramePaint(); // persist current frame before exporting
-    const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+    const slide1 = currentSlide1;
 
     const frames = [];
     const box = getSpriteBox();
@@ -674,19 +735,27 @@ Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, down
   layoutAndRedraw();
 
   const storyId = selectedStory || "tortoise-hare";
-  const manifest = await loadSlidesManifest(storyId);
-  slidesManifest = manifest;
-  appearances = buildAppearances(manifest, selectedChar);
+  slidesManifest = await loadSlidesManifest(storyId);
+  appearances = buildAppearances(slidesManifest, selectedChar);
 
   if (appearances.length) {
-    await gotoAppearance(0);
+    const ix = appearances.indexOf(initialSlide1 - 1);
+    if (ix >= 0) {
+      await gotoAppearance(ix);
+      currentSlide1 = initialSlide1;
+    } else {
+      await gotoAppearance(0);
+      currentSlide1 = appearances[0] + 1;
+    }
     drawOutlineForFrame(1);
     restoreFramePaint(1);
   } else {
-    await preloadOutlinesForSlide(1);
+    await preloadOutlinesForSlide(initialSlide1);
+    currentSlide1 = initialSlide1;
     layoutAndRedraw();
     drawOutlineForFrame(1);
     restoreFramePaint(1);
     schedulePreview();
   }
 })();
+

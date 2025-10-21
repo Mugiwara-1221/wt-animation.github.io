@@ -1,0 +1,8 @@
+{
+  "background": "images/backgrounds/little-ducks/background4.png",
+  "characters": [
+    { "id": "fox",     "name": "Fox",     "sprite": "images/sprites/little-ducks/slide4/fox.png", "x": 8, "y": 38, "w": 45},
+    { "id": "last_duck",     "name": "Last Duck",     "sprite": "images/sprites/little-ducks/slide4/last_duck.png", "x": 58, "y": 65, "w": 25},
+    { "id": "look_back_duck",   "name": "Look Back Duck",   "sprite": "images/sprites/little-ducks/slide4/look_back_duck.png", "x": 45, "y": 60, "w": 25} 
+  ]
+}

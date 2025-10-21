@@ -7,11 +7,11 @@ const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
 // story id (keep fallback logic, normalized with dashes)
 const storyId = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
 
-// read slide from URL (0-based for storyboard); else from ctx (usually 1-based)
-const requested = Number(qs.get("slide"));
-const fromCtx   = Number(ctx.slide);
+// read slide from URL (CANVAS sends 1-based); else from ctx (also 1-based)
+const requested1 = Number(qs.get("slide"));
+const fromCtx    = Number(ctx.slide);
 let initialSlide = 0;
-if (!Number.isNaN(requested)) initialSlide = Math.max(0, requested);
+if (!Number.isNaN(requested1)) initialSlide = Math.max(0, requested1 - 1);
 else if (!Number.isNaN(fromCtx)) initialSlide = Math.max(0, fromCtx - 1);
 
 // selected character (optional)
@@ -156,51 +156,71 @@ async function placeCharacter(cfg, slideNo){
 
   try{
     // 1) Prefer painted frames for the selected character on this slide
-    let baseFrames;
-    const paintedURLs = (id.toLowerCase() === selectedChar)
-      ? getPaintedFrames(storyId, slideNo, id)
-      : null;
+    // 1) Prefer painted frames for the selected character on this slide
+  const paintedURLs = getPaintedFrames(storyId, slideNo, id);
+  let baseFrames;
 
-    if (paintedURLs) {
-      baseFrames = await Promise.all(paintedURLs.map(loadImage));
-    } else {
-      // 2) Fallback to repo frames
-      baseFrames = await getFrames(framesPrefix, frameCount);
+  if (paintedURLs) {
+    const loaders = paintedURLs.map(u => u ? loadImage(u).catch(() => null) : Promise.resolve(null));
+    baseFrames = (await Promise.all(loaders)).filter(Boolean);
+    if (!baseFrames.length) {
+    // fall back to repo frames below
+    baseFrames = null;
     }
+  }
 
-    function draw(ix) {
-      const r = cvs.getBoundingClientRect();
-      ctx.clearRect(0, 0, r.width, r.height);
-      if (baseFrames && baseFrames.length > 0) {
-        const frame = baseFrames[ix % baseFrames.length];
-        if (frame) ctx.drawImage(frame, 0, 0, r.width, r.height);
+  if (!baseFrames) {
+    const now = Date.now();
+
+    if ((frameCount || 0) <= 1) {
+      // SINGLE-FRAME: load exactly the .png if provided, else assume "...1.png"
+      const singleURL = /\.png$/i.test(framesPrefix)
+        ? `${framesPrefix}?v=${now}`
+        : `${framesPrefix}1.png?v=${now}`;
+      try {
+        const img = await loadImage(singleURL);
+        baseFrames = [img];
+        } catch {
+        console.warn("[storyboard] single-frame load failed:", singleURL);
+        baseFrames = [];
       }
-    }
+      } else {
+    // MULTI-FRAME: ensure prefix is a stem (no trailing .png)
+    const stem = /\.png$/i.test(framesPrefix)
+      ? framesPrefix.replace(/\.png$/i, "")
+      : framesPrefix;
+    baseFrames = await getFrames(stem, frameCount);
+  }
+}
 
-    // draw & animate if multiple frames and fps > 0
-    draw(0);
-    if (baseFrames.length > 1 && fps > 0) {
-      let i = 0, last = performance.now(), raf = 0, stop = false;
-      const frameMs = 1000 / Math.max(1, fps);
-      function tick(ts) {
-        if (stop) return;
-        if (ts - last >= frameMs) {
-          last = ts;
-          i = (i + 1) % baseFrames.length;
-          draw(i);
-        }
-        raf = requestAnimationFrame(tick);
-      }
-      raf = requestAnimationFrame(tick);
-      loops.add(() => {
-        stop = true;
-        cancelAnimationFrame(raf);
-        ro.disconnect();
-      });
-    } else {
-      loops.add(() => ro.disconnect());
+draw(0);
+
+// --- decide whether to animate ---
+const shouldAnimate = (frameCount > 1) && (baseFrames.length > 1) && (fps > 0);
+
+if (shouldAnimate) {
+  let i = 0, last = performance.now(), raf = 0, stop = false;
+  const frameMs = 1000 / Math.max(1, fps);
+  function tick(ts) {
+    if (stop) return;
+    if (ts - last >= frameMs) {
+      last = ts;
+      i = (i + 1) % baseFrames.length;
+      draw(i);
     }
-  }catch(e){
+    raf = requestAnimationFrame(tick);
+  }
+  raf = requestAnimationFrame(tick);
+  loops.add(() => {
+    stop = true;
+    cancelAnimationFrame(raf);
+    ro.disconnect();
+  });
+} else {
+  // single-frame path: stay static (e.g., 5 Little Ducks)
+  loops.add(() => ro.disconnect());
+}
+  } catch (e) {
     console.warn("[storyboard] character failed:", id, e);
     ro.disconnect();
   }
@@ -256,8 +276,9 @@ async function showSlide(i){
   // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
-  url.searchParams.set("slide", cur);
+  url.searchParams.set("slide", String(cur + 1));  // keep URL 1-based
   history.replaceState({}, "", url);
+
 
   window.__slides = { index: cur, count: manifest.slides.length };
   window.dispatchEvent(new Event("slidechange"));
