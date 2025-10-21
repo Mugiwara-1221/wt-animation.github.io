@@ -1,5 +1,10 @@
 "use strict";
 
+const API_BASE =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://wt-animation-github-io.onrender.com";
+
 /* ---------- Canvas setup ---------- */
 const bgCanvas     = document.getElementById("bgCanvas");
 const drawCanvas   = document.getElementById("drawCanvas");
@@ -51,7 +56,6 @@ const STORY_FOLDER_MAP = new Map([
   ["frog-prince",   "frog-prince"],
   ["old-mcdonald",  "old-mcdonald"],
 ]);
-console.log("hello")
 
 /* Full-window canvases; sprite sits in a centered square */
 const SPRITE_BOX_SIZE = 600;
@@ -673,7 +677,10 @@ function prevAppearance(){ gotoAppearance(appearCursor-1); }
 prevAppBtn?.addEventListener("click", prevAppearance);
 nextAppBtn?.addEventListener("click", nextAppearance);
 
-/* ------- Send to storyboard (bake 4 PNGs) ------- */
+
+
+
+/* ------- Send to storyboard (bake 4 PNGs) -------*/
 async function sendToStoryboard() {
   try {
     saveCurrentFramePaint(); // persist current frame before exporting
@@ -682,6 +689,7 @@ async function sendToStoryboard() {
     const frames = [];
     const box = getSpriteBox();
 
+    /* temporarily disable 4 frame png export
     for (let n = 1; n <= TOTAL_FRAMES; n++) {
       const comp = document.createElement('canvas');
       comp.width = drawCanvas.width; comp.height = drawCanvas.height;
@@ -711,11 +719,43 @@ async function sendToStoryboard() {
       }
 
       frames.push(comp.toDataURL('image/png'));
+    } */
+
+    /* new temporary 1 png export*/
+    {
+      const n = 1;
+      const comp = document.createElement('canvas');
+      comp.width = drawCanvas.width; comp.height = drawCanvas.height;
+      const cx = comp.getContext('2d');
+
+      // paint for frame 1
+      const p = paintLayers[n];
+      if (p){
+        cx.drawImage(p, 0,0,p.width,p.height, box.x, box.y, box.width, box.height);
+      } else {
+        const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, n);
+        const paintURL = localStorage.getItem(key);
+        if (paintURL) {
+          const paintImg = await loadImageCached(paintURL);
+          cx.drawImage(paintImg, 0, 0, paintImg.width, paintImg.height, box.x, box.y, box.width, box.height);
+        }
+      }
+
+      // outline (frame 1)
+      const ol = outlineImgs[n];
+      if (ol) {
+        cx.save();
+        cx.globalCompositeOperation = "multiply";
+        cx.drawImage(ol, box.x, box.y, box.width, box.height);
+        cx.restore();
+      }
+
+      frames.push(comp.toDataURL('image/png'));
     }
 
     // stash for storyboard (1..4 loop)
     const sbKey = `sbFrames:${selectedStory || "tortoise-hare"}:${slide1}:${selectedChar}`;
-    localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 4 }));
+    localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 0}));
 
     // Navigate
     const q = new URLSearchParams({ story: selectedStory, slide: String(slide1), char: selectedChar });
@@ -727,6 +767,8 @@ async function sendToStoryboard() {
     alert('Send to Storyboard failed. See console for details.');
   }
 }
+
+
 
 /* ---------- Expose for buttons ---------- */
 Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
