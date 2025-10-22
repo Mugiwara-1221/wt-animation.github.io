@@ -2,7 +2,12 @@
 // js/index.js
 // Session page controller (browser-safe)
 
+//import { use } from 'react';
 import { nextURL } from './flow.js';
+
+const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8000'
+  : 'https://wt-animation-github-io.onrender.com';
 
 const createBtn          = document.getElementById('createSessionBtn');
 const joinBtn            = document.getElementById('joinSessionBtn');
@@ -49,17 +54,18 @@ const deviceToken = getDeviceToken();
 
 createBtn?.addEventListener('click', async () => {
   try {
-    const res = await fetch('https://wt-animation-github-io.onrender.com/session', {
+    const res = await fetch(`${API_BASE}/session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'Guest 1' })
+      body: JSON.stringify({ user_id: 'Guest 1' })
     });
 
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    const { session_id } = await res.json();
+    const { session_id, user_id } = await res.json();
 
     localStorage.setItem('sessionCode', session_id);
-    sessionCodeDisplay.textContent = `Session ID: ${session_id}`;
+    localStorage.setItem('memberId', user_id);
+    sessionCodeDisplay.textContent = `Session ID: ${session_id} User: ${user_id}`;
 
     const url = nextURL('story-select.html', { session: session_id });
     location.href = url;
@@ -87,10 +93,10 @@ joinBtn?.addEventListener('click', async () => {
   }
 
   try {
-    const res = await fetch(`https://wt-animation-github-io.onrender.com/session/${code}/join`, {
+    const res = await fetch(`${API_BASE}/session/${code}/join`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "Guest " + idCode })
+      body: JSON.stringify({ user_id: parseInt(idCode,10) })
     });
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
     const data = await res.json();

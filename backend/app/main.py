@@ -13,7 +13,7 @@ app = FastAPI()
 sessions: Dict[str, Dict] = {}
 
 class JoinRequest(BaseModel):
-    username: str
+    user_id: int
 
 class LockRequest(BaseModel):
     character: str
@@ -103,7 +103,7 @@ async def join_session(sid: str, req: JoinRequest):
     if len(sessions[sid]["users"]) >= 6:
         raise HTTPException(status_code=400, detail="Session full")
     new_id = len(session["users"])+1
-    label = req.username or f"Guest {new_id}"
+    label = req.user_id or f"Guest {new_id}"
     user = {"id": new_id, "label": label}
     session["users"][new_id] = user
     await manager.broadcast(sid, {
