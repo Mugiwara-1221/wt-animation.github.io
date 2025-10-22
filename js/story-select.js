@@ -2,9 +2,15 @@
 // js/story-select.js — show all stories by default; filter by grade; use manifest if available
 import { readCtx, writeCtx, nextURL } from "./flow.js";
 
+const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8000'
+  : 'https://wt-animation-github-io.onrender.com';
+
+const WS_BASE = API_BASE.replace(/^http/, "ws");
+
 const sid = localStorage.getItem("sessionCode");
-const ws = new WebSocket(`wss://wt-animation-github-io.onrender.com/ws/${sid}`);
-const messagesDiv = document.getElementById("messages");
+const userid = localStorage.getItem("memberId");
+const ws = new WebSocket(`${WS_BASE}/ws/${sid}`);
 ws.onopen = () => {
   console.log("Connected to session", sid);
 };
@@ -57,7 +63,7 @@ const checkboxes = Array.from(document.querySelectorAll('input[name="grade"]'));
 // ---- Session guard ----
 const ctx = readCtx();
 if (!ctx.session) { location.replace("index.html"); throw 0; }
-sessionEl.textContent = `Session: ${ctx.session}`;
+sessionEl.textContent = `Session: ${ctx.session} User: ${userid}`;
 
 /* ---------- RESET grade on page load ----------
    Always show all stories on refresh:
