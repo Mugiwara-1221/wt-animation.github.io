@@ -156,41 +156,63 @@ async function placeCharacter(cfg, slideNo){
 
   try{
     // 1) Prefer painted frames for the selected character on this slide
-    // 1) Prefer painted frames for the selected character on this slide
   const paintedURLs = getPaintedFrames(storyId, slideNo, id);
-  let baseFrames;
+let baseFrames = null;
 
-  if (paintedURLs) {
-    const loaders = paintedURLs.map(u => u ? loadImage(u).catch(() => null) : Promise.resolve(null));
-    baseFrames = (await Promise.all(loaders)).filter(Boolean);
-    if (!baseFrames.length) {
-    // fall back to repo frames below
-    baseFrames = null;
+if (paintedURLs) {
+  const loaders = paintedURLs.map(u =>
+    u ? loadImage(u).catch(() => null) : Promise.resolve(null)
+  );
+  const imgs = (await Promise.all(loaders)).filter(Boolean);
+
+  // accept 1-frame or multi-frame bundles
+  if (imgs.length) {
+    baseFrames = imgs;
+    // if the manifest says single-frame, clamp to 1
+    if ((cfg.frameCount || 0) <= 1 && baseFrames.length > 1) {
+      baseFrames = [baseFrames[0]];
     }
   }
+}
 
-  if (!baseFrames) {
-    const now = Date.now();
+if (!baseFrames) {
+  const now = Date.now();
 
-    if ((frameCount || 0) <= 1) {
-      // SINGLE-FRAME: load exactly the .png if provided, else assume "...1.png"
-      const singleURL = /\.png$/i.test(framesPrefix)
-        ? `${framesPrefix}?v=${now}`
-        : `${framesPrefix}1.png?v=${now}`;
-      try {
-        const img = await loadImage(singleURL);
-        baseFrames = [img];
-        } catch {
-        console.warn("[storyboard] single-frame load failed:", singleURL);
-        baseFrames = [];
-      }
-      } else {
-    // MULTI-FRAME: ensure prefix is a stem (no trailing .png)
+  if ((frameCount || 0) <= 1) {
+    // SINGLE-FRAME
+    const singleURL = /\.png$/i.test(framesPrefix)
+      ? `${framesPrefix}?v=${now}`
+      : `${framesPrefix}1.png?v=${now}`;
+    try {
+      const img = await loadImage(singleURL);
+      baseFrames = [img];
+    } catch {
+      console.warn("[storyboard] single-frame load failed:", singleURL);
+      baseFrames = [];
+    }
+  } else {
+    // MULTI-FRAME
     const stem = /\.png$/i.test(framesPrefix)
       ? framesPrefix.replace(/\.png$/i, "")
       : framesPrefix;
     baseFrames = await getFrames(stem, frameCount);
   }
+}
+
+/* >>> ADD THESE LINES <<< */
+// bail if we still have nothing
+if (!baseFrames || !baseFrames.length) {
+  console.warn("[storyboard] no frames to draw for", id);
+  ro.disconnect();
+  return;
+}
+
+// local draw helper (must be after baseFrames is set)
+function draw(ix) {
+  const r = cvs.getBoundingClientRect();
+  ctx.clearRect(0, 0, r.width, r.height);
+  const frame = baseFrames[Math.min(ix, baseFrames.length - 1)];
+  if (frame) ctx.drawImage(frame, 0, 0, r.width, r.height);
 }
 
 draw(0);
