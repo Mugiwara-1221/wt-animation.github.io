@@ -5,13 +5,11 @@
 
 import { readCtx, nextURL } from "./flow.js";
 
-// ---- import Azure helpers (optional at runtime) ----
-let Azure = null;
-try {
-  Azure = await import("./azure-api.js");
-} catch {
-  //proceed without Azure (GitHub Pages, local file, etc.)
-}
+const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8000'
+  : 'https://wt-animation-github-io.onrender.com';
+
+const WS_BASE = API_BASE.replace(/^http/, "ws");
 
 /************ Session / flow ctx ************/
 const ctx = readCtx();             // story/grade/etc if user followed the flow
@@ -32,10 +30,56 @@ const deviceToken = (() => {
 
 // List any temporarily disabled characters here
 const TEMP_DISABLED = new Set(["bush"]); // ← replace with your data-char id(s)
-
+const userid = localStorage.getItem("memberId");
 
 /************ Pixel-accurate hover + click ************/
 const hit = new Map();
+
+let socket;
+
+function initSocket(sessionId, userId) {
+  socket = new WebSocket(`${WS_BASE}/ws/${sessionId}?user_id=${userId}`);
+  socket.addEventListener("open", () => {
+    console.log("WebSocket connected");
+  });
+  socket.addEventListener("message", (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === "locks") {
+      updateLocks(msg.locks);
+    }
+    // You can add other message types here (system, drawings, etc.)
+  });
+  socket.addEventListener("close", () => {
+    console.log("WebSocket closed, attempting reconnect in 2s");
+    setTimeout(() => initSocket(sessionId, userId), 2000);
+  });
+
+  socket.addEventListener("error", (err) => {
+    console.error("WebSocket error:", err);
+  });
+}
+initSocket(sessionId, userid);
+
+socket.addEventListener("message", (event) => {
+  const msg = JSON.parse(event.data);
+
+  if (msg.type === "locks") {
+    updateLocks(msg.locks);
+  }
+});
+
+function updateLocks(locks) {
+  document.querySelectorAll(".character").forEach(el => {
+    const key = el.dataset.char;
+    if (locks[key]) {
+      el.classList.add("locked");
+      el.setAttribute("title", `Locked by ${locks[key]}`);
+    } else {
+      el.classList.remove("locked");
+      el.removeAttribute("title");
+    }
+  });
+}
 
 function buildHitCanvas(img) {
   const w = img.naturalWidth || img.width;
@@ -125,15 +169,20 @@ img.addEventListener("click", async (e) => {
   const spriteUrl = img.dataset.sprite || img.src;
 
   // No session or no Azure? Just navigate — do NOT block rendering.
-  if (!sessionId || !Azure?.lockCharacter) {
-    goToCanvas(charKey, spriteUrl);
-    return;
-  }
-
-  // Try Azure lock; on failure, proceed anyway so class can continue.
   try {
-    const res = await Azure.lockCharacter(sessionId, charKey, deviceToken);
-    const ok = !!res && !!res.locks && res.locks[charKey] === deviceToken;
+    const res = await fetch(`${API_BASE}/session/${sessionId}/lock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ character: charKey, user_id: parseInt(userid,10) })
+    });
+    console.log(res);
+    if (res.status === 409) {
+      alert("Sorry, this character is already taken.");
+      return;
+    }
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+    const ok = data.success && data.locks[charKey] === parseInt(userid);
     if (!ok) {
       alert("Sorry, this character is already taken.");
       return;
@@ -149,7 +198,6 @@ img.addEventListener("click", async (e) => {
 function wireAllCurrentSprites() {
   const sprites = Array.from(document.querySelectorAll(".character"));
   sprites.forEach(wire);
-
   // Rebuild hit-maps if elements resize
   const ro = new ResizeObserver(entries => {
     for (const e of entries) {
@@ -171,7 +219,7 @@ document.querySelectorAll(".character").forEach(img => {
   const id = (img.dataset.char || "").toLowerCase();
   if (TEMP_DISABLED.has(id)) img.classList.add("disabled");
 });
-  scheduleLockRefresh(0);    // non-blocking lock polling
+  //scheduleLockRefresh(0);    // non-blocking lock polling
 }
 
 /************ Refresh locks (non-blocking with backoff) ************/
@@ -181,14 +229,20 @@ function scheduleLockRefresh(delay) {
 }
 
 async function refreshLocks() {
-  if (!sessionId || !Azure?.getSession) return; // standalone: nothing to refresh
+  if (!sessionId) return; // nothing to refresh
+
   try {
-    const sess = await Azure.getSession(sessionId);
+    const res = await fetch(`${API_BASE}/session/${sessionId}`);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const sess = await res.json();
     const taken = (sess && sess.locks) || {};
     document.querySelectorAll(".character").forEach(el => {
       const key = el.dataset.char;
-      if (taken[key]) el.classList.add("locked");
-      else el.classList.remove("locked");
+      if (taken[key]) {
+        el.classList.add("locked");
+      } else {
+        el.classList.remove("locked");
+      }
     });
     lockPollMs = 1000; // success: fast cadence
   } catch (err) {
