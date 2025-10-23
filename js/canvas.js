@@ -1,9 +1,19 @@
 "use strict";
 
-const API_BASE =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "https://wt-animation-github-io.onrender.com";
+const hostname = window.location.hostname;
+const port = window.location.port;
+
+let API_BASE;
+
+// Case 1: running locally (frontend served from localhost or 127.0.0.1)
+if (hostname === "localhost" || hostname === "127.0.0.1") {
+  // If you’re serving FastAPI on 5500, use that
+  API_BASE = `http://${hostname}:${port}`;
+}
+// Case 2: production (your deployed site)
+else {
+  API_BASE = "https://wt-animation-github-io.onrender.com";
+}
 
 /* ---------- Canvas setup ---------- */
 const bgCanvas     = document.getElementById("bgCanvas");
