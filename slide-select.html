@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Select a Page</title>
+  <title>Select Slides</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root { 
@@ -12,24 +12,29 @@
       --accent:#BADA55; 
       --border:#d6dbef; 
     }
+
     body { 
       margin:0; 
       font-family:system-ui, Arial; 
       background:#4d8ad5;  
       color:#1d2330; 
     }
+
     header { 
       padding:20px 16px; 
       text-align:center 
     }
+
     h1 { 
       margin:0 0 6px; 
       font-size:clamp(22px,4vw,36px) 
     }
+
     #sub { 
       opacity:.7; 
       font-size:.95rem; 
     }
+
     .bar {
       max-width: 1100px; 
       margin: 0 auto; 
@@ -39,6 +44,7 @@
       align-items: center; 
       justify-content: space-between;
     }
+
     .btn {
       background:#fff; 
       border:2px solid var(--border); 
@@ -48,6 +54,7 @@
       font-weight: 600;
       box-shadow:0 3px 8px rgba(0,0,0,.05);
     }
+
     .btn:hover { 
       border-color: var(--accent); 
     }
@@ -60,6 +67,7 @@
       margin: 0 auto 40px; 
       padding: 0 20px 20px;
     }
+
     .card {
       position: relative;
       background: #fff;
@@ -73,10 +81,38 @@
       min-height: 220px;
       transition: border-color .15s ease, transform .15s ease;
     }
+
     .card:hover { 
       border-color: var(--accent); 
       transform:translateY(-1px); 
     }
+
+    .card.selected { 
+
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .card .tick {
+      position:absolute; right:10px; top:10px;
+      width:26px; height:26px; border-radius:50%;
+      background:#fff; border:2px solid var(--border);
+      display:grid; place-items:center; font-weight:800; font-size:.9rem;
+      color:#4a6a00; opacity:0; transition:opacity .12s ease, transform .12s ease;
+      transform:scale(.9);
+    } 
+
+    .card.selected .tick { 
+      opacity:1; transform:scale(1); border-color:var(--accent);
+      background: #eaffc2;
+    }
+
+    .toolbar-actions{
+      display:flex;
+      gap:8px;
+      margin-left:auto;
+    }
+
     .thumb { 
       aspect-ratio: 4/3; 
       background: #dfe7ff; 
@@ -118,7 +154,11 @@
 
   <div class="bar">
     <button id="backBtn" class="btn" type="button">← Back to Stories</button>
-    <div></div>
+    <div class="toolbar-actions">
+      <button id="btnSelectAll" class="btn" type="button">Select all</button>
+      <button id="btnClearAll"  class="btn" type="button">Clear</button>
+      <button id="btnContinue"  class="btn" type="button" disabled>Continue →</button>
+    </div>
   </div>
 
   <div id="grid" class="grid" aria-live="polite"></div>
