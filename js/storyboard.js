@@ -327,6 +327,8 @@ socket.addEventListener("error", (err) => {
 
 socket.addEventListener("message", async (event) => {
   let msg;
+  cur = Math.max(0, Math.min(cur, manifest.slides.length - 1));
+  const s = manifest.slides[cur];
   try {
     msg = JSON.parse(event.data);
   } catch (err) {
@@ -337,6 +339,9 @@ socket.addEventListener("message", async (event) => {
     const id   = msg.character;
     const fps  = msg.fps;
     const newFrames = msg.frames;
+    const currentSlideNo =     
+      slideNoFromPath(s.background) ??
+      (manifest.slides.indexOf(s) + 1);
     // Look up placement info for this character (from your manifest/config)
     const { x, y, w, h } = lookupPlacement(id, currentSlideNo);
     // Remove any existing placeholder canvas for this character
