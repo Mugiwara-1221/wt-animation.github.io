@@ -113,6 +113,37 @@ canvas.char-layer.mama_duck {
   animation: bounceLeftRight 2s ease-in-out infinite;
   /* positioning */      /* keep aspect ratio */
 }
+canvas.char-layer.fish1 {
+  animation: energeticHareHop 5s ease-in-out infinite;
+}
+canvas.char-layer.fish2 {
+  animation: energeticHareHop 8s ease-in-out infinite;
+}
+canvas.char-layer.lead_duck {
+  animation: bounceLeftRight 3s ease-in-out infinite;
+}
+canvas.char-layer.sleepy_duck {
+  animation: bounceLeftRight 5s ease-in-out infinite;
+}
+canvas.char-layer.waving_duck {
+  animation: bounceLeftRight 1s ease-in-out infinite;
+}
+canvas.char-layer.look_back_duck {
+  animation: bounceLeftRight 5s ease-in-out infinite;
+}
+canvas.char-layer.last_duck {
+  animation: bounceLeftRight 2s ease-in-out infinite;
+}
+canvas.char-layer.flamingo {
+  animation: energeticHareHop 10s ease-in-out infinite;
+}
+canvas.char-layer.fox {
+  animation: tortoiseWaddle 10s ease-in-out infinite;
+}
+
+
+
+
 
 img.character {
   position: absolute;
