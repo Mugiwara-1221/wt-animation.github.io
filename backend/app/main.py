@@ -24,6 +24,7 @@ class SaveFramesRequest(BaseModel):
     character: str
     frames: List[str]
     fps: int
+    slide: int
 
 class ConnectionManager:
     def __init__(self):
@@ -180,7 +181,8 @@ async def save_frames(sid: str, data: SaveFramesRequest):
         "user_id": data.user_id,
         "frames": char_store["frames"],
         "fps": char_store["fps"],
-        "start_time": char_store["start_time"]
+        "start_time": char_store["start_time"],
+        "slide": data.slide
     })
     return {"success": True}
 

@@ -774,7 +774,8 @@ async function sendToStoryboard() {
         character: selectedChar,
         user_id: parseInt(userId),
         frames,   // array of base64 PNGs or stroke data
-        fps: 0
+        fps: 0,
+        slide: slide1
       })
     });
     // Navigate

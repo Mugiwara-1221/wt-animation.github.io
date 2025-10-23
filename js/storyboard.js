@@ -328,8 +328,6 @@ socket.addEventListener("error", (err) => {
 
 socket.addEventListener("message", async (event) => {
   let msg;
-  cur = Math.max(0, Math.min(cur, manifest.slides.length - 1));
-  const s = manifest.slides[cur];
   try {
     msg = JSON.parse(event.data);
   } catch (err) {
@@ -340,9 +338,8 @@ socket.addEventListener("message", async (event) => {
     const id   = msg.character;
     const fps  = msg.fps;
     const newFrames = msg.frames;
-    const currentSlideNo =     
-      slideNoFromPath(s.background) ??
-      (manifest.slides.indexOf(s) + 1);
+    const currentSlideNo = msg.slide;
+    console.log(typeof currentSlideNo);
     // Look up placement info for this character (from your manifest/config)
     const { x, y, w, h } = lookupPlacement(id, currentSlideNo);
     // Remove any existing placeholder canvas for this character
@@ -365,24 +362,28 @@ socket.addEventListener("message", async (event) => {
 });
 
 function lookupPlacement(id, slideNo) {
-  const slide = manifest.slides[slideNo - 1];
+  const slide = manifest.slides[slideNo];
   if (!slide || !Array.isArray(slide.characters)) return {};
-  console.log(slide.characters);
+  //console.log(slide.characters);
   return slide.characters.find(c => c.id === id) || {};
 }
 
 async function preloadSessionState(sessionId, slideNo) {
   const res = await fetch(`${API_BASE}/session/${sessionId}/state`);
   const state = await res.json();
-
   state.characters.forEach(c => {
     const oldLayer = document.querySelector(`.char-layer.${c.id}`);
     if (oldLayer) oldLayer.remove();
-
+    // Look up placement from manifest
+    const placement = lookupPlacement(c.id, slideNo);
+    console.log(placement);
     placeCharacter(
       {
         id: c.id,
-        x: c.x, y: c.y, w: c.w, h: c.h,
+        x: placement.x,
+        y: placement.y,
+        w: placement.w,
+        h: placement.h,
         z: 1,
         frameCount: c.frames.length,
         fps: c.fps,
@@ -470,7 +471,10 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
     console.error("[storyboard] No slides discovered for", storyId);
     return;
   }
-  await showSlide(Math.min(initialSlide, manifest.slides.length - 1));
+  const cur = Math.min(initialSlide, manifest.slides.length - 1);
+  await showSlide(cur);
+  //console.log(cur);
+  await preloadSessionState(sessionId, cur);
 
   addEventListener("keydown", e=>{
     if (e.key === "ArrowRight") nextSlide();
