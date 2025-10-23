@@ -66,13 +66,13 @@
           "framesPath": "images/frames/little-ducks/frame2/waving_duck/waving_duck.png",
           "maskCsvPrefix": "images/frames/little-ducks/frame2/waving_duck/waving_duck_mask_1.csv",
           "frameCount": 1 },
-        { "id": "fox", "x": 60, "y": 10, "w": 50, "h": 60,
+        { "id": "fox", "x": 48, "y": 10, "w": 75, "h": 60,
           "framesPath": "images/frames/little-ducks/frame2/fox/fox.png",
           "maskCsvPrefix": "images/frames/little-ducks/frame2/fox/fox_mask_1.csv",
           "frameCount": 1 },
         { "id": "mama_duck", "x": 4, "y": 33, "w": 30, "h": 60,
-          "framesPath": "images/frames/little-ducks/frame1/mama_duck/mama_duck1.png",
-          "maskCsvPrefix": "images/frames/little-ducks/frame1/mama_duck/mama_duck_mask_1.csv",
+          "framesPath": "images/frames/little-ducks/frame2/mama_duck/mama_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame2/mama_duck/mama_duck_mask_1.csv",
           "frameCount": 1},
         { "id": "bush", "x": 74, "y": 32, "w": 30, "h": 44,
           "framesPath": "images/frames/little-ducks/frame2/bush/bush.png",
@@ -81,23 +81,6 @@
     },
     {
       "background": "stories/little-ducks/slide3/slide3.png",
-      "characters": [
-        { "id": "fox", "x": 60, "y": 10, "w": 50, "h": 60,
-          "framesPath": "images/frames/little-ducks/frame4/fox/fox.png",
-          "maskCsvPrefix": "images/frames/little-ducks/frame4/fox/fox_mask_1.csv",
-          "frameCount": 1 },
-        { "id": "last_duck", "x": 45, "y": 38, "w": 35, "h": 45,
-          "framesPath": "images/frames/little-ducks/frame4/last_duck/last_duck.png",
-          "maskCsvPrefix": "images/frames/little-ducks/frame4/last_duck/last_duck_mask_1.csv",
-          "frameCount": 1 },
-        { "id": "look_back_duck", "x": 25, "y": 25, "w": 60, "h": 60,
-          "framesPath": "images/frames/little-ducks/frame4/look_back_duck/look_back_duck.png",
-          "maskCsvPrefix": "images/frames/little-ducks/frame4/look_back_duck/look_back_duck_mask_1.csv",
-          "frameCount": 1 } 
-      ]
-    },
-    {
-      "background": "stories/little-ducks/slide3/slide4.png",
       "characters": [
         { "id": "lead_duck", "x": 20, "y": 45, "w": 50, "h": 60,
           "framesPath": "images/frames/little-ducks/frame3/lead_duck/lead_duck.png",
@@ -118,16 +101,53 @@
       ]
     },
     {
-      "background": "stories/lion-mouse/slide5.png",
+      "background": "stories/little-ducks/slide4/slide4.png",
       "characters": [
-        { "id": "lion", "x": 15, "y": 60, "w": 65,
-          "framesPath": "images/frames/lion_and_the_mouse/frame5/lion/lion",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame5/lion/lion_mask_" },
-        { "id": "mouse", "x": 30, "y": 30, "w": 70,
-          "framesPath": "images/frames/lion_and_the_mouse/frame5/mouse/mouse",
-          "frameCount": 4,
-          "maskCsvPrefix": "images/frames/lion_and_the_mouse/frame5/mouse/mouse_mask_" }
+        { "id": "fox", "x": 60, "y": 10, "w": 50, "h": 60,
+          "framesPath": "images/frames/little-ducks/frame4/fox/fox.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame4/fox/fox_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "last_duck", "x": 45, "y": 38, "w": 35, "h": 45,
+          "framesPath": "images/frames/little-ducks/frame4/last_duck/last_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame4/last_duck/last_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "look_back_duck", "x": 25, "y": 25, "w": 60, "h": 60,
+          "framesPath": "images/frames/little-ducks/frame4/look_back_duck/look_back_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame4/look_back_duck/look_back_duck_mask_1.csv",
+          "frameCount": 1 } 
+      ]
+    },
+    {
+      "background": "stories/little-ducks/slide5/slide5.png",
+      "characters": [
+         { "id": "last_duck", "x": 45, "y": 38, "w": 35, "h": 45,
+          "framesPath": "images/frames/little-ducks/frame5/last_duck/last_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/last_duck/last_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "lead_duck", "x": 10, "y": 48, "w": 50, "h": 50,
+          "framesPath": "images/frames/little-ducks/frame5/lead_duck/lead_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/lead_duck/lead_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "look_back_duck", "x": 25, "y": 25, "w": 60, "h": 60,
+          "framesPath": "images/frames/little-ducks/frame5/look_back_duck/look_back_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/look_back_duck/look_back_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "sleepy_duck", "x": 19, "y": 48, "w": 50, "h": 50,
+          "framesPath": "images/frames/little-ducks/frame5/sleepy_duck/sleepy_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/sleepy_duck/sleepy_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "waving_duck", "x": 47, "y": 53, "w": 30, "h": 35,
+          "framesPath": "images/frames/little-ducks/frame5/waving_duck/waving_duck.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/waving_duck/waving_duck_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "fox", "x": 48, "y": 10, "w": 75, "h": 60,
+          "framesPath": "images/frames/little-ducks/frame5/fox/fox.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/fox/fox_mask_1.csv",
+          "frameCount": 1 },
+        { "id": "mama_duck", "x": 4, "y": 33, "w": 30, "h": 60,
+          "framesPath": "images/frames/little-ducks/frame5/mama_duck/mama_duck1.png",
+          "maskCsvPrefix": "images/frames/little-ducks/frame5/mama_duck/mama_duck_mask_1.csv",
+          "frameCount": 1}
       ]
     },
     {
