@@ -372,12 +372,12 @@ async function preloadSessionState(sessionId, slideNo) {
   slideNo = slideNo +1;
   const res = await fetch(`${API_BASE}/session/${sessionId}/state`);
   const state = await res.json();
-  state.characters.forEach(c => {
-    const oldLayer = document.querySelector(`.char-layer.${c.id}`);
+  const slideFrames = state.frames[slideNo] || {};
+  Object.entries(slideFrames).forEach(([id, c]) => {
+    const oldLayer = document.querySelector(`.char-layer.${id}`);
     if (oldLayer) oldLayer.remove();
-    // Look up placement from manifest
-    const placement = lookupPlacement(c.id, slideNo);
-    console.log(slideNo);
+    const placement = lookupPlacement(id, slideNo);
+    //console.log(placement);
     placeCharacter(
       {
         id: c.id,

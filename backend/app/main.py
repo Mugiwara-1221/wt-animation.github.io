@@ -162,8 +162,9 @@ async def save_frames(sid: str, data: SaveFramesRequest):
     if "frames" not in session:
         session["frames"] = {}
     now = asyncio.get_event_loop().time()
+    slide_store = session["frames"].setdefault(data.slide, {})
     # Ensure this character has a slot with a list
-    char_store = session["frames"].setdefault(data.character, {
+    char_store = slide_store.setdefault(data.character, {
         "user_id": data.user_id,
         "frames": [],
         "fps": data.fps,
@@ -200,11 +201,17 @@ async def get_session_state(sid: str):
         raise HTTPException(status_code=404, detail="Session not found")
     frames = session.get("frames", {})
     return {
-        "characters": [
-            {"id": cid, **cdata}
-            for cid, cdata in frames.items()
-        ]
-    }
+        "frames": {
+            slide_no: {
+                cid: {
+                    "id": cid,
+                    **cdata
+                }
+                for cid, cdata in chars.items()
+            }
+            for slide_no, chars in frames.items()
+        }
+}
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
