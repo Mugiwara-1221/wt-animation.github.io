@@ -44,6 +44,7 @@ class ConnectionManager:
                 
     async def broadcast(self, sid: str, payload: dict | str):
         data = payload if isinstance(payload, str) else json.dumps(payload)
+        #print(data)
         dead = []
         sockets = self.active.get(sid, [])
         for ws in sockets:
@@ -58,8 +59,8 @@ manager = ConnectionManager()
 
 app.add_middleware(
     CORSMiddleware,
-    #allow_origins=["https://mugiwara-1221.github.io/wt-animation.github.io/"],   # or ["http://127.0.0.1:5500"]
-    allow_origins=["http://127.0.0.1:8000"],
+    #allow_origins=["http://127.0.0.1:8000", "https://mugiwara-1221.github.io/wt-animation.github.io/"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -154,39 +155,41 @@ async def unlock_character(sid: str, data: LockRequest):
 @app.post("/session/{sid}/save_frames")
 async def save_frames(sid: str, data: SaveFramesRequest):
     session = sessions.setdefault(sid, {
-        "users": {},
-        "locks": {},
-        "drawings": {},
-        "data": {},
-        "frames": []
+        "users": {}, "locks": {}, "drawings": {}, "data": {}
     })
+    # Always ensure frames dict exists
+    if "frames" not in session:
+        session["frames"] = {}
     now = asyncio.get_event_loop().time()
-    session["drawings"][data.character] = {
+    # Ensure this character has a slot with a list
+    char_store = session["frames"].setdefault(data.character, {
         "user_id": data.user_id,
-        "frames": data.frames,
+        "frames": [],
         "fps": data.fps,
         "start_time": now
-    }
-    session["frames"].extend(data.frames)  # add new frames
-    session["fps"] = data.fps
-    session["start_time"] = now
-
+    })
+    # Append new frames if provided
+    if data.frames:
+        char_store["frames"].extend(data.frames)
+    # Update metadata
+    char_store["fps"] = data.fps
+    char_store["start_time"] = now
     await manager.broadcast(sid, {
         "type": "character_frames",
         "character": data.character,
         "user_id": data.user_id,
-        "frames": session["frames"],
-        "fps": session["fps"],
-        "start_time": sessions["start_time"]
+        "frames": char_store["frames"],
+        "fps": char_store["fps"],
+        "start_time": char_store["start_time"]
     })
-    return { "success": True }
+    return {"success": True}
 
 @app.get("/session/{sid}/frames")
 async def get_frames(sid: str):
     session = sessions.get(sid)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return session["drawings"]
+    return session.get("frames", {})
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
