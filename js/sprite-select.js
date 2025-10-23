@@ -5,6 +5,8 @@
 
 import { readCtx, nextURL } from "./flow.js";
 
+const hostname = window.location.hostname;
+const port = window.location.port;
 let API_BASE;
 // Case 1: running locally (frontend served from localhost or 127.0.0.1)
 if (hostname === "localhost" || hostname === "127.0.0.1") {
