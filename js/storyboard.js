@@ -310,14 +310,6 @@ const socket = new WebSocket(`${API_BASE.replace(/^http/, "ws")}/ws/${sessionId}
 socket.addEventListener("open", () => {
   console.log("Connected to session", sessionId);
 });
-socket.addEventListener("message", (event) => {
-  const msg = JSON.parse(event.data);
-  console.log("WS message:", msg);
-  if (msg.type === "character_frames") {
-    // handle new frames from another user
-    // e.g. call placeCharacter with msg.character, msg.frames, msg.fps
-  }
-});
 socket.addEventListener("close", () => {
   console.log("Socket closed");
 });
@@ -359,12 +351,14 @@ socket.addEventListener("message", async (event) => {
       },
       currentSlideNo
     );
+    console.log("loaded");
   }
 });
 
 function lookupPlacement(id, slideNo) {
   const slide = manifest.slides[slideNo - 1];
   if (!slide || !Array.isArray(slide.characters)) return {};
+  console.log(slide.characters);
   return slide.characters.find(c => c.id === id) || {};
 }
 
@@ -393,7 +387,7 @@ async function showSlide(i){
     (manifest.slides.indexOf(s) + 1);
 
   const chars = Array.isArray(s.characters) ? s.characters : [];
-  console.log(chars);
+  //console.log(chars);
   await Promise.allSettled(
     chars.map(async c => {
       // Try to fetch server frames for this character
