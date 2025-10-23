@@ -471,7 +471,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
     console.error("[storyboard] No slides discovered for", storyId);
     return;
   }
-  const cur = Math.min(initialSlide, manifest.slides.length - 1);
+  const cur = Math.min(initialSlide, manifest.slides.length + 1);
   await showSlide(cur);
   //console.log(cur);
   await preloadSessionState(sessionId, cur);
