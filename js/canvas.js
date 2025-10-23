@@ -739,6 +739,7 @@ async function sendToStoryboard() {
       const cx = comp.getContext('2d');
 
       // paint for frame 1
+      let paintURL = null;
       const p = paintLayers[n];
       if (p){
         cx.drawImage(p, 0,0,p.width,p.height, box.x, box.y, box.width, box.height);
@@ -750,7 +751,7 @@ async function sendToStoryboard() {
           cx.drawImage(paintImg, 0, 0, paintImg.width, paintImg.height, box.x, box.y, box.width, box.height);
         }
       }
-
+      //console.log("paintURL:", paintURL);
       // outline (frame 1)
       const ol = outlineImgs[n];
       if (ol) {
@@ -788,8 +789,6 @@ async function sendToStoryboard() {
     alert('Send to Storyboard failed. See console for details.');
   }
 }
-
-
 
 /* ---------- Expose for buttons ---------- */
 Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
