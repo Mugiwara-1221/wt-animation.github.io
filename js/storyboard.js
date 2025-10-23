@@ -3,9 +3,15 @@
 // Use a fixed version tag instead of Date.now() to stabilize caching between refreshes
 const VERSION = "2025-10-22"; // bump only when assets change
 
+const API_BASE =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:8000"
+    : "https://wt-animation-github-io.onrender.com";
+
 // --- Query & context (must be first) ---
 const qs  = new URLSearchParams(location.search);
 const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
+const sessionId = localStorage.getItem("sessionCode")
 
 // story id (keep fallback logic, normalized with dashes)
 const storyId = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
@@ -43,6 +49,8 @@ const scene = document.getElementById("scene");
 // caches & animation loop registry
 const framesCache = new Map();
 const loops       = new Set();
+
+framesCache.clear();
 
 const pct = n => `${n}%`;
 function slideNoFromPath(p){
@@ -196,7 +204,6 @@ async function placeCharacter(cfg, slideNo){
   const ro = new ResizeObserver(() => fitCanvasToCSS(cvs, () => draw(curIx)));
   fitCanvasToCSS(cvs, () => draw(curIx));
   ro.observe(cvs);
-
   try {
     // 1) Prefer painted frames for the selected character on this slide
     const paintedURLs = getPaintedFrames(storyId, slideNo, id);
@@ -298,6 +305,58 @@ async function discoverManifest(){
   catch { throw new Error("slides.json is invalid JSON"); }
 }
 
+// Socket
+const socket = new WebSocket(`${API_BASE.replace(/^http/, "ws")}/ws/${sessionId}`);
+socket.addEventListener("open", () => {
+  console.log("Connected to session", sessionId);
+});
+socket.addEventListener("message", (event) => {
+  const msg = JSON.parse(event.data);
+  console.log("WS message:", msg);
+  if (msg.type === "character_frames") {
+    // handle new frames from another user
+    // e.g. call placeCharacter with msg.character, msg.frames, msg.fps
+  }
+});
+socket.addEventListener("close", () => {
+  console.log("Socket closed");
+});
+socket.addEventListener("error", (err) => {
+  console.error("Socket error", err);
+});
+
+socket.addEventListener("message", async (event) => {
+  let msg;
+  try {
+    msg = JSON.parse(event.data);
+  } catch (err) {
+    console.warn("Non‑JSON WS message:", event.data);
+    return;
+  }
+  if (msg.type === "character_frames") {
+    const id   = msg.character;
+    const fps  = msg.fps;
+    const newFrames = msg.frames;
+    // Look up placement info for this character (from your manifest/config)
+    const { x, y, w, h } = lookupPlacement(id, currentSlideNo);
+    // Remove any existing placeholder canvas for this character
+    const oldLayer = document.querySelector(`.char-layer.${id}`);
+    if (oldLayer) oldLayer.remove();
+    // Place the new character with server frames
+    await placeCharacter(
+      {
+        id,
+        x, y, w, h,
+        z: 1,
+        frameCount: newFrames.length,
+        fps,
+        serverFrames: newFrames
+      },
+      currentSlideNo
+    );
+  }
+});
+
 /* ---------------- Slide rendering ---------------- */
 async function showSlide(i){
   if (!manifest) return;
@@ -323,18 +382,36 @@ async function showSlide(i){
     (manifest.slides.indexOf(s) + 1);
 
   const chars = Array.isArray(s.characters) ? s.characters : [];
+  console.log(chars);
   await Promise.allSettled(
-    chars.map(c => placeCharacter(
-      {
-        frameCount: c.frameCount || 4,
-        fps:        c.fps ?? 6,
-        z:          1,
-        ...c
-      },
-      slideNo
-    ))
+    chars.map(async c => {
+      // Try to fetch server frames for this character
+      let serverFrames = null;
+      try {
+        const res = await fetch(`${API_BASE}/session/${sessionId}/frames`);
+        if (res.ok) {
+          const data = await res.json(); // { frames: [...], fps, start_time, user_id }
+          console.log(data);
+          if (data.frames && data.frames.length) {
+            serverFrames = data;
+          }
+        }
+      } catch (err) {
+        console.warn("[storyboard] server fetch failed for", c.id, err);
+      }
+      // Call placeCharacter with either server frames or manifest config
+      return placeCharacter(
+        {
+          frameCount: serverFrames ? serverFrames.frames.length : (c.frameCount || 4),
+          fps:        serverFrames ? serverFrames.fps : (c.fps ?? 6),
+          z:          1,
+          ...c,
+          serverFrames: serverFrames ? serverFrames.frames : null
+        },
+        slideNo
+      );
+    })
   );
-
   // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
