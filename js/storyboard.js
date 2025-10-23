@@ -1,5 +1,8 @@
 // js/storyboard.js — colored PNG frame animation
 
+// Use a fixed version tag instead of Date.now() to stabilize caching between refreshes
+const VERSION = "2025-10-22"; // bump only when assets change
+
 // --- Query & context (must be first) ---
 const qs  = new URLSearchParams(location.search);
 const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
@@ -14,7 +17,7 @@ let initialSlide = 0;
 if (!Number.isNaN(requested1)) initialSlide = Math.max(0, requested1 - 1);
 else if (!Number.isNaN(fromCtx)) initialSlide = Math.max(0, fromCtx - 1);
 
-// selected character (optional)
+// (optional) selected character hint
 const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
 
 // storyIDs → repo folders (for frames)
@@ -23,8 +26,8 @@ const STORY_FOLDER_MAP = new Map([
   ["lion-mouse",    "lion-mouse"],
   ["little-ducks",  "little-ducks"],
   ["prince-pauper", "prince-pauper"],
-  ["frog-prince", "frog-prince"],
-  ["old-mcdonald", "old-mcdonald"],
+  ["frog-prince",   "frog-prince"],
+  ["old-mcdonald",  "old-mcdonald"],
 ]);
 
 function resolveStoryFolder(id) {
@@ -39,35 +42,7 @@ const scene = document.getElementById("scene");
 
 // caches & animation loop registry
 const framesCache = new Map();
-const loops       = new Set(); 
-
-async function getFrames(prefix, count){
-  const key = `${prefix}|${count}`;
-  if (framesCache.has(key)) return framesCache.get(key);
-
-  // cache-buster so slide1/tortoise1.png and slide2/tortoise1.png never collide
-  const now = Date.now();
-  const urls = Array.from({length: count}, (_, i) =>
-    `${prefix}${i+1}.png?v=${now}`
-  );
-
-  const loaders = urls.map(u =>
-    loadImage(u).catch(() => null)
-  );
-
-  const images = (await Promise.all(loaders)).filter(Boolean);
-  if (!images.length){
-    console.warn("[storyboard] no frames loaded for", urls);
-  } else {
-    console.log("[storyboard] frames:", urls);
-  }
-
-  framesCache.set(key, images);
-  return images;
-}
-
-let manifest = null;
-let cur = 0;
+const loops       = new Set();
 
 const pct = n => `${n}%`;
 function slideNoFromPath(p){
@@ -90,21 +65,30 @@ function clearLayers(){
 function loadImage(src){
   return new Promise((res, rej) => {
     const im = new Image();
-    im.onload = () => res(im);
+    im.onload  = () => res(im);
     im.onerror = () => rej(new Error("Failed to load " + src));
-    im.src = src;
+    im.src     = src;
   });
 }
 
-function fitCanvasToCSS(cvs){
-  const r = cvs.getBoundingClientRect();
+/**
+ * Resize canvas only when necessary (resizing clears it),
+ * and optionally redraw the current frame immediately after.
+ */
+function fitCanvasToCSS(cvs, redraw /* fn */){
+  const r   = cvs.getBoundingClientRect();
   const dpr = devicePixelRatio || 1;
-  cvs.width  = Math.max(1, Math.round(r.width  * dpr));
-  cvs.height = Math.max(1, Math.round(r.height * dpr));
-  const ctx = cvs.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.imageSmoothingEnabled = false;
-  return ctx;
+
+  const W = Math.max(1, Math.round(r.width  * dpr));
+  const H = Math.max(1, Math.round(r.height * dpr));
+
+  if (cvs.width !== W || cvs.height !== H) {
+    cvs.width  = W;
+    cvs.height = H;
+    if (typeof redraw === "function") {
+      try { redraw(); } catch(e){ console.warn("[storyboard] redraw after resize failed", e); }
+    }
+  }
 }
 
 /* ---------- Read painted frames saved by canvas (chronological) ---------- */
@@ -119,24 +103,65 @@ function getPaintedFrames(storyDash, slide1, charId) {
   return null;
 }
 
+/* ---------- Normalize framesPath story folder defensively ---------- */
+function normalizeFramesPrefix(p){
+  if (!p) return p;
+  // Map any incoming story folder to the canonical (dash-based) folder
+  return p.replace(/images\/frames\/([^/]+)/, (_, s) => `images/frames/${resolveStoryFolder(s)}`);
+}
+
+/* ---------------- Frame loading with stable cache-buster ------------- */
+async function getFrames(prefix, count){
+  const key = `${prefix}|${count}`;
+  if (framesCache.has(key)) return framesCache.get(key);
+
+  // Build stable URLs using VERSION
+  const urls = Array.from({ length: count }, (_, i) =>
+    `${prefix}${i + 1}.png?v=${VERSION}`
+  );
+
+  // Load with logging; do not swallow silently
+  const images = await Promise.all(
+    urls.map(u =>
+      loadImage(u).catch(err => {
+        console.error("[storyboard] frame load fail:", u, err);
+        return null;
+      })
+    )
+  );
+
+  // Enforce all-or-nothing for this character set
+  if (images.some(img => !img)) {
+    console.error("[storyboard] missing one or more frames for set:", urls);
+    framesCache.set(key, []); // cache failure to avoid loops
+    return [];
+  }
+
+  console.log("[storyboard] frames OK:", urls);
+  framesCache.set(key, images);
+  return images;
+}
+
 /* ----------------- Character placement ----------------- */
 async function placeCharacter(cfg, slideNo){
   const { id, x, y, w, h, z = 1 } = cfg;
   const frameCount = cfg.frameCount || 4;
   const fps        = cfg.fps ?? 6;
 
-  const host = (()=>{
+  const host = (() => {
     let h = document.getElementById("charHost");
     if (!h){
       h = document.createElement("div");
       h.id = "charHost";
-      Object.assign(h.style, { position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none" });
+      Object.assign(h.style, {
+        position:"absolute", left:0, top:0, width:"100%", height:"100%", pointerEvents:"none"
+      });
       scene.parentElement.appendChild(h);
     }
     return h;
   })();
 
-  const framesPrefix = (cfg.framesPath && cfg.framesPath.trim()) ||
+  const framesPrefix = normalizeFramesPrefix((cfg.framesPath && cfg.framesPath.trim())) ||
     `images/frames/${storyFolder}/frame${slideNo}/${id}/${id}`;
 
   const cvs = document.createElement("canvas");
@@ -150,98 +175,110 @@ async function placeCharacter(cfg, slideNo){
     pointerEvents:"none"
   });
   host.appendChild(cvs);
-  const ctx = fitCanvasToCSS(cvs);
-  const ro  = new ResizeObserver(()=>fitCanvasToCSS(cvs));
+  const ctx = cvs.getContext("2d");
+
+  // local draw helper (defined before observer so we can pass it in)
+  let baseFrames = null;
+  let curIx = 0;
+  function draw(ix = curIx) {
+    curIx = Math.min(ix, (baseFrames?.length || 1) - 1);
+    const r   = cvs.getBoundingClientRect();
+    const dpr = devicePixelRatio || 1;
+    // re-apply transform every draw (resizes reset transform)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, r.width, r.height);
+    const frame = baseFrames?.[curIx];
+    if (frame) ctx.drawImage(frame, 0, 0, r.width, r.height);
+  }
+
+  // initial fit + observe (redraw after any size change)
+  const ro = new ResizeObserver(() => fitCanvasToCSS(cvs, () => draw(curIx)));
+  fitCanvasToCSS(cvs, () => draw(curIx));
   ro.observe(cvs);
 
-  try{
+  try {
     // 1) Prefer painted frames for the selected character on this slide
-  const paintedURLs = getPaintedFrames(storyId, slideNo, id);
-let baseFrames = null;
-
-if (paintedURLs) {
-  const loaders = paintedURLs.map(u =>
-    u ? loadImage(u).catch(() => null) : Promise.resolve(null)
-  );
-  const imgs = (await Promise.all(loaders)).filter(Boolean);
-
-  // accept 1-frame or multi-frame bundles
-  if (imgs.length) {
-    baseFrames = imgs;
-    // if the manifest says single-frame, clamp to 1
-    if ((cfg.frameCount || 0) <= 1 && baseFrames.length > 1) {
-      baseFrames = [baseFrames[0]];
+    const paintedURLs = getPaintedFrames(storyId, slideNo, id);
+    if (paintedURLs) {
+      const imgs = await Promise.all(
+        paintedURLs.map(u =>
+          u ? loadImage(u).catch(err => {
+                console.error("[storyboard] painted frame load fail:", u, err);
+                return null;
+              })
+            : Promise.resolve(null)
+        )
+      );
+      if (imgs.some(im => !im)) {
+        console.error("[storyboard] painted set incomplete for", id, "slide", slideNo, paintedURLs);
+        baseFrames = [];
+      } else if (imgs.length) {
+        baseFrames = imgs;
+        if ((cfg.frameCount || 0) <= 1 && baseFrames.length > 1) {
+          baseFrames = [baseFrames[0]];
+        }
+      }
     }
-  }
-}
 
-if (!baseFrames) {
-  const now = Date.now();
+    // 2) If no painted frames, use framesPath / auto stem
+    if (!baseFrames) {
+      if ((frameCount || 0) <= 1) {
+        // SINGLE-FRAME
+        const singleURL = /\.png$/i.test(framesPrefix)
+          ? `${framesPrefix}?v=${VERSION}`
+          : `${framesPrefix}1.png?v=${VERSION}`;
 
-  if ((frameCount || 0) <= 1) {
-    // SINGLE-FRAME
-    const singleURL = /\.png$/i.test(framesPrefix)
-      ? `${framesPrefix}?v=${now}`
-      : `${framesPrefix}1.png?v=${now}`;
-    try {
-      const img = await loadImage(singleURL);
-      baseFrames = [img];
-    } catch {
-      console.warn("[storyboard] single-frame load failed:", singleURL);
-      baseFrames = [];
+        const img = await loadImage(singleURL).catch(err => {
+          console.error("[storyboard] single-frame load fail:", singleURL, err);
+          return null;
+        });
+        baseFrames = img ? [img] : [];
+      } else {
+        // MULTI-FRAME
+        const stem = /\.png$/i.test(framesPrefix)
+          ? framesPrefix.replace(/\.png$/i, "")
+          : framesPrefix;
+        baseFrames = await getFrames(stem, frameCount);
+      }
     }
-  } else {
-    // MULTI-FRAME
-    const stem = /\.png$/i.test(framesPrefix)
-      ? framesPrefix.replace(/\.png$/i, "")
-      : framesPrefix;
-    baseFrames = await getFrames(stem, frameCount);
-  }
-}
 
-/* >>> ADD THESE LINES <<< */
-// bail if we still have nothing
-if (!baseFrames || !baseFrames.length) {
-  console.warn("[storyboard] no frames to draw for", id);
-  ro.disconnect();
-  return;
-}
-
-// local draw helper (must be after baseFrames is set)
-function draw(ix) {
-  const r = cvs.getBoundingClientRect();
-  ctx.clearRect(0, 0, r.width, r.height);
-  const frame = baseFrames[Math.min(ix, baseFrames.length - 1)];
-  if (frame) ctx.drawImage(frame, 0, 0, r.width, r.height);
-}
-
-draw(0);
-
-// --- decide whether to animate ---
-const shouldAnimate = (frameCount > 1) && (baseFrames.length > 1) && (fps > 0);
-
-if (shouldAnimate) {
-  let i = 0, last = performance.now(), raf = 0, stop = false;
-  const frameMs = 1000 / Math.max(1, fps);
-  function tick(ts) {
-    if (stop) return;
-    if (ts - last >= frameMs) {
-      last = ts;
-      i = (i + 1) % baseFrames.length;
-      draw(i);
+    // 3) Guard: if still nothing, skip this character cleanly
+    if (!baseFrames || !baseFrames.length) {
+      console.warn("[storyboard] no frames to draw for", id, "slide", slideNo, "prefix:", framesPrefix);
+      ro.disconnect();
+      return;
     }
-    raf = requestAnimationFrame(tick);
-  }
-  raf = requestAnimationFrame(tick);
-  loops.add(() => {
-    stop = true;
-    cancelAnimationFrame(raf);
-    ro.disconnect();
-  });
-} else {
-  // single-frame path: stay static (e.g., 5 Little Ducks)
-  loops.add(() => ro.disconnect());
-}
+
+    // first paint
+    draw(0);
+
+    // --- decide whether to animate ---
+    const shouldAnimate = (frameCount > 1) && (baseFrames.length > 1) && (fps > 0);
+
+    if (shouldAnimate) {
+      let i = 0, last = performance.now(), raf = 0, stop = false;
+      const frameMs = 1000 / Math.max(1, fps);
+      function tick(ts) {
+        if (stop) return;
+        if (ts - last >= frameMs) {
+          i = (i + 1) % baseFrames.length;
+          curIx = i;          // keep current index synced for redraws after resize
+          draw(i);
+          last = ts;
+        }
+        raf = requestAnimationFrame(tick);
+      }
+      raf = requestAnimationFrame(tick);
+      loops.add(() => {
+        stop = true;
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+      });
+    } else {
+      // single-frame path: stay static (e.g., 5 Little Ducks)
+      loops.add(() => ro.disconnect());
+    }
   } catch (e) {
     console.warn("[storyboard] character failed:", id, e);
     ro.disconnect();
@@ -249,6 +286,9 @@ if (shouldAnimate) {
 }
 
 /* ---------------- Manifest discovery ---------------- */
+let manifest = null;
+let cur = 0;
+
 async function discoverManifest(){
   const url = `stories/${storyId}/slides.json`;
   const r = await fetch(url, { cache: "no-store" });
@@ -300,7 +340,6 @@ async function showSlide(i){
   url.searchParams.set("story", storyId);
   url.searchParams.set("slide", String(cur + 1));  // keep URL 1-based
   history.replaceState({}, "", url);
-
 
   window.__slides = { index: cur, count: manifest.slides.length };
   window.dispatchEvent(new Event("slidechange"));
