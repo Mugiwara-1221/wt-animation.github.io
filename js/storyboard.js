@@ -371,6 +371,28 @@ function lookupPlacement(id, slideNo) {
   return slide.characters.find(c => c.id === id) || {};
 }
 
+async function preloadSessionState(sessionId, slideNo) {
+  const res = await fetch(`${API_BASE}/session/${sessionId}/state`);
+  const state = await res.json();
+
+  state.characters.forEach(c => {
+    const oldLayer = document.querySelector(`.char-layer.${c.id}`);
+    if (oldLayer) oldLayer.remove();
+
+    placeCharacter(
+      {
+        id: c.id,
+        x: c.x, y: c.y, w: c.w, h: c.h,
+        z: 1,
+        frameCount: c.frames.length,
+        fps: c.fps,
+        serverFrames: c.frames
+      },
+      slideNo
+    );
+  });
+}
+
 /* ---------------- Slide rendering ---------------- */
 async function showSlide(i){
   if (!manifest) return;

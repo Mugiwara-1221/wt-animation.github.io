@@ -191,6 +191,19 @@ async def get_frames(sid: str):
         raise HTTPException(status_code=404, detail="Session not found")
     return session.get("frames", {})
 
+@app.get("/session/{sid}/state")
+async def get_session_state(sid: str):
+    session = sessions.get(sid)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    frames = session.get("frames", {})
+    return {
+        "characters": [
+            {"id": cid, **cdata}
+            for cid, cdata in frames.items()
+        ]
+    }
+
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):
     print(f"[WS] Incoming connection for session {sid}")
