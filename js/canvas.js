@@ -13,6 +13,7 @@ if (hostname === "localhost" || hostname === "127.0.0.1") {
 // Case 2: production (your deployed site)
 else {
   API_BASE = "https://wt-animation-github-io.onrender.com";
+  console.log("here");
 }
 
 /* ---------- Canvas setup ---------- */
