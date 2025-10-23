@@ -357,6 +357,12 @@ socket.addEventListener("message", async (event) => {
   }
 });
 
+function lookupPlacement(id, slideNo) {
+  const slide = manifest.slides[slideNo - 1];
+  if (!slide || !Array.isArray(slide.characters)) return {};
+  return slide.characters.find(c => c.id === id) || {};
+}
+
 /* ---------------- Slide rendering ---------------- */
 async function showSlide(i){
   if (!manifest) return;
