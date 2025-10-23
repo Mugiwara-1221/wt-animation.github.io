@@ -1,24 +1,57 @@
-
 // js/sprite-select.js
 // Pixel-accurate hover & click on .character sprites.
-// Uses Azure locks if available, but NEVER blocks rendering if API is down.
+// Now aware of multi-slide selection; preserves slides list and
+// allows cycling among ONLY the selected slides.
 
-import { readCtx, nextURL } from "./flow.js";
+import {
+  readCtx,
+  nextURL,
+  // ↓ these helpers were added to flow.js in step 1
+  getSelectedSlides,
+  nextInSelection,
+  prevInSelection
+} from "./flow.js";
 
 // ---- import Azure helpers (optional at runtime) ----
 let Azure = null;
 try {
   Azure = await import("./azure-api.js");
 } catch {
-  //proceed without Azure (GitHub Pages, local file, etc.)
+  // proceed without Azure (GitHub Pages, local file, etc.)
 }
 
 /************ Session / flow ctx ************/
-const ctx = readCtx();             // story/grade/etc if user followed the flow
+const ctx = readCtx(); // story/grade/slide/slides if user followed the flow
 const sessionId =
   ctx.session ||
-  localStorage.getItem("sessionCode") || // fallback if someone arrived directly
+  localStorage.getItem("sessionCode") ||
   null;
+
+// Selected slides (sorted, unique)
+const selectedSlides = getSelectedSlides(ctx);
+
+// Ensure we are looking at a valid slide from the selection
+let slideNo = Number(ctx.slide) || (selectedSlides?.[0] ?? 1);
+if (selectedSlides?.length && !selectedSlides.includes(slideNo)) {
+  slideNo = selectedSlides[0];
+  // snap URL so refresh/share is correct
+  const u = new URL(location.href);
+  u.searchParams.set("slide", String(slideNo));
+  if (selectedSlides.length) u.searchParams.set("slides", selectedSlides.join(","));
+  history.replaceState({}, "", u.toString());
+}
+
+// Optional: wire prev/next buttons if present
+const btnPrev = document.getElementById("btnPrev");
+const btnNext = document.getElementById("btnNext");
+btnPrev?.addEventListener("click", () => goToSlide(prevInSelection(slideNo, selectedSlides)));
+btnNext?.addEventListener("click", () => goToSlide(nextInSelection(slideNo, selectedSlides)));
+
+// Also allow keyboard ←/→ to move among selected slides
+addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft")  goToSlide(prevInSelection(slideNo, selectedSlides));
+  if (e.key === "ArrowRight") goToSlide(nextInSelection(slideNo, selectedSlides));
+});
 
 // Stable device token (for locking identity)
 const deviceToken = (() => {
@@ -31,8 +64,7 @@ const deviceToken = (() => {
 })();
 
 // List any temporarily disabled characters here
-const TEMP_DISABLED = new Set(["bush"]); // ← replace with your data-char id(s)
-
+const TEMP_DISABLED = new Set(["bush"]); // ← replace or empty as needed
 
 /************ Pixel-accurate hover + click ************/
 const hit = new Map();
@@ -61,17 +93,22 @@ function isOverInk(img, off, evt) {
   return off.ctx.getImageData(x, y, 1, 1).data[3] > 20;
 }
 
-// Include sprite URL so canvas never confuses cross-story characters
+// Include slide + sprite URL so canvas has full context.
+// IMPORTANT: preserve `slides=` in the URL so downstream pages can cycle among them.
 function goToCanvas(charKey, spriteUrl) {
-  const url = nextURL("canvas.html", ctx, {
+  const url = nextURL("canvas.html", { ...ctx, slide: String(slideNo) }, {
     char: charKey,
-    sprite: spriteUrl || ""
+    includeSlides: true     // <- flow.nextURL will append slides if available
   });
-  location.href = url;
+  // ensure slides query param exists even if some page didn't include it earlier
+  const u = new URL(url, location.href);
+  if (selectedSlides?.length) u.searchParams.set("slides", selectedSlides.join(","));
+  if (spriteUrl) u.searchParams.set("sprite", spriteUrl);
+  location.href = u.toString();
 }
 
 function wire(img) {
-  // Build hit-map as soon as the image is ready
+  // Build hit-map when the image is ready
   if (img.complete && (img.naturalWidth || img.width)) buildHitCanvas(img);
   else {
     if ("decode" in img) {
@@ -93,57 +130,48 @@ function wire(img) {
   img.addEventListener("mouseleave", onLeave);
   img.addEventListener("touchstart", onMove, { passive: true });
 
-img.addEventListener("click", async (e) => {
-  if (img.classList.contains("disabled")) return;   // ← belt-and-suspenders
-  const off = hit.get(img);
+  img.addEventListener("click", async (e) => {
+    if (img.classList.contains("disabled")) return;
+    const off = hit.get(img);
 
-  // Transparent pixel? Let the element underneath receive this click.
-  if (off && !isOverInk(img, off, e)) {
-    e.preventDefault();
-    e.stopPropagation();
+    // Transparent pixel? route to element underneath
+    if (off && !isOverInk(img, off, e)) {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const prev = img.style.pointerEvents;
-    img.style.pointerEvents = "none";               // temporarily ignore this img
-    const under = document.elementFromPoint(e.clientX, e.clientY);
-    img.style.pointerEvents = prev || "";           // restore immediately
+      const prev = img.style.pointerEvents;
+      img.style.pointerEvents = "none";
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      img.style.pointerEvents = prev || "";
 
-    if (under && under !== img) {
-      under.dispatchEvent(new MouseEvent("click", {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-        clientX: e.clientX,
-        clientY: e.clientY
-      }));
-    }
-    return; // done
-  }
-
-  if (img.classList.contains("locked")) return;
-
-  const charKey   = img.dataset.char;
-  const spriteUrl = img.dataset.sprite || img.src;
-
-  // No session or no Azure? Just navigate — do NOT block rendering.
-  if (!sessionId || !Azure?.lockCharacter) {
-    goToCanvas(charKey, spriteUrl);
-    return;
-  }
-
-  // Try Azure lock; on failure, proceed anyway so class can continue.
-  try {
-    const res = await Azure.lockCharacter(sessionId, charKey, deviceToken);
-    const ok = !!res && !!res.locks && res.locks[charKey] === deviceToken;
-    if (!ok) {
-      alert("Sorry, this character is already taken.");
+      if (under && under !== img) {
+        under.dispatchEvent(new MouseEvent("click", {
+          view: window, bubbles: true, cancelable: true,
+          clientX: e.clientX, clientY: e.clientY
+        }));
+      }
       return;
     }
-    goToCanvas(charKey, spriteUrl);
-  } catch (err) {
-    console.warn("Lock failed, proceeding without lock:", err);
-    goToCanvas(charKey, spriteUrl);
-  }
-}, true);
+
+    if (img.classList.contains("locked")) return;
+
+    const charKey   = img.dataset.char;
+    const spriteUrl = img.dataset.sprite || img.src;
+
+    if (!sessionId || !Azure?.lockCharacter) {
+      goToCanvas(charKey, spriteUrl);
+      return;
+    }
+    try {
+      const res = await Azure.lockCharacter(sessionId, charKey, deviceToken);
+      const ok = !!res && !!res.locks && res.locks[charKey] === deviceToken;
+      if (!ok) { alert("Sorry, this character is already taken."); return; }
+      goToCanvas(charKey, spriteUrl);
+    } catch (err) {
+      console.warn("Lock failed, proceeding without lock:", err);
+      goToCanvas(charKey, spriteUrl);
+    }
+  }, true);
 }
 
 function wireAllCurrentSprites() {
@@ -158,20 +186,6 @@ function wireAllCurrentSprites() {
     }
   });
   sprites.forEach(img => ro.observe(img));
-}
-
-/************ Boot: ALWAYS wire sprites first ************/
-async function boot() {
-  if (document.readyState === "loading") {
-    await new Promise(r => document.addEventListener("DOMContentLoaded", r, { once: true }));
-  }
-  wireAllCurrentSprites();   // characters are already injected by sprite-select.html
-  // Tag disabled sprites
-document.querySelectorAll(".character").forEach(img => {
-  const id = (img.dataset.char || "").toLowerCase();
-  if (TEMP_DISABLED.has(id)) img.classList.add("disabled");
-});
-  scheduleLockRefresh(0);    // non-blocking lock polling
 }
 
 /************ Refresh locks (non-blocking with backoff) ************/
@@ -199,17 +213,16 @@ async function refreshLocks() {
   }
 }
 
-// === Strict Pixel-Perfect Router ===
+/************ Strict Pixel-Perfect Router ************/
 (function enableStrictPixelRouter() {
   const selector = '.character';
   const alphaThreshold = 20;
 
-  // Offscreen cache for alpha sampling
   const hitCache = new WeakMap();
 
   function ensureHitCanvas(img) {
     let h = hitCache.get(img);
-    const w = img.naturalWidth || img.width;
+    const w  = img.naturalWidth || img.width;
     const hh = img.naturalHeight || img.height;
     if (h && h.w === w && h.h === hh) return h;
 
@@ -238,23 +251,21 @@ async function refreshLocks() {
     return h.ctx.getImageData(x, y, 1, 1).data[3];
   }
 
-  // Find candidate sprites by geometry (since pointer-events:none hides them from elementsFromPoint)
   function spritesUnderPoint(clientX, clientY) {
-  const all = Array.from(document.querySelectorAll(selector));
-  return all
-    .filter(el => {
-      const r = el.getBoundingClientRect();
-      const hitGeom = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
-      return hitGeom && !el.classList.contains("disabled"); // ← skip disabled
-    })
-    .sort((a, b) => {
-      const za = parseInt(getComputedStyle(a).zIndex || '0', 10);
-      const zb = parseInt(getComputedStyle(b).zIndex || '0', 10);
-      if (za !== zb) return zb - za; // higher z-index first
-      // DOM order tie-breaker: later appears on top
-      return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
-    });
-}
+    const all = Array.from(document.querySelectorAll(selector));
+    return all
+      .filter(el => {
+        const r = el.getBoundingClientRect();
+        const hitGeom = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+        return hitGeom && !el.classList.contains("disabled");
+      })
+      .sort((a, b) => {
+        const za = parseInt(getComputedStyle(a).zIndex || '0', 10);
+        const zb = parseInt(getComputedStyle(b).zIndex || '0', 10);
+        if (za !== zb) return zb - za; // higher z-index first
+        return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+      });
+  }
 
   function topOpaqueSpriteAt(clientX, clientY) {
     const candidates = spritesUnderPoint(clientX, clientY);
@@ -265,7 +276,6 @@ async function refreshLocks() {
     return null;
   }
 
-  // Disable native rectangle hits globally (CSS also does this; JS enforces for dynamic nodes)
   function disableNativeHits() {
     for (const img of document.querySelectorAll(selector)) {
       img.style.pointerEvents = 'none';
@@ -274,42 +284,53 @@ async function refreshLocks() {
   }
   disableNativeHits();
 
-  // Hover state (drives your .character.hovered CSS)
   let lastHover = null;
   document.addEventListener('mousemove', (e) => {
-    const hit = topOpaqueSpriteAt(e.clientX, e.clientY);
-    const canHover = hit && !hit.classList.contains('disabled');  // ← skip disabled
-
-    if (lastHover && lastHover !== hit) lastHover.classList.remove('hovered');
-    if (hit && hit !== lastHover) hit.classList.add('hovered');
-    lastHover = hit || null;
-
-    document.body.style.cursor = hit ? 'pointer' : 'default';
+    const h = topOpaqueSpriteAt(e.clientX, e.clientY);
+    const canHover = h && !h.classList.contains('disabled');
+    if (lastHover && lastHover !== h) lastHover.classList.remove('hovered');
+    if (h && h !== lastHover && canHover) h.classList.add('hovered');
+    lastHover = h || null;
+    document.body.style.cursor = h ? 'pointer' : 'default';
   }, true);
 
-  // Click routing
   document.addEventListener('click', (e) => {
-    if (!e.isTrusted) return; // ignore synthetic clicks we dispatch ourselves
-    const hit = topOpaqueSpriteAt(e.clientX, e.clientY);
-     if (!hit || hit.classList.contains('disabled')) return;  // ← skip disabled
-
-    // Stop the native click on any containers, route to the right sprite
+    if (!e.isTrusted) return; // ignore synthetic clicks
+    const h = topOpaqueSpriteAt(e.clientX, e.clientY);
+    if (!h || h.classList.contains('disabled')) return;
     e.preventDefault();
     e.stopPropagation();
-
-    // Fire a normal click on the sprite so your wire(img) listener runs
-    hit.dispatchEvent(new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: e.clientX,
-      clientY: e.clientY
+    h.dispatchEvent(new MouseEvent('click', {
+      view: window, bubbles: true, cancelable: true,
+      clientX: e.clientX, clientY: e.clientY
     }));
   }, true);
 
-  // If sprites are added later, keep them inert to native hits
   const mo = new MutationObserver(disableNativeHits);
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 
+/************ Navigation helpers ************/
+function goToSlide(n) {
+  if (!n || n === slideNo) return;
+  slideNo = Number(n);
+  const u = new URL(location.href);
+  u.searchParams.set("slide", String(slideNo));
+  if (selectedSlides?.length) u.searchParams.set("slides", selectedSlides.join(","));
+  location.href = u.toString(); // reload to show the proper page-specific characters
+}
+
+/************ Boot ************/
+async function boot() {
+  if (document.readyState === "loading") {
+    await new Promise(r => document.addEventListener("DOMContentLoaded", r, { once: true }));
+  }
+  wireAllCurrentSprites(); // characters are already in the DOM (page-specific)
+  // Tag disabled sprites
+  document.querySelectorAll(".character").forEach(img => {
+    const id = (img.dataset.char || "").toLowerCase();
+    if (TEMP_DISABLED.has(id)) img.classList.add("disabled");
+  });
+  scheduleLockRefresh(0); // non-blocking lock polling
+}
 boot();
