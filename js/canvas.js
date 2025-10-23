@@ -12,6 +12,7 @@ const spriteCanvas = document.getElementById("spriteCanvas");
 const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
+const userId = localStorage.getItem("memberId");
 
 /* === Mini preview + appearances-only nav === */
 const previewCanvas = document.getElementById("previewCanvas");
@@ -756,7 +757,17 @@ async function sendToStoryboard() {
     // stash for storyboard (1..4 loop)
     const sbKey = `sbFrames:${selectedStory || "tortoise-hare"}:${slide1}:${selectedChar}`;
     localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 0}));
-
+    console.log(frames);
+    await fetch(`${API_BASE}/session/${sessionCode}/save_frames`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        character: selectedChar,
+        user_id: parseInt(userId),
+        frames,   // array of base64 PNGs or stroke data
+        fps: 0
+      })
+    });
     // Navigate
     const q = new URLSearchParams({ story: selectedStory, slide: String(slide1), char: selectedChar });
     if (sessionCode)   q.set("session", sessionCode);
