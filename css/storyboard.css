@@ -55,6 +55,24 @@ h2 {
   image-rendering: pixelated; /* keeps line art crisp when scaled */
 }
 
+#uploadLog {
+  position: absolute;
+  top: 0;          /* start at top */
+  right: 0;        /* stick to right edge */
+  width: 200px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.8);
+  border-left: 1px solid #ccc;
+  font-size: 0.9em;
+}
+
+#uploadList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 /* ──────────────────────────────────────────────────────────────
    Character image rules (ONLY apply to <img class="character">).
    Your animCanvas also has class="character", so we scope these

@@ -72,11 +72,17 @@ function setTitle(){
   if (h2) h2.textContent = `Story Scene: ${manifest?.storyTitle || "Story"}`;
 }
 
-function clearLayers(){
+function clearLayers(keepIds = []){
   for (const stop of loops) { try { stop(); } catch{} }
   loops.clear();
   const host = document.getElementById("charHost");
-  if (host) host.innerHTML = "";
+  if (!host) return;
+  host.querySelectorAll(".char-layer").forEach(layer => {
+    const id = layer.dataset.charId;
+    if (!keepIds.includes[id]) {
+      layer.remove();
+    }
+  });
 }
 
 function loadImage(src){
@@ -301,6 +307,69 @@ async function placeCharacter(cfg, slideNo){
   }
 }
 
+async function placePaintedCharacter(cfg) {
+  let cvs = document.querySelector(`.char-layer.${cfg.id}`);
+  if (!cvs) {
+    cvs = document.createElement("canvas");
+    cvs.className = `char-layer ${cfg.id}`;
+    const host = document.getElementById("charHost");
+    if (!host) {
+      console.warn("charHost not found");
+      return;
+    }
+    host.appendChild(cvs);
+  }
+  const ctx = cvs.getContext("2d");
+
+  const baseFrames = await Promise.all(
+    (cfg.serverFrames || []).map(async src => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      return img;
+    })
+  );
+  if (!baseFrames.length) {
+    console.warn("No frames for", cfg.id);
+    return;
+  }
+
+  const first = baseFrames[0];
+  const drawW = cfg.w && cfg.w > 0 ? cfg.w : first.width;
+  const drawH = cfg.h && cfg.h > 0 ? cfg.h : first.height;
+
+  cvs.width = drawW;
+  cvs.height = drawH;
+
+  Object.assign(cvs.style, {
+    position: "absolute",
+    left: pct(cfg.x),
+    top: pct(cfg.y),
+    width: drawW + "px",
+    height: drawH + "px",
+    zIndex: String(cfg.z || 1),
+    pointerEvents: "none"
+  });
+  let curIx = 0;
+  function draw(ix = curIx) {
+    curIx = Math.min(ix, baseFrames.length - 1);
+    const dpr = devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.drawImage(baseFrames[curIx], 0, 0, cvs.width, cvs.height);
+  }
+  draw(0);
+  if (cvs._animTimer) clearInterval(cvs._animTimer);
+  if (baseFrames.length > 1 && cfg.fps) {
+    cvs._animTimer = setInterval(() => {
+      curIx = (curIx + 1) % baseFrames.length;
+      draw(curIx);
+    }, 1000 / cfg.fps);
+  }
+  console.log("Painted character loaded:", cfg.id);
+}
+
 /* ---------------- Manifest discovery ---------------- */
 let manifest = null;
 let cur = 0;
@@ -339,9 +408,9 @@ socket.addEventListener("message", async (event) => {
     const fps  = msg.fps;
     const newFrames = msg.frames;
     const currentSlideNo = msg.slide;
-    console.log(typeof currentSlideNo);
+    //console.log(typeof currentSlideNo);
     // Look up placement info for this character (from your manifest/config)
-    const { x, y, w, h } = lookupPlacement(id, currentSlideNo);
+    const { x, y, w, h, z } = lookupPlacement(id, currentSlideNo);
     // Remove any existing placeholder canvas for this character
     const oldLayer = document.querySelector(`.char-layer.${id}`);
     if (oldLayer) oldLayer.remove();
@@ -350,13 +419,19 @@ socket.addEventListener("message", async (event) => {
       {
         id,
         x, y, w, h,
-        z: 1,
+        z: z,
         frameCount: newFrames.length,
         fps,
         serverFrames: newFrames
       },
       currentSlideNo
     );
+    const list = document.getElementById("uploadList");
+    if (list) {
+      const li = document.createElement("li");
+      li.textContent = `User ${msg.user_id} ${id} Uploaded`;
+      list.appendChild(li);
+    }
     console.log("loaded");
   }
 });
@@ -369,29 +444,25 @@ function lookupPlacement(id, slideNo) {
 }
 
 async function preloadSessionState(sessionId, slideNo) {
-  slideNo = slideNo +1;
+  slideNo = slideNo + 1;
   const res = await fetch(`${API_BASE}/session/${sessionId}/state`);
   const state = await res.json();
   const slideFrames = state.frames[slideNo] || {};
+  // clear everything except the characters we’re about to reload
+  clearLayers(Object.keys(slideFrames));
   Object.entries(slideFrames).forEach(([id, c]) => {
-    const oldLayer = document.querySelector(`.char-layer.${id}`);
-    if (oldLayer) oldLayer.remove();
     const placement = lookupPlacement(id, slideNo);
-    //console.log(placement);
-    placeCharacter(
-      {
-        id: c.id,
-        x: placement.x,
-        y: placement.y,
-        w: placement.w,
-        h: placement.h,
-        z: 1,
-        frameCount: c.frames.length,
-        fps: c.fps,
-        serverFrames: c.frames
-      },
-      slideNo
-    );
+    placeCharacter({
+      id: c.id,
+      x: placement.x,
+      y: placement.y,
+      w: placement.w,
+      h: placement.h,
+      z: placement.z ?? 1,
+      frameCount: c.frames.length,
+      fps: c.fps,
+      serverFrames: c.frames
+    });
   });
 }
 
@@ -429,7 +500,7 @@ async function showSlide(i){
         const res = await fetch(`${API_BASE}/session/${sessionId}/frames`);
         if (res.ok) {
           const data = await res.json(); // { frames: [...], fps, start_time, user_id }
-          console.log(data);
+          //console.log(data);
           if (data.frames && data.frames.length) {
             serverFrames = data;
           }
@@ -475,7 +546,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
   const cur = Math.min(initialSlide, manifest.slides.length - 1);
   await showSlide(cur);
   //console.log(cur);
-  await preloadSessionState(sessionId, cur);
+  //await preloadSessionState(sessionId, cur);
 
   addEventListener("keydown", e=>{
     if (e.key === "ArrowRight") nextSlide();
