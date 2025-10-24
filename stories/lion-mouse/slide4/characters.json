@@ -1,0 +1,10 @@
+
+{
+  "background": "stories/lion-mouse/slide4/slide4.png",
+  "characters": [
+    { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/slide4/lion.png", "x": 37, "y": 11, "w": 45 },
+    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide4/mouse.png", "x": 60, "y": 55, "w": 35 },
+    { "id": "bush", "name": "Bush", "sprite": "images/sprites/lion-mouse/slide4/bush.png", "x": 0, "y": 13, "w": 100 },
+    { "id": "net", "name": "Net", "sprite": "images/sprites/lion-mouse/slide4/net.png", "x": 35, "y": -2, "w": 50 }
+  ]
+}

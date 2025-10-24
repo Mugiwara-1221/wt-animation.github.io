@@ -1,0 +1,9 @@
+
+{
+  "background": "stories/lion-mouse/slide2/slide2.png",
+  "characters": [
+    { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/slide2/owl.png","x": 8, "y": 33, "w": 20 },
+    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide2/mouse.png", "x": 35, "y": 68, "w": 13 },
+    { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/slide2/lion.png", "x": 45, "y": 40, "w": 50 }
+  ]
+}

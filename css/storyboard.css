@@ -32,8 +32,8 @@ h2 {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 
   /* keep same overall scaling as your selection page */
-  max-width: 110vh;
-  max-height: 80vh;
+  width: min(90vw, 110vh);
+  height: auto;
   overflow: hidden; /* ensure slide + canvas stay clipped to the rounded box */
 }
 

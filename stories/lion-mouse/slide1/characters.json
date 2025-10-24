@@ -1,13 +1,8 @@
 
 {
-  "background": "images/backgrounds/lion-mouse/slide1.png",
+  "background": "stories/lion-mouse/slide1/slide1.png",
   "characters": [
-    { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/owl.png" },
-    { "id": "lion", "name": "Lion", "sprite": "images/sprites/lion-mouse/lion.png" },
-    { "id": "geese", "name": "Geese", "sprite": "images/sprites/lion-mouse/geese.png" },
-    { "id": "squirrel1", "name": "Squirrel", "sprite": "images/sprites/lion-mouse/squirrel1.png" },
-    { "id": "deer", "name": "Deer", "sprite": "images/sprites/lion-mouse/deer.png" },
-    { "id": "butterfly", "name": "Butterfly",  "sprite": "images/sprites/lion-mouse/butterfly.png" },
-    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide1/mouse.png", "x": 68.5, "y": 65, "w": 28 }
+    { "id": "owl", "name": "Owl", "sprite": "images/sprites/lion-mouse/slide1/owl.png","x": 25, "y": 0, "w": 45 },
+    { "id": "mouse", "name": "Mouse", "sprite": "images/sprites/lion-mouse/slide1/mouse.png", "x": 62, "y": 60, "w": 32 }
   ]
 }
