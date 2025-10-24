@@ -38,7 +38,7 @@ const deviceToken = (() => {
 })();
 
 // List any temporarily disabled characters here
-const TEMP_DISABLED = new Set(["bush","net"]); // ← replace with your data-char id(s)
+const TEMP_DISABLED = new Set(["bush","net","ribbon"]); // ← replace with your data-char id(s)
 const userid = localStorage.getItem("memberId");
 
 /************ Pixel-accurate hover + click ************/

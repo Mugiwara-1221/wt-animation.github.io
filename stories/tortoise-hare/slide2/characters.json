@@ -1,0 +1,9 @@
+
+{
+  "comment" : "all images should be within the chosen slide",
+  "background": "stories/tortoise-hare/slide2/slide2.png",
+  "characters": [
+    { "id": "hare",     "name": "Hare",     "sprite": "images/sprites/tortoise-hare/slide2/hare.png", "x": 30, "y": 3, "w": 50  },
+    { "id": "tortoise", "name": "Tortoise", "sprite": "images/sprites/tortoise-hare/slide2/tortoise.png", "x": 20, "y": 40, "w": 50 }
+  ]
+}
