@@ -30,19 +30,17 @@ h2 {
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-
-  /* keep same overall scaling as your selection page */
-  width: min(90vw, 110vh);
-  height: auto;
-  overflow: hidden; /* ensure slide + canvas stay clipped to the rounded box */
+  width: min(90vw, 110vh);   /* consistent horizontal scaling */
+  overflow: hidden;
 }
 
 #scene {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;              /* maintain image aspect ratio */
   border-radius: 12px;
 }
+
 
 /* The overlaid animation canvas must sit exactly over the slide */
 #animCanvas {
