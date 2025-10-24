@@ -1,0 +1,11 @@
+
+{
+  "comment" : "all images should be within the chosen slide",
+  "background": "stories/tortoise-hare/slide3/slide3.png",
+  "characters": [
+    { "id": "bear",     "name": "Bear",     "sprite": "images/sprites/tortoise-hare/slide3/bear.png", "x": 53, "y": 28, "w": 50  },
+    { "id": "squirrel", "name": "Squirrel", "sprite": "images/sprites/tortoise-hare/slide3/squirrel.png", "x": 45, "y": 55, "w": 30  },
+    { "id": "bird1",    "name": "Bird 1",   "sprite": "images/sprites/tortoise-hare/slide3/bird1.png", "x": 0, "y": 0, "w": 30  },
+    { "id": "bird2",    "name": "Bird 2",   "sprite": "images/sprites/tortoise-hare/slide3/bird2.png", "x": 19, "y": 8, "w": 30  }
+  ]
+}
