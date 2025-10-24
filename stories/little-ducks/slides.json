@@ -33,7 +33,7 @@
           "framesPath": "images/frames/little-ducks/frame1/sleepy_duck/sleepy_duck1.png",
           "maskCsvPrefix": "images/frames/little-ducks/frame1/sleepy_duck/sleepy_duck_mask_1.csv",
           "frameCount": 1 },
-        { "id": "waving_duck", "x": 38, "y": 50, "w": 50, "h": 60,
+        { "id": "waving_duck", "x": 38, "y": 50, "w": 60, "h": 60,
           "framesPath": "images/frames/little-ducks/frame1/waving_duck/waving_duck1.png",
           "maskCsvPrefix": "images/frames/little-ducks/frame1/waving_duck/waving_duck_mask_1.csv",
           "frameCount": 1 },
