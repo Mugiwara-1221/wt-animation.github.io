@@ -220,6 +220,19 @@ async function placeCharacter(cfg, slideNo){
   fitCanvasToCSS(cvs, () => draw(curIx));
   ro.observe(cvs);
   try {
+    // 0) Server frames (highest priority)
+    if (cfg.serverFrames && cfg.serverFrames.length) {
+      const imgs = await Promise.all(
+        cfg.serverFrames.map(u =>
+          loadImage(u).catch(err => {
+            console.error("[storyboard] server frame load fail:", u, err);
+            return null;
+          })
+        )
+      );
+      baseFrames = imgs.filter(Boolean);
+    }
+
     // 1) Prefer painted frames for the selected character on this slide
     const paintedURLs = getPaintedFrames(storyId, slideNo, id);
     if (paintedURLs) {
@@ -305,69 +318,6 @@ async function placeCharacter(cfg, slideNo){
     console.warn("[storyboard] character failed:", id, e);
     ro.disconnect();
   }
-}
-
-async function placePaintedCharacter(cfg) {
-  let cvs = document.querySelector(`.char-layer.${cfg.id}`);
-  if (!cvs) {
-    cvs = document.createElement("canvas");
-    cvs.className = `char-layer ${cfg.id}`;
-    const host = document.getElementById("charHost");
-    if (!host) {
-      console.warn("charHost not found");
-      return;
-    }
-    host.appendChild(cvs);
-  }
-  const ctx = cvs.getContext("2d");
-
-  const baseFrames = await Promise.all(
-    (cfg.serverFrames || []).map(async src => {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      return img;
-    })
-  );
-  if (!baseFrames.length) {
-    console.warn("No frames for", cfg.id);
-    return;
-  }
-
-  const first = baseFrames[0];
-  const drawW = cfg.w && cfg.w > 0 ? cfg.w : first.width;
-  const drawH = cfg.h && cfg.h > 0 ? cfg.h : first.height;
-
-  cvs.width = drawW;
-  cvs.height = drawH;
-
-  Object.assign(cvs.style, {
-    position: "absolute",
-    left: pct(cfg.x),
-    top: pct(cfg.y),
-    width: drawW + "px",
-    height: drawH + "px",
-    zIndex: String(cfg.z || 1),
-    pointerEvents: "none"
-  });
-  let curIx = 0;
-  function draw(ix = curIx) {
-    curIx = Math.min(ix, baseFrames.length - 1);
-    const dpr = devicePixelRatio || 1;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
-    ctx.drawImage(baseFrames[curIx], 0, 0, cvs.width, cvs.height);
-  }
-  draw(0);
-  if (cvs._animTimer) clearInterval(cvs._animTimer);
-  if (baseFrames.length > 1 && cfg.fps) {
-    cvs._animTimer = setInterval(() => {
-      curIx = (curIx + 1) % baseFrames.length;
-      draw(curIx);
-    }, 1000 / cfg.fps);
-  }
-  console.log("Painted character loaded:", cfg.id);
 }
 
 /* ---------------- Manifest discovery ---------------- */
