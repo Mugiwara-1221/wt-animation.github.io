@@ -3,10 +3,19 @@
 // Use a fixed version tag instead of Date.now() to stabilize caching between refreshes
 const VERSION = "2025-10-22"; // bump only when assets change
 
-const API_BASE =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "https://wt-animation-github-io.onrender.com";
+const hostname = window.location.hostname;
+const port = window.location.port;
+
+let API_BASE;
+// Case 1: running locally (frontend served from localhost or 127.0.0.1)
+if (hostname === "localhost" || hostname === "127.0.0.1") {
+  // If you’re serving FastAPI on 5500, use that
+  API_BASE = `http://${hostname}:${port}`;
+}
+// Case 2: production (your deployed site)
+else {
+  API_BASE = "https://wt-animation-github-io.onrender.com";
+}
 
 // --- Query & context (must be first) ---
 const qs  = new URLSearchParams(location.search);
@@ -319,8 +328,6 @@ socket.addEventListener("error", (err) => {
 
 socket.addEventListener("message", async (event) => {
   let msg;
-  cur = Math.max(0, Math.min(cur, manifest.slides.length - 1));
-  const s = manifest.slides[cur];
   try {
     msg = JSON.parse(event.data);
   } catch (err) {
@@ -331,9 +338,8 @@ socket.addEventListener("message", async (event) => {
     const id   = msg.character;
     const fps  = msg.fps;
     const newFrames = msg.frames;
-    const currentSlideNo =     
-      slideNoFromPath(s.background) ??
-      (manifest.slides.indexOf(s) + 1);
+    const currentSlideNo = msg.slide;
+    console.log(typeof currentSlideNo);
     // Look up placement info for this character (from your manifest/config)
     const { x, y, w, h } = lookupPlacement(id, currentSlideNo);
     // Remove any existing placeholder canvas for this character
@@ -356,10 +362,37 @@ socket.addEventListener("message", async (event) => {
 });
 
 function lookupPlacement(id, slideNo) {
-  const slide = manifest.slides[slideNo - 1];
+  const slide = manifest.slides[slideNo];
   if (!slide || !Array.isArray(slide.characters)) return {};
-  console.log(slide.characters);
+  //console.log(slide.characters);
   return slide.characters.find(c => c.id === id) || {};
+}
+
+async function preloadSessionState(sessionId, slideNo) {
+  slideNo = slideNo +1;
+  const res = await fetch(`${API_BASE}/session/${sessionId}/state`);
+  const state = await res.json();
+  const slideFrames = state.frames[slideNo] || {};
+  Object.entries(slideFrames).forEach(([id, c]) => {
+    const oldLayer = document.querySelector(`.char-layer.${id}`);
+    if (oldLayer) oldLayer.remove();
+    const placement = lookupPlacement(id, slideNo);
+    //console.log(placement);
+    placeCharacter(
+      {
+        id: c.id,
+        x: placement.x,
+        y: placement.y,
+        w: placement.w,
+        h: placement.h,
+        z: 1,
+        frameCount: c.frames.length,
+        fps: c.fps,
+        serverFrames: c.frames
+      },
+      slideNo
+    );
+  });
 }
 
 /* ---------------- Slide rendering ---------------- */
@@ -439,7 +472,10 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
     console.error("[storyboard] No slides discovered for", storyId);
     return;
   }
-  await showSlide(Math.min(initialSlide, manifest.slides.length - 1));
+  const cur = Math.min(initialSlide, manifest.slides.length - 1);
+  await showSlide(cur);
+  //console.log(cur);
+  await preloadSessionState(sessionId, cur);
 
   addEventListener("keydown", e=>{
     if (e.key === "ArrowRight") nextSlide();

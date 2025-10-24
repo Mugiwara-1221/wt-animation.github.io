@@ -24,6 +24,7 @@ class SaveFramesRequest(BaseModel):
     character: str
     frames: List[str]
     fps: int
+    slide: int
 
 class ConnectionManager:
     def __init__(self):
@@ -161,8 +162,9 @@ async def save_frames(sid: str, data: SaveFramesRequest):
     if "frames" not in session:
         session["frames"] = {}
     now = asyncio.get_event_loop().time()
+    slide_store = session["frames"].setdefault(data.slide, {})
     # Ensure this character has a slot with a list
-    char_store = session["frames"].setdefault(data.character, {
+    char_store = slide_store.setdefault(data.character, {
         "user_id": data.user_id,
         "frames": [],
         "fps": data.fps,
@@ -180,7 +182,8 @@ async def save_frames(sid: str, data: SaveFramesRequest):
         "user_id": data.user_id,
         "frames": char_store["frames"],
         "fps": char_store["fps"],
-        "start_time": char_store["start_time"]
+        "start_time": char_store["start_time"],
+        "slide": data.slide
     })
     return {"success": True}
 
@@ -190,6 +193,25 @@ async def get_frames(sid: str):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return session.get("frames", {})
+
+@app.get("/session/{sid}/state")
+async def get_session_state(sid: str):
+    session = sessions.get(sid)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    frames = session.get("frames", {})
+    return {
+        "frames": {
+            slide_no: {
+                cid: {
+                    "id": cid,
+                    **cdata
+                }
+                for cid, cdata in chars.items()
+            }
+            for slide_no, chars in frames.items()
+        }
+}
 
 @app.websocket("/ws/{sid}")
 async def websocket_endpoint( sid: str, websocket: WebSocket ):

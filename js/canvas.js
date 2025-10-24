@@ -4,7 +4,6 @@ const hostname = window.location.hostname;
 const port = window.location.port;
 
 let API_BASE;
-
 // Case 1: running locally (frontend served from localhost or 127.0.0.1)
 if (hostname === "localhost" || hostname === "127.0.0.1") {
   // If you’re serving FastAPI on 5500, use that
@@ -13,7 +12,6 @@ if (hostname === "localhost" || hostname === "127.0.0.1") {
 // Case 2: production (your deployed site)
 else {
   API_BASE = "https://wt-animation-github-io.onrender.com";
-  console.log("here");
 }
 
 /* ---------- Canvas setup ---------- */
@@ -741,6 +739,7 @@ async function sendToStoryboard() {
       const cx = comp.getContext('2d');
 
       // paint for frame 1
+      let paintURL = null;
       const p = paintLayers[n];
       if (p){
         cx.drawImage(p, 0,0,p.width,p.height, box.x, box.y, box.width, box.height);
@@ -752,7 +751,7 @@ async function sendToStoryboard() {
           cx.drawImage(paintImg, 0, 0, paintImg.width, paintImg.height, box.x, box.y, box.width, box.height);
         }
       }
-
+      //console.log("paintURL:", paintURL);
       // outline (frame 1)
       const ol = outlineImgs[n];
       if (ol) {
@@ -776,7 +775,8 @@ async function sendToStoryboard() {
         character: selectedChar,
         user_id: parseInt(userId),
         frames,   // array of base64 PNGs or stroke data
-        fps: 0
+        fps: 0,
+        slide: slide1
       })
     });
     // Navigate
@@ -789,8 +789,6 @@ async function sendToStoryboard() {
     alert('Send to Storyboard failed. See console for details.');
   }
 }
-
-
 
 /* ---------- Expose for buttons ---------- */
 Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
