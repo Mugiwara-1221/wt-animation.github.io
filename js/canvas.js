@@ -617,51 +617,56 @@ function prevAppearance(){ gotoAppearance(appearCursor-1); }
 prevAppBtn?.addEventListener("click", prevAppearance);
 nextAppBtn?.addEventListener("click", nextAppearance);
 
-/* ------- Send to storyboard (bake 4 PNGs) ------- */
+/* ------- Send to storyboard (bake 4 compact JPEGs) ------- */
 async function sendToStoryboard() {
   try {
     saveCurrentFramePaint(); // persist current frame before exporting
-    const slide1 = appearances.length ? appearances[appearCursor] : 1;
+
+    // appearances[] holds 0-based slide indexes → add 1 for the real slide #
+    const slide1 = appearances.length ? (appearances[appearCursor] + 1) : 1;
 
     const frames = [];
-    const box = getSpriteBox();
+    const box = getSpriteBox(); // {x,y,width,height} of the character area
 
     for (let n = 1; n <= TOTAL_FRAMES; n++) {
+      // Build a compact frame exactly the character box size
       const comp = document.createElement('canvas');
-      comp.width = drawCanvas.width; comp.height = drawCanvas.height;
+      comp.width  = box.width;
+      comp.height = box.height;
       const cx = comp.getContext('2d');
 
-      // paint for this frame
+      // paint for this frame (scale into box)
       const p = paintLayers[n];
-      if (p){
-        cx.drawImage(p, 0,0,p.width,p.height, box.x, box.y, box.width, box.height);
+      if (p) {
+        cx.drawImage(p, 0, 0, p.width, p.height, 0, 0, box.width, box.height);
       } else {
         // fallback to saved PNG (if any)
         const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, n);
         const paintURL = localStorage.getItem(key);
         if (paintURL) {
           const paintImg = await loadImageCached(paintURL);
-          cx.drawImage(paintImg, 0, 0, paintImg.width, paintImg.height, box.x, box.y, box.width, box.height);
+          cx.drawImage(paintImg, 0, 0, paintImg.width, paintImg.height, 0, 0, box.width, box.height);
         }
       }
 
-      // outline
+      // outline (multiply at box size)
       const ol = outlineImgs[n];
       if (ol) {
         cx.save();
         cx.globalCompositeOperation = "multiply";
-        cx.drawImage(ol, box.x, box.y, box.width, box.height);
+        cx.drawImage(ol, 0, 0, box.width, box.height);
         cx.restore();
       }
 
-      frames.push(comp.toDataURL('image/png'));
+      // Use JPEG for much smaller data-URLs (avoids quota issues)
+      frames.push(comp.toDataURL('image/jpeg', 0.85));
     }
 
     // stash for storyboard (1..4 loop)
     const sbKey = `sbFrames:${selectedStory || "tortoise-hare"}:${slide1}:${selectedChar}`;
     localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 4 }));
 
-    // Navigate
+    // Navigate with the correct 1-based slide number
     const q = new URLSearchParams({ story: selectedStory, slide: String(slide1), char: selectedChar });
     if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade",  selectedGrade);

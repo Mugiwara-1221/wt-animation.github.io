@@ -2,7 +2,7 @@
 {
   "grades": {
     "TK-K": {
-      "label": "TK–2",
+      "label": "TK–K",
       "tools": {
         "brush": true,
         "eraser": false,
@@ -34,7 +34,7 @@
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
     "G.3-5": {
-      "label": "G.3–4",
+      "label": "G.3–5",
       "tools": {
         "brush": true,
         "eraser": true,
@@ -50,7 +50,7 @@
       "allowedCharacters": ["tortoise","hare","bear","squirrel","bird1","bird2"]
     },
     "G.6-8": {
-      "label": "G.5–8",
+      "label": "G.6–8",
       "tools": {
         "brush": true,
         "eraser": true,

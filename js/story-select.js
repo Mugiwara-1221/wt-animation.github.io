@@ -117,6 +117,16 @@ async function tryLoadManifest() {
   console.warn("[story-select] Manifest not found; using fallback list.");
 }
 
+// default grade when a story has multiple, youngest → oldest
+const GRADE_ORDER = ["TK-2", "G.1-2", "G.3-4", "G.5-8"];
+function pickDefaultGrade(grades = []) {
+  if (!Array.isArray(grades) || !grades.length) return "";
+  return [...grades].sort(
+    (a, b) => GRADE_ORDER.indexOf(a) - GRADE_ORDER.indexOf(b)
+  )[0];
+}
+
+
 function bindFilters() {
   // Do NOT auto-restore any grade; start with all stories visible.
 
@@ -174,10 +184,20 @@ function makeCard(s) {
   card.append(thumb, title);
 
   const go = () => {
-    const nextCtx = { ...readCtx(), story: s.id };   // keep latest ctx
+    // Pick grade from this story’s grades (from manifest or fallback)
+    const defaultGrade = pickDefaultGrade(s.grades);
+  
+    const nextCtx = { 
+      ...readCtx(), 
+      story: s.id, 
+      grade: defaultGrade // <- auto-assign here
+    };
+  
+    // Persist and navigate (include grade in URL for clarity)
     writeCtx(nextCtx);
-    location.href = nextURL("slide-select.html", nextCtx);
+    location.href = nextURL("slide-select.html", nextCtx, { includeGrade: true });
   };
+  
   card.addEventListener("click", go);
   card.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
