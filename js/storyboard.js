@@ -7,12 +7,20 @@ const ctx = JSON.parse(localStorage.getItem("ctx") || "{}");
 // story id (keep fallback logic, normalized with dashes)
 const storyId = (qs.get("story") || localStorage.getItem("selectedStory") || "tortoise-hare").replace(/_/g, "-");
 
-// read slide from URL (0-based for storyboard); else from ctx (usually 1-based)
-const requested = Number(qs.get("slide"));
-const fromCtx   = Number(ctx.slide);
-let initialSlide = 0;
-if (!Number.isNaN(requested)) initialSlide = Math.max(0, requested);
-else if (!Number.isNaN(fromCtx)) initialSlide = Math.max(0, fromCtx - 1);
+// read slide from URL (1-based coming from canvas); else from ctx (also 1-based)
+// convert to 0-based ONLY for indexing internal arrays
+const rawSlide    = Number(qs.get("slide"));   // 1-based from canvas.html
+const rawCtxSlide = Number(ctx.slide);         // 1-based if it exists in ctx
+let initialSlide  = 0;                         // 0-based index used internally
+
+if (Number.isFinite(rawSlide) && rawSlide >= 1) {
+  initialSlide = rawSlide - 1;
+} else if (Number.isFinite(rawCtxSlide) && rawCtxSlide >= 1) {
+  initialSlide = rawCtxSlide - 1;
+} else {
+  initialSlide = 0; // default to first slide
+}
+
 
 // selected character (optional)
 const selectedChar = (qs.get("char") || localStorage.getItem("selectedCharacter") || "").toLowerCase();
@@ -40,6 +48,63 @@ const scene = document.getElementById("scene");
 // caches & animation loop registry
 const framesCache = new Map();
 const loops       = new Set(); 
+
+//
+// ----- Multi-select slide routing helpers -----
+function safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
+
+function getSelectedSlides(){
+  // stored by slide-select.js as a 1-based, sorted array
+  const arr = safeParse(localStorage.getItem("selectedSlides")) || [];
+  return Array.from(new Set(arr.map(Number).filter(n => Number.isFinite(n)))).sort((a,b)=>a-b);
+}
+
+function buildSpriteURL(slide1){
+  // slide1 must be 1-based in the URL
+  const u = new URL("sprite-select.html", location.href);
+  u.searchParams.set("story", storyId);
+  u.searchParams.set("slide", String(slide1));
+  const sid   = qs.get("session") || localStorage.getItem("sessionCode") || ctx.session;
+  const grade = qs.get("grade")   || localStorage.getItem("selectedGrade") || ctx.grade;
+  if (sid)   u.searchParams.set("session", sid);
+  if (grade) u.searchParams.set("grade", grade);
+  return u.toString();
+}
+
+function goToNextSelectedSlide(){
+  const slides = getSelectedSlides();           // 1-based list
+  if (!slides.length){ nextSlide(); return; }   // fallback: old behavior
+  const current1 = cur + 1;                     // cur is 0-based
+  const idx = slides.indexOf(current1);
+
+  // If current slide isn’t in the selection, jump to the first selected > current, else first
+  if (idx === -1){
+    const next = slides.find(s => s > current1) || slides[0];
+    location.href = buildSpriteURL(next);
+    return;
+  }
+
+  // Otherwise advance within the selected list; if at end, return to slide picker
+  if (idx < slides.length - 1){
+    location.href = buildSpriteURL(slides[idx + 1]);
+  } else {
+    location.href = "slide-select.html";
+  }
+}
+
+function goToPrevSelectedSlide(){
+  const slides = getSelectedSlides();
+  if (!slides.length){ prevSlide(); return; }
+  const current1 = cur + 1;
+  const idx = slides.indexOf(current1);
+
+  if (idx > 0){
+    location.href = buildSpriteURL(slides[idx - 1]);
+  } else {
+    location.href = "slide-select.html";
+  }
+}
+//
 
 async function getFrames(prefix, count){
   const key = `${prefix}|${count}`;
@@ -256,7 +321,7 @@ async function showSlide(i){
   // keep URL in sync
   const url = new URL(location.href);
   url.searchParams.set("story", storyId);
-  url.searchParams.set("slide", cur);
+  url.searchParams.set("slide", String(cur + 1)); // keep URL 1-based
   history.replaceState({}, "", url);
 
   window.__slides = { index: cur, count: manifest.slides.length };
@@ -266,6 +331,14 @@ async function showSlide(i){
 function nextSlide(){ showSlide(cur+1); }
 function prevSlide(){ showSlide(cur-1); }
 Object.assign(window, { nextSlide, prevSlide, showSlide });
+
+//
+// Prefer selected-slides routing for on-screen buttons if present
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+nextBtn?.addEventListener("click", (e)=>{ e.preventDefault(); goToNextSelectedSlide(); });
+prevBtn?.addEventListener("click", (e)=>{ e.preventDefault(); goToPrevSelectedSlide(); });
+// 10/28
 
 /* ---------------- Boot ---------------- */
 (async function boot(){
@@ -278,7 +351,7 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
   await showSlide(Math.min(initialSlide, manifest.slides.length - 1));
 
   addEventListener("keydown", e=>{
-    if (e.key === "ArrowRight") nextSlide();
-    if (e.key === "ArrowLeft")  prevSlide();
-  });
+    if (e.key === "ArrowRight"){ e.preventDefault(); goToNextSelectedSlide(); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); goToPrevSelectedSlide(); }
+  });  
 })();

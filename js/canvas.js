@@ -13,7 +13,7 @@ const bgCtx = bgCanvas.getContext("2d");
 const ctx   = drawCanvas.getContext("2d");
 const sctx  = spriteCanvas.getContext("2d");
 
-/* === Mini preview + appearances-only nav === */
+/* === Mini preview + (now disabled) slide nav === */
 const previewCanvas = document.getElementById("previewCanvas");
 const pctx          = previewCanvas ? previewCanvas.getContext("2d") : null;
 const prevAppBtn    = document.getElementById("prevAppBtn");
@@ -67,6 +67,17 @@ const userId = localStorage.getItem("memberId");
 
 localStorage.setItem("selectedCharacter", selectedChar);
 
+/* --- chosen slide(s) (multi-select flow support) --- */
+const selectedSlidesQS = (urlParams.get("slides") || "")
+  .split(",").map(n => +n).filter(n => n > 0).sort((a,b)=>a-b);
+let selectedSlidesLS = [];
+try { selectedSlidesLS = JSON.parse(localStorage.getItem("selectedSlides") || "[]"); } catch {}
+const selectedSlides = (selectedSlidesQS.length ? selectedSlidesQS : selectedSlidesLS)
+  .map(n => +n).filter(n => n > 0).sort((a,b)=>a-b);
+
+const slideFromUrl  = +urlParams.get("slide") || null;
+const CHOSEN_SLIDE1 = slideFromUrl || (selectedSlides[0] || 1); // 1-based
+
 /* ---------- Helpers ---------- */
 function resolveStoryFolder(storyIdDash) {
   const id = (storyIdDash || "").replace(/_/g, "-");
@@ -80,14 +91,6 @@ async function loadSlidesManifest(storyIdDash){
   const url = `stories/${storyIdDash}/slides.json`;
   try { const r = await fetch(url, { cache:"no-store" }); if (!r.ok) throw 0; return await r.json(); }
   catch { return { slides: [] }; }
-}
-function buildAppearances(manifest, charId){
-  const out = [];
-  (manifest.slides || []).forEach((sl, idx) => {
-    const has = Array.isArray(sl.characters) && sl.characters.some(c => (c.id||"").toLowerCase() === charId);
-    if (has) out.push(idx);
-  });
-  return out;
 }
 
 /* ---------- Per-frame ---------- */
@@ -198,8 +201,7 @@ async function preloadOutlinesForSlide(slide1) {
   for (let n = 1; n <= TOTAL_FRAMES; n++) {
     const candidates = [perSlide(n), perSlideAlt(n)];
     for (const raw of candidates) {
-      // cache-buster to defeat <img> HTTP cache
-      const url = `${raw}?v=${Date.now()}`;
+      const url = `${raw}?v=${Date.now()}`; // cache-buster for <img> cache
       try {
         if (await urlExists(raw)) {
           outlineImgs[n] = await loadImageCached(url);
@@ -213,7 +215,6 @@ async function preloadOutlinesForSlide(slide1) {
     }
   }
 }
-
 
 function drawOutlineForFrame(n) {
   sctx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
@@ -443,9 +444,9 @@ function downloadImage(){
   document.getElementById("saveOptions").classList.add("hidden");
 }
 
-/* ---------- Per-frame save/restore ---------- */
+/* ---------- Per-frame save/restore (LOCKED to CHOSEN_SLIDE1) ---------- */
 function saveCurrentFramePaint() {
-  const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+  const slide1 = CHOSEN_SLIDE1; // locked
   const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, currentFrame);
   const p = paintLayers[currentFrame];
   if (p) localStorage.setItem(key, p.toDataURL("image/png"));
@@ -453,7 +454,7 @@ function saveCurrentFramePaint() {
 
 function restoreFramePaint(n) {
   ensurePaintCtx(n);
-  const slide1 = appearances.length ? appearances[appearCursor] + 1 : 1;
+  const slide1 = CHOSEN_SLIDE1; // locked
   const key = framePaintKey(selectedStory || "tortoise-hare", slide1, selectedChar, n);
   const url = localStorage.getItem(key);
   const p = ensurePaintCtx(n);
@@ -523,10 +524,17 @@ function updateSliderFill(slider){
   if(!sl) return; updateSliderFill(sl); sl.addEventListener("input", ()=>updateSliderFill(sl));
 });
 
-/* === Appearances-only model + preview === */
+/* === Appearances model (now forced to ONE slide) + preview === */
 let slidesManifest=null;
 let appearances=[];
 let appearCursor=0;
+
+/* Lock this page to ONE slide: remove slide navigation / preview HUD if present */
+try {
+  document.getElementById("prevAppBtn")?.remove();
+  document.getElementById("nextAppBtn")?.remove();
+  document.getElementById("previewHUD")?.classList?.add("hidden");
+} catch {}
 
 function ensurePreviewDimsFor(bgIm){
   const sceneW = bgIm.naturalWidth  || bgIm.width  || 1600;
@@ -548,13 +556,16 @@ function ensurePreviewDimsFor(bgIm){
 /* atomic updates to avoid flicker */
 let previewToken=0;
 async function drawPreview(){
-  if(!pctx || !slidesManifest || !appearances.length){
-    if(pctx) pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+  if(!pctx || !slidesManifest) {
+    if (pctx) pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
     return;
   }
   const myToken=++previewToken;
-  const globalIdx=appearances[appearCursor];
-  const slide=slidesManifest.slides[globalIdx]; if(!slide) return;
+
+  // Use the locked slide for preview
+  const idx0 = Math.max(0, CHOSEN_SLIDE1 - 1);
+  const slide = slidesManifest.slides?.[idx0];
+  if(!slide){ if(pctx) pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height); return; }
 
   try{
     const bgIm=await loadImageCached(slide.background);
@@ -596,34 +607,12 @@ async function drawPreview(){
   }
 }
 
-async function gotoAppearance(n){
-  if(!appearances.length) return;
-  if(n<0 || n>=appearances.length) return;
-  appearCursor=n;
-
-  const slide1 = appearances[appearCursor] + 1;
-  await preloadOutlinesForSlide(slide1);
-
-  // throw away masks from the previous slide
-  maskLayers.fill(null);
-
-  layoutAndRedraw();
-  restoreFramePaint(currentFrame);
-  schedulePreview();
-}
-
-function nextAppearance(){ gotoAppearance(appearCursor+1); }
-function prevAppearance(){ gotoAppearance(appearCursor-1); }
-prevAppBtn?.addEventListener("click", prevAppearance);
-nextAppBtn?.addEventListener("click", nextAppearance);
-
-/* ------- Send to storyboard (bake 4 compact JPEGs) ------- */
+/* ------- Send to storyboard (bake 4 compact PNGs with alpha) ------- */
 async function sendToStoryboard() {
   try {
     saveCurrentFramePaint(); // persist current frame before exporting
 
-    // appearances[] holds 0-based slide indexes → add 1 for the real slide #
-    const slide1 = appearances.length ? (appearances[appearCursor] + 1) : 1;
+    const slide1 = CHOSEN_SLIDE1; // 1-based, locked
 
     const frames = [];
     const box = getSpriteBox(); // {x,y,width,height} of the character area
@@ -658,18 +647,19 @@ async function sendToStoryboard() {
         cx.restore();
       }
 
-      // Use JPEG for much smaller data-URLs (avoids quota issues)
-      frames.push(comp.toDataURL('image/jpeg', 0.85));
+      // PNG keeps alpha -> no black squares
+      frames.push(comp.toDataURL('image/png'));
     }
 
     // stash for storyboard (1..4 loop)
     const sbKey = `sbFrames:${selectedStory || "tortoise-hare"}:${slide1}:${selectedChar}`;
     localStorage.setItem(sbKey, JSON.stringify({ frames, fps: 4 }));
 
-    // Navigate with the correct 1-based slide number
+    // Navigate with the correct 1-based slide number, and pass selectedSlides for correct cycle order
     const q = new URLSearchParams({ story: selectedStory, slide: String(slide1), char: selectedChar });
     if (sessionCode)   q.set("session", sessionCode);
     if (selectedGrade) q.set("grade",  selectedGrade);
+    if (selectedSlides?.length) q.set("slides", selectedSlides.join(","));
     location.href = `storyboard.html?${q.toString()}`;
   } catch (err) {
     console.error('[sendToStoryboard] failed:', err);
@@ -680,23 +670,27 @@ async function sendToStoryboard() {
 /* ---------- Expose for buttons ---------- */
 Object.assign(window,{ setTool, undo, redo, clearCanvas, toggleSaveOptions, downloadImage, sendToStoryboard, zoomIn, zoomOut });
 
+/* ---------- Boot: lock to single slide, remove slide nav ---------- */
 (async function boot(){
   layoutAndRedraw();
 
   const storyId = selectedStory || "tortoise-hare";
-  const manifest = await loadSlidesManifest(storyId);
-  slidesManifest = manifest;
-  appearances = buildAppearances(manifest, selectedChar);
+  try { slidesManifest = await loadSlidesManifest(storyId); } catch {}
 
-  if (appearances.length) {
-    await gotoAppearance(0);
-    drawOutlineForFrame(1);
-    restoreFramePaint(1);
-  } else {
-    await preloadOutlinesForSlide(1);
-    layoutAndRedraw();
-    drawOutlineForFrame(1);
-    restoreFramePaint(1);
-    schedulePreview();
-  }
+  // Appearances is a ONE-item list: the chosen slide (0-based index)
+  appearances = [Math.max(0, CHOSEN_SLIDE1 - 1)];
+  appearCursor = 0;
+
+  // Kill slide-switch UI if present
+  try {
+    prevAppBtn?.remove();
+    nextAppBtn?.remove();
+    document.getElementById("previewHUD")?.classList?.add("hidden");
+  } catch {}
+
+  await preloadOutlinesForSlide(CHOSEN_SLIDE1);
+  layoutAndRedraw();
+  drawOutlineForFrame(1);
+  restoreFramePaint(1);
+  schedulePreview();
 })();
