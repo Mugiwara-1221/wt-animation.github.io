@@ -54,10 +54,27 @@ const loops       = new Set();
 function safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
 
 function getSelectedSlides(){
-  // stored by slide-select.js as a 1-based, sorted array
-  const arr = safeParse(localStorage.getItem("selectedSlides")) || [];
-  return Array.from(new Set(arr.map(Number).filter(n => Number.isFinite(n)))).sort((a,b)=>a-b);
+  // from URL (?slides=1,3,5)
+  const fromQS = (qs.get("slides") || "")
+    .split(",")
+    .map(n => Number(n))
+    .filter(n => Number.isFinite(n) && n >= 1);
+
+  // from ctx (written by slide-select.js)
+  const fromCtx = Array.isArray(ctx.slides)
+    ? ctx.slides.map(n => Number(n)).filter(n => Number.isFinite(n) && n >= 1)
+    : [];
+
+  // from localStorage (written by slide-select.js)
+  const fromLS = (safeParse(localStorage.getItem("selectedSlides")) || [])
+    .map(n => Number(n))
+    .filter(n => Number.isFinite(n) && n >= 1);
+
+  // merge + dedupe + sort ascending (1-based)
+  const merged = [...fromQS, ...fromCtx, ...fromLS];
+  return [...new Set(merged)].sort((a,b)=>a-b);
 }
+
 
 function buildSpriteURL(slide1){
   // slide1 must be 1-based in the URL
@@ -334,10 +351,19 @@ Object.assign(window, { nextSlide, prevSlide, showSlide });
 
 //
 // Prefer selected-slides routing for on-screen buttons if present
-const nextBtn = document.getElementById("nextBtn");
-const prevBtn = document.getElementById("prevBtn");
+const nextBtn =
+  document.getElementById("nextBtn") ||
+  document.querySelector('[data-action="next"]') ||
+  Array.from(document.querySelectorAll("button")).find(b => /next/i.test(b.textContent||""));
+
+const prevBtn =
+  document.getElementById("prevBtn") ||
+  document.querySelector('[data-action="prev"]') ||
+  Array.from(document.querySelectorAll("button")).find(b => /back|prev/i.test(b.textContent||""));
+
 nextBtn?.addEventListener("click", (e)=>{ e.preventDefault(); goToNextSelectedSlide(); });
 prevBtn?.addEventListener("click", (e)=>{ e.preventDefault(); goToPrevSelectedSlide(); });
+
 // 10/28
 
 /* ---------------- Boot ---------------- */
@@ -353,5 +379,5 @@ prevBtn?.addEventListener("click", (e)=>{ e.preventDefault(); goToPrevSelectedSl
   addEventListener("keydown", e=>{
     if (e.key === "ArrowRight"){ e.preventDefault(); goToNextSelectedSlide(); }
     if (e.key === "ArrowLeft") { e.preventDefault(); goToPrevSelectedSlide(); }
-  });  
+  }); 
 })();
